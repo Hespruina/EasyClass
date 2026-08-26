@@ -1,0 +1,688 @@
+<!-- 
+Copyright © 2026 zhrhello.top. All rights reserved.
+本网站属于原创作品，其版权为本网站所有，未经授权不得以任何方式复制、分发、镜像，也不得修改后在其他网站使用。
+--><!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机点名 - 遥控端</title>
+    <style>
+        /* 引入需要的字体 */
+        @import url('https://fonts-googleapis-com.mirror.zhrhello.top/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+            background: #23242a;
+        }
+
+        .box {
+            position: relative;
+            width: 100%;
+            max-width: 380px;
+            height: auto;
+            background: #1c1c1c;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        form {
+            position: relative;
+            padding: 50px 40px;
+            background: #28292d;
+            border-radius: 8px;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 水平居中 */
+        }
+
+        h2 {
+            color: #45f3ff;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: 0.1em;
+        }
+
+        .inputBox {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 35px;
+        }
+
+        .inputBox input {
+            position: relative;
+            width: 100%;
+            padding: 20px 10px 10px;
+            background: transparent;
+            outline: none;
+            box-shadow: none;
+            border: none;
+            color: #23242a;
+            font-size: 1em;
+            letter-spacing: 0.05em;
+            transition: 0.5s;
+            z-index: 10;
+        }
+
+        .inputBox span {
+            position: absolute;
+            left: 0;
+            padding: 20px 0px 10px;
+            pointer-events: none;
+            font-size: 1em;
+            color: #8f8f8f;
+            letter-spacing: 0.05em;
+            transition: 0.5s;
+        }
+
+        .inputBox input:valid~span,
+        .inputBox input:focus~span {
+            color: #45f3ff;
+            transform: translateX(0px) translateY(-34px);
+            font-size: 0.75em;
+        }
+
+        .inputBox i {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 2px;
+            background: #45f3ff;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: 0.5s;
+            pointer-events: none;
+            z-index: 9;
+        }
+
+        .inputBox input:valid~i,
+        .inputBox input:focus~i {
+            height: 44px;
+        }
+
+        input[type="submit"] {
+            border: none;
+            outline: none;
+            padding: 0;
+            background: linear-gradient(45deg, #45f3ff, #00bfff);
+            cursor: pointer;
+            border-radius: 50%;
+            font-weight: 600;
+            width: 100px;
+            height: 100px;
+            margin-top: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #23242a;
+            font-size: 1em;
+        }
+
+        input[type="submit"]:hover {
+            transform: scale(1.1);
+        }
+
+        input[type="submit"]:active {
+            transform: scale(0.9);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #editNameListButton {
+            border: none;
+            outline: none;
+            padding: 0;
+            background: linear-gradient(45deg, #666, #888);
+            cursor: pointer;
+            border-radius: 12px;
+            font-weight: 500;
+            width: 160px;
+            height: 40px;
+            margin-top: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.9em;
+        }
+
+        #editNameListButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #editNameListButton:not(:disabled):hover {
+            transform: scale(1.05);
+        }
+
+        #editNameListButton:not(:disabled):active {
+            transform: scale(0.95);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .semicircle {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background-color: #23242a; /* 与整体背景颜色一致 */
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #8f8f8f;
+            font-size: 1em;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        @keyframes pulse {
+            0% {
+                background-color: #23242a;
+                color: #8f8f8f;
+            }
+            50% {
+                background-color: #45f3ff;
+                color: #23242a;
+            }
+            100% {
+                background-color: #23242a;
+                color: #8f8f8f;
+            }
+        }
+
+        @keyframes flashRed {
+            0%, 100% {
+                background-color: #23242a;
+                color: #8f8f8f;
+            }
+            50% {
+                background-color: red;
+                color: #23242a;
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            .box {
+                width: 100%;
+                padding: 20px;
+            }
+
+            form {
+                padding: 30px 20px;
+            }
+
+            .inputBox {
+                max-width: 100%;
+            }
+
+            input[type="submit"] {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+        .message {
+            display: none;
+            color: #ff6b6b;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* 名单输入弹窗样式 */
+        .name-list-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .name-list-modal.show {
+            display: flex;
+        }
+
+        .name-list-content {
+            background-color: #28292d;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            border: 2px solid #45f3ff;
+            box-shadow: 0 0 20px rgba(69, 243, 255, 0.3);
+        }
+
+        .name-list-content h3 {
+            color: #45f3ff;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .name-list-content p {
+            color: #8f8f8f;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .name-list-content textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #45f3ff;
+            border-radius: 8px;
+            background: #1c1c1c;
+            color: #45f3ff;
+            font-size: 1em;
+            resize: none;
+            outline: none;
+        }
+
+        .name-list-content textarea::placeholder {
+            color: #666;
+        }
+
+        .name-list-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .name-list-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .name-list-buttons button:hover {
+            transform: scale(1.02);
+        }
+
+        .name-list-buttons button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-send {
+            background: linear-gradient(45deg, #45f3ff, #00bfff);
+            color: #23242a;
+            font-weight: 600;
+        }
+
+        .btn-cancel {
+            background: #666;
+            color: white;
+        }
+
+    /* 定义版权信息的样式 */
+    footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+            background: #1c1c1c;
+            color: #45f3ff;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="semicircle"></div>
+    <div class="box">
+        <form autocomplete="off" id="codeForm">
+            <h2>Enter Code</h2>
+            <div class="inputBox">
+                <input type="text" id="code" name="code">
+                <span>Code</span>
+                <i></i>
+            </div>
+            <input type="submit" value="connect" id="connectButton">
+            <input type="button" value="编辑名单" id="editNameListButton" disabled>
+            <p class="message" id="errorMessage"></p>
+        </form>
+    </div>
+
+    <!-- 名单输入弹窗 -->
+    <div class="name-list-modal" id="nameListModal">
+        <div class="name-list-content">
+            <h3>输入点名名单</h3>
+            <p>请输入姓名，每行一个</p>
+            <textarea id="nameListInput" placeholder="张三&#10;李四&#10;王五"></textarea>
+            <div class="name-list-buttons">
+                <button class="btn-cancel" id="cancelNameList">取消</button>
+                <button class="btn-send" id="sendNameList">发送名单</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © 2026 zhrhello.top 著作权所有
+    </footer>
+
+    <script>
+        let socket = null;
+        let isConnected = false;
+        let currentCode = '';
+        let isNameListSent = false;  // 标记是否已发送名单
+
+        // 获取 API 基础路径（用于连接到 EasyCore）
+        // 假设部署结构为：
+        //   /randamer/ -> 静态文件
+        //   /easycore/api/randamer/ -> EasyCore API
+        function getApiBasePath() {
+            const pathname = window.location.pathname;
+            
+            // 如果当前在 /randamer/ 目录下
+            if (pathname.includes('/randamer/')) {
+                const randamerIndex = pathname.indexOf('/randamer/');
+                const basePath = pathname.substring(0, randamerIndex);
+                return basePath + '/easycore/';
+            }
+            
+            // 默认情况
+            return '/';
+        }
+
+        // 安全发送 JSON 消息
+        function wsSend(data) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify(data));
+                return true;
+            }
+            return false;
+        }
+
+        // 建立 WebSocket 连接的函数
+        function connectWebSocket(code) {
+            const connectButton = document.getElementById('connectButton');
+            const semicircle = document.querySelector('.semicircle');
+            
+            if (!code) {
+                showError('请输入code');
+                return;
+            }
+
+            console.log('开始建立 WebSocket 连接，code:', code);
+            
+            // 构造原生 WebSocket URL（带 my_code 查询参数）
+            const basePath = getApiBasePath();
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = protocol + '//' + window.location.host + basePath + 'api/randamer/ws?my_code=' + encodeURIComponent(code);
+            
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = function() {
+                console.log('WebSocket连接已打开');
+                isConnected = true;
+                connectButton.value = 'Click';
+                document.getElementById('editNameListButton').disabled = false;
+                semicircle.style.backgroundColor = '#45f3ff';
+                semicircle.style.color = '#23242a';
+                semicircle.style.animation = 'pulse 0.5s ease-in-out';
+                setTimeout(() => {
+                    semicircle.style.backgroundColor = '#23242a';
+                    semicircle.style.color = '#8f8f8f';
+                    semicircle.style.animation = '';
+                }, 500);
+            };
+
+            socket.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'need_name_list') {
+                        // 服务端请求发送名单（PC 端确认自己没有名单）
+                        if (!isNameListSent) {
+                            showNameListModal();
+                        }
+                    } else if (data.type === 'pc_has_names') {
+                        // PC 端已有名单，无需手机输入
+                        console.log('PC端已有名单，无需输入名单');
+                        hideNameListModal();
+                        showSuccess('PC端已有名单，无需输入');
+                    } else if (data.type === 'pc_names_returned') {
+                        // PC端返回名单，显示编辑弹窗
+                        console.log('收到PC端返回的名单:', data.names);
+                        const nameInput = document.getElementById('nameListInput');
+                        if (data.names && data.names.length > 0) {
+                            nameInput.value = data.names.join('\n');
+                        } else {
+                            nameInput.value = '';
+                        }
+                        showNameListModal();
+                    } else if (data.type === 'name_list_received') {
+                        // PC端已接收名单
+                        hideNameListModal();
+                        isNameListSent = true;
+                        showSuccess('名单已发送成功');
+                    } else if (data.status === 'OK') {
+                        console.log('请求成功', data);
+                        semicircle.style.backgroundColor = '#45f3ff';
+                        semicircle.style.color = '#23242a';
+                        semicircle.style.animation = 'pulse 0.5s ease-in-out';
+                        setTimeout(() => {
+                            semicircle.style.backgroundColor = '#23242a';
+                            semicircle.style.color = '#8f8f8f';
+                            semicircle.style.animation = '';
+                        }, 500);
+                    } else if (data.status === 'error') {
+                        showError(data.message || '请求失败');
+                        if (data.message === 'PC 端已断开' || data.message === 'PC 端未在线') {
+                            disconnectSocket();
+                        }
+                    }
+                } catch (error) {
+                    console.error('解析WebSocket消息失败:', error);
+                }
+            };
+
+            socket.onerror = function(error) {
+                console.error('WebSocket错误:', error);
+                showError('连接失败');
+            };
+
+            socket.onclose = function(event) {
+                console.log('WebSocket连接已关闭，代码:', event.code);
+                isConnected = false;
+                isNameListSent = false;
+                connectButton.value = 'connect';
+                document.getElementById('editNameListButton').disabled = true;
+                showError('连接已断开');
+            };
+        }
+
+        // 显示名单输入弹窗
+        function showNameListModal() {
+            const modal = document.getElementById('nameListModal');
+            modal.classList.add('show');
+            document.getElementById('nameListInput').focus();
+        }
+
+        // 隐藏名单输入弹窗
+        function hideNameListModal() {
+            const modal = document.getElementById('nameListModal');
+            modal.classList.remove('show');
+        }
+
+        // 发送名单到服务端
+        function sendNameList() {
+            const nameInput = document.getElementById('nameListInput');
+            const namesText = nameInput.value.trim();
+            
+            if (!namesText) {
+                showError('请输入至少一个姓名');
+                return;
+            }
+            
+            // 解析姓名列表（每行一个）
+            const names = namesText.split('\n').map(name => name.trim()).filter(name => name !== '');
+            
+            if (names.length === 0) {
+                showError('请输入至少一个有效的姓名');
+                return;
+            }
+            
+            if (wsSend({
+                type: 'this_is_list',
+                code: currentCode,
+                names: names
+            })) {
+                console.log('发送名单:', names);
+            } else {
+                showError('连接已断开，请重新连接');
+            }
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.style.display = 'block';
+            errorMessage.textContent = message;
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 2000);
+
+            const semicircle = document.querySelector('.semicircle');
+            semicircle.style.animation = 'flashRed 1s ease-in-out';
+            setTimeout(() => {
+                semicircle.style.animation = '';
+            }, 1000);
+        }
+
+        function showSuccess(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.style.display = 'block';
+            errorMessage.style.color = '#4ade80';  // 绿色
+            errorMessage.textContent = message;
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+                errorMessage.style.color = '#ff6b6b';  // 恢复红色
+            }, 2000);
+
+            const semicircle = document.querySelector('.semicircle');
+            semicircle.style.backgroundColor = '#4ade80';  // 绿色
+            semicircle.style.color = '#23242a';
+            semicircle.style.animation = 'pulse 0.5s ease-in-out';
+            setTimeout(() => {
+                semicircle.style.backgroundColor = '#23242a';
+                semicircle.style.color = '#8f8f8f';
+                semicircle.style.animation = '';
+            }, 1000);
+        }
+
+        function disconnectSocket() {
+            if (socket) {
+                socket.onopen = null;
+                socket.onmessage = null;
+                socket.onerror = null;
+                socket.onclose = null;
+                try { socket.close(); } catch(e) {}
+                socket = null;
+            }
+            isConnected = false;
+            isNameListSent = false;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const codeInput = document.getElementById('code');
+            const connectButton = document.getElementById('connectButton');
+            
+            // 从URL获取code参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+
+            if (code) {
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index < code.length) {
+                        codeInput.value += code[index];
+                        index++;
+                    } else {
+                        clearInterval(interval);
+                        // 自动填充完成后，自动建立连接
+                        currentCode = code;
+                        connectWebSocket(code);
+                    }
+                }, 200); // 0.2秒每字符
+            }
+
+            // 表单提交事件
+            document.getElementById('codeForm').addEventListener('submit', function (event) {
+                console.log('表单提交事件触发');
+                event.preventDefault();
+                event.stopPropagation();
+                
+                console.log('isConnected:', isConnected);
+                
+                if (isConnected) {
+                    // 如果已连接，发送click_bton消息
+                    if (wsSend({ 
+                        type: 'click_bton', 
+                        code: currentCode 
+                    })) {
+                        console.log('发送click_bton消息');
+                    }
+                } else {
+                    // 如果未连接，建立WebSocket连接
+                    currentCode = document.getElementById('code').value;
+                    console.log('准备连接，code:', currentCode);
+                    connectWebSocket(currentCode);
+                }
+            });
+
+            // 名单弹窗按钮事件
+            document.getElementById('sendNameList').addEventListener('click', sendNameList);
+            document.getElementById('cancelNameList').addEventListener('click', hideNameListModal);
+
+            // 编辑名单按钮事件
+            document.getElementById('editNameListButton').addEventListener('click', function() {
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    showError('请先连接到PC端');
+                    return;
+                }
+                console.log('编辑名单按钮被点击，请求PC端名单');
+                wsSend({
+                    type: 'get_pc_names',
+                    code: currentCode
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
+<!-- 
+Copyright © 2026 zhrhello.top. All rights reserved.
+本网站属于原创作品，其版权为本网站所有，未经授权不得以任何方式复制、分发、镜像，也不得修改后在其他网站使用。
+-->

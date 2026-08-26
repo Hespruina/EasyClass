@@ -1,0 +1,382 @@
+/* 编辑名单弹窗样式 */
+.edit-names-panel {
+background: var(--edit-names-panel-bg);
+border: 2px solid var(--edit-names-panel-border);
+border-radius: 16px;
+width: 90%;
+max-width: 900px;
+max-height: 85vh;
+display: flex;
+flex-direction: column;
+box-shadow: 0 0 30px var(--edit-names-panel-shadow);
+animation: slideIn 0.3s ease;
+}
+.modal-overlay.hiding .edit-names-panel {
+animation: slideOut 0.3s ease-out forwards;
+}
+.edit-names-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 20px 25px;
+border-bottom: 1px solid rgba(69, 243, 255, 0.2);
+}
+.edit-names-title {
+font-family: 'ZCOOL KuaiLe', cursive;
+color: var(--primary);
+font-size: 24px;
+margin: 0;
+}
+.edit-names-close {
+background: none;
+border: none;
+color: var(--text-dim);
+font-size: 28px;
+cursor: pointer;
+transition: color 0.2s;
+line-height: 1;
+padding: 0;
+width: 36px;
+height: 36px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 50%;
+}
+.edit-names-close:hover {
+color: var(--primary);
+background: rgba(69, 243, 255, 0.1);
+}
+.edit-names-body {
+flex: 1;
+overflow-y: auto;
+padding: 20px;
+min-height: 300px;
+max-height: calc(85vh - 180px);
+}
+.edit-names-cards-container {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+gap: 12px;
+width: 100%;
+}
+.edit-name-card {
+background: var(--edit-name-card-bg);
+border: 1px solid var(--edit-name-card-border);
+border-radius: 12px;
+position: relative;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 12px 8px;
+transition: all 0.2s;
+box-shadow: 0 4px 6px var(--edit-name-card-shadow);
+overflow: hidden;
+min-width: 90px;
+min-height: 90px;
+}
+.edit-name-card:hover {
+border-color: rgba(69, 243, 255, 0.4);
+box-shadow: var(--edit-name-card-hover-shadow);
+}
+.edit-name-card.selected {
+border-color: var(--edit-name-card-selected-border);
+box-shadow: 0 0 20px var(--edit-name-card-selected-shadow);
+background: var(--edit-name-card-selected-bg);
+animation: selected-glow 1.5s ease-in-out infinite alternate;
+}
+@keyframes selected-glow {
+from {
+box-shadow: var(--edit-name-card-selected-shadow-glow);
+}
+to {
+box-shadow: 0 0 30px var(--edit-name-card-selected-shadow);
+}
+}
+.edit-name-card.selected .edit-name-display {
+color: var(--gold);
+}
+.edit-name-card.selected .edit-name-edit-btn,
+.edit-name-card.selected .edit-name-delete-btn {
+opacity: 0.5;
+pointer-events: none;
+}
+.edit-name-card-input {
+background: rgba(0, 0, 0, 0.3);
+border: 2px dashed rgba(69, 243, 255, 0.4);
+border-radius: 8px;
+padding: 10px;
+color: var(--text-main);
+font-size: 16px;
+width: 100%;
+text-align: center;
+resize: none;
+font-family: 'Noto Sans SC', sans-serif;
+height: 60px;
+margin-bottom: 8px;
+}
+.edit-name-card-input:focus {
+outline: none;
+border-color: var(--primary);
+box-shadow: var(--input-focus-shadow);
+}
+.edit-name-card-input::placeholder {
+color: var(--text-dim);
+}
+.edit-name-input-actions {
+display: flex;
+gap: 8px;
+width: 100%;
+}
+.edit-name-confirm-btn,
+.edit-name-cancel-btn {
+flex: 1;
+padding: 8px;
+border-radius: 8px;
+font-size: 14px;
+font-weight: bold;
+cursor: pointer;
+transition: all 0.2s;
+border: none;
+font-family: 'Noto Sans SC', sans-serif;
+}
+.edit-name-confirm-btn {
+background: linear-gradient(135deg, rgba(69, 243, 255, 0.2), rgba(69, 243, 255, 0.1));
+color: var(--primary);
+border: 1px solid rgba(69, 243, 255, 0.4);
+}
+.edit-name-confirm-btn:hover {
+background: linear-gradient(135deg, rgba(69, 243, 255, 0.3), rgba(69, 243, 255, 0.2));
+box-shadow: var(--edit-name-edit-btn-shadow);
+}
+.edit-name-cancel-btn {
+background: rgba(255, 255, 255, 0.05);
+color: var(--text-dim);
+border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.edit-name-cancel-btn:hover {
+background: rgba(255, 255, 255, 0.1);
+color: var(--text-main);
+}
+.edit-name-display {
+color: var(--primary);
+padding: 2px;
+border-radius: 6px;
+font-size: clamp(13px, 1.5vw, 16px);
+font-weight: 800;
+width: 100%;
+text-align: center;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+flex-shrink: 0;
+line-height: 1.3;
+}
+.edit-name-actions {
+display: flex;
+gap: 6px;
+margin-top: 8px;
+}
+.edit-name-edit-btn {
+width: 28px;
+height: 28px;
+background: rgba(255, 215, 0, 0.15);
+border: 2px solid rgba(255, 215, 0, 0.5);
+border-radius: 6px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 14px;
+font-weight: bold;
+color: var(--gold);
+cursor: pointer;
+transition: all 0.2s;
+flex-shrink: 0;
+padding: 0;
+}
+.edit-name-edit-btn:hover {
+background: rgba(255, 215, 0, 0.3);
+border-color: var(--gold);
+box-shadow: var(--edit-name-edit-btn-shadow);
+}
+.edit-name-edit-btn svg {
+width: 14px;
+height: 14px;
+fill: currentColor;
+}
+.edit-name-delete-btn {
+width: 28px;
+height: 28px;
+background: rgba(255, 107, 107, 0.15);
+border: 2px solid rgba(255, 107, 107, 0.5);
+border-radius: 6px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 14px;
+font-weight: bold;
+color: var(--minus-btn-color);
+cursor: pointer;
+transition: all 0.2s;
+flex-shrink: 0;
+padding: 0;
+}
+.edit-name-delete-btn:hover {
+background: rgba(255, 107, 107, 0.3);
+border-color: var(--minus-btn-color);
+box-shadow: var(--edit-name-delete-btn-shadow);
+}
+.edit-name-delete-btn svg {
+width: 14px;
+height: 14px;
+fill: currentColor;
+}
+.edit-names-footer {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 15px 25px;
+border-top: 1px solid rgba(69, 243, 255, 0.2);
+}
+.edit-names-footer-left {
+display: flex;
+gap: 10px;
+}
+.edit-names-footer-right {
+display: flex;
+gap: 12px;
+}
+@media (max-width: 768px) {
+.edit-names-cards-container {
+grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+gap: 5px;
+}
+.edit-name-card {
+min-width: 70px;
+min-height: 70px;
+padding: 10px 6px;
+}
+.edit-name-display {
+font-size: clamp(12px, 1.4vw, 14px);
+line-height: 1.2;
+}
+.edit-name-actions {
+gap: 4px;
+margin-top: 6px;
+}
+.edit-name-edit-btn,
+.edit-name-delete-btn {
+width: 24px;
+height: 24px;
+font-size: 12px;
+}
+.edit-name-edit-btn svg,
+.edit-name-delete-btn svg {
+width: 12px;
+height: 12px;
+}
+.edit-names-footer {
+flex-direction: column;
+gap: 12px;
+}
+.edit-names-footer-left,
+.edit-names-footer-right {
+width: 100%;
+justify-content: center;
+}
+}
+
+/* 保存到云名单弹窗样式 */
+.save-cloud-option {
+padding: 15px;
+border: 2px solid var(--primary-border);
+border-radius: 12px;
+cursor: pointer;
+transition: all 0.3s ease;
+background: var(--card-bg);
+}
+.save-cloud-option:hover {
+border-color: var(--primary-border-highlight);
+background: var(--primary-dim);
+}
+.save-cloud-option-new {
+border-color: var(--primary-border);
+}
+.save-cloud-option-new:hover {
+border-color: var(--primary-border-highlight);
+background: var(--primary-dim);
+}
+.save-cloud-option-new.selected {
+border-color: var(--primary);
+background: var(--primary-dim);
+box-shadow: 0 0 15px var(--primary-glow);
+}
+.save-cloud-option-overwrite {
+border-color: rgba(255, 193, 7, 0.2);
+}
+.save-cloud-option-overwrite:hover {
+border-color: rgba(255, 193, 7, 0.4);
+background: rgba(255, 193, 7, 0.05);
+}
+.save-cloud-option-overwrite.selected {
+border-color: var(--gold);
+background: rgba(255, 193, 7, 0.08);
+box-shadow: 0 0 15px rgba(255, 193, 7, 0.15);
+}
+.save-cloud-option-title {
+color: var(--primary);
+font-family: 'ZCOOL KuaiLe', cursive;
+font-size: 1.1em;
+margin-bottom: 5px;
+}
+.save-cloud-option-overwrite .save-cloud-option-title {
+color: var(--gold);
+}
+.save-cloud-option-desc {
+color: var(--text-dim);
+font-size: 0.85em;
+}
+.save-cloud-input {
+width: 100%;
+padding: 10px;
+background: var(--input-bg);
+border: 1px solid var(--input-border);
+border-radius: 8px;
+color: var(--text-main);
+font-size: 14px;
+outline: none;
+transition: all 0.3s;
+}
+.save-cloud-input:focus {
+border-color: var(--input-focus-border);
+box-shadow: 0 0 10px var(--input-focus-glow);
+}
+.save-cloud-input::placeholder {
+color: var(--text-dim);
+}
+.save-cloud-list-item {
+padding: 12px;
+background: var(--card-bg);
+border: 2px solid var(--card-border);
+border-radius: 8px;
+cursor: pointer;
+transition: all 0.3s;
+}
+.save-cloud-list-item:hover {
+border-color: var(--gold);
+background: var(--card-bg-alt);
+}
+.save-cloud-list-item.selected {
+border-color: var(--gold);
+background: rgba(255, 193, 7, 0.05);
+}
+.save-cloud-list-name {
+color: var(--gold);
+font-weight: bold;
+margin-bottom: 5px;
+}
+.save-cloud-list-info {
+color: var(--text-dim);
+font-size: 0.85em;
+}

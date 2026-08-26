@@ -1,0 +1,42 @@
+/* 名单更改标签样式 */
+.name-change-tags {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+justify-content: center;
+margin: 15px 0;
+max-height: 200px;
+overflow-y: auto;
+padding: 10px;
+background: rgba(0, 0, 0, 0.2);
+border-radius: 8px;
+}
+.name-change-tag {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+padding: 6px 12px;
+border-radius: 16px;
+font-size: 13px;
+font-weight: bold;
+transition: all 0.2s;
+}
+.name-change-tag.add {
+background: var(--name-change-tag-add-bg);
+border: 1px solid var(--name-change-tag-add-border);
+color: var(--name-change-tag-add-color);
+}
+.name-change-tag.remove {
+background: var(--name-change-tag-remove-bg);
+border: 1px solid var(--name-change-tag-remove-border);
+color: var(--name-change-tag-remove-color);
+}
+.name-change-tag .icon {
+font-size: 14px;
+font-weight: bold;
+}
+.name-change-tag .name {
+white-space: nowrap;
+}
+
+/* 编辑名单弹窗样式 */

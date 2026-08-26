@@ -1,0 +1,199 @@
+/* 拼音首字母查找弹窗 - Win10 开始菜单风格 */
+.letter-search-modal {
+display: none;
+position: fixed;
+z-index: 2000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0);
+justify-content: center;
+align-items: center;
+}
+.letter-search-modal.show {
+display: flex;
+animation: fadeIn 0.3s ease forwards;
+}
+.letter-search-modal.hiding {
+animation: fadeOut 0.3s ease forwards;
+}
+.letter-search-panel {
+background: var(--search-panel-bg);
+border: 1px solid var(--search-panel-border);
+border-radius: 8px;
+padding: 30px;
+box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+backdrop-filter: blur(20px);
+animation: slideIn 0.3s ease;
+}
+.letter-search-modal.hiding .letter-search-panel {
+animation: slideOut 0.3s ease-out forwards;
+}
+.letter-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 8px;
+width: 280px;
+}
+.letter-btn {
+aspect-ratio: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 24px;
+font-weight: 500;
+color: var(--text-main);
+background: transparent;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+transition: all 0.15s;
+font-family: 'Noto Sans SC', sans-serif;
+}
+.letter-btn:hover {
+background: rgba(255, 255, 255, 0.1);
+}
+.letter-btn:active {
+background: var(--letter-btn-active-bg-raw);
+transform: scale(0.95);
+}
+.letter-btn.has-names {
+color: var(--primary);
+font-weight: 700;
+}
+.letter-btn.has-names:hover {
+background: var(--letter-btn-has-names-hover-bg);
+box-shadow: var(--letter-btn-has-names-shadow);
+}
+.letter-btn.empty {
+color: var(--text-dim);
+cursor: default;
+}
+.letter-btn.empty:hover {
+background: transparent;
+}
+/* 设置弹窗 */
+.modal-overlay {
+display: none;
+position: fixed;
+z-index: 1000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+overflow: auto;
+background-color: rgba(0,0,0,0);
+justify-content: center;
+align-items: center;
+}
+.modal-overlay.show {
+display: flex;
+animation: fadeIn 0.3s ease forwards;
+}
+.modal-overlay.hiding {
+animation: fadeOut 0.3s ease forwards;
+}
+.settings-panel, .prompt-panel {
+background: var(--settings-panel-bg);
+border: 2px solid var(--settings-panel-border);
+border-radius: 16px;
+padding: 25px;
+width: 90%;
+max-width: 450px;
+box-shadow: 0 0 30px rgba(0,0,0,0.5);
+animation: slideIn 0.3s;
+}
+@keyframes fadeIn {
+from { background-color: rgba(0,0,0,0); }
+to { background-color: rgba(0,0,0,0.85); }
+}
+@keyframes fadeOut {
+from { background-color: rgba(0,0,0,0.85); }
+to { background-color: rgba(0,0,0,0); }
+}
+@keyframes slideIn {
+from { transform: translateY(-50px); opacity: 0; }
+to { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideOut {
+from { transform: translateY(0); opacity: 1; }
+to { transform: translateY(50px); opacity: 0; }
+}
+.settings-title, .prompt-title { font-family: 'ZCOOL KuaiLe', cursive; color: var(--primary); font-size: 22px; margin-bottom: 20px; text-align: center; }
+.setting-item { margin-bottom: 20px; }
+.setting-label { display: block; color: var(--text-dim); margin-bottom: 10px; font-size: 15px; }
+.toggle-group { display: flex; background: var(--toggle-group-bg); border-radius: 8px; padding: 4px; border: 1px solid var(--toggle-group-border); }
+.toggle-option { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 6px; transition: all 0.2s; font-size: 14px; color: var(--toggle-option-color); }
+.toggle-option.active { background: var(--toggle-option-active-bg); color: var(--toggle-option-active-color); font-weight: bold; box-shadow: 0 1px 3px var(--card-shadow); }
+.toggle-group.three-options .toggle-option { font-size: 13px; padding: 8px 4px; }
+.btn-group { display: flex; gap: 15px; margin-top: 25px; }
+.action-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+.btn-confirm { background: rgba(69, 243, 255, 0.2); color: var(--primary); border: 1px solid rgba(69, 243, 255, 0.4); }
+.btn-reset { background: var(--btn-reset-bg); color: var(--btn-reset-color); border: 1px solid var(--btn-reset-border); }
+.btn-secondary { background: var(--btn-secondary-bg); color: var(--btn-secondary-color); border: 1px solid var(--btn-secondary-border); }
+.data-info { margin-top: 15px; font-size: 12px; color: var(--name-change-tag-add-color); text-align: center; font-weight: bold; }
+.prompt-text { color: var(--text-main); font-size: 15px; line-height: 1.5; margin-bottom: 20px; text-align: center; white-space: pre-wrap; word-wrap: break-word; }
+.prompt-text b { color: var(--text-main); font-weight: bold; }
+.checkbox-group { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; color: var(--text-dim); font-size: 14px; }
+.checkbox-group input { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+/* 常驻快速查找框 */
+.quick-search-container {
+padding: 10px;
+border-bottom: 1px solid var(--quick-search-container-border);
+background: var(--quick-search-container-bg);
+flex-shrink: 0;
+}
+.quick-search-container.hidden {
+display: none;
+}
+.quick-search-grid {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 4px;
+}
+.quick-search-btn {
+aspect-ratio: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 12px;
+font-weight: 600;
+color: var(--text-dim);
+background: rgba(255, 255, 255, 0.03);
+border: 1px solid rgba(255, 255, 255, 0.05);
+border-radius: 4px;
+cursor: pointer;
+transition: all 0.15s;
+font-family: 'Noto Sans SC', sans-serif;
+padding: 0;
+min-height: 24px;
+}
+.quick-search-btn:hover {
+background: rgba(255, 255, 255, 0.08);
+border-color: rgba(255, 255, 255, 0.1);
+}
+.quick-search-btn:active {
+transform: scale(0.95);
+}
+.quick-search-btn.has-names {
+color: var(--primary);
+background: var(--quick-search-btn-has-names-bg);
+border-color: var(--quick-search-btn-has-names-border);
+}
+.quick-search-btn.has-names:hover {
+background: var(--quick-search-btn-has-names-hover-bg, rgba(69, 243, 255, 0.2));
+border-color: var(--quick-search-btn-has-names-hover-border, rgba(69, 243, 255, 0.4));
+box-shadow: var(--quick-search-btn-has-names-shadow);
+}
+.quick-search-btn.empty {
+color: var(--quick-search-btn-empty-color);
+cursor: default;
+background: var(--quick-search-btn-empty-bg);
+border-color: var(--quick-search-btn-empty-border);
+}
+.quick-search-btn.empty:hover {
+background: var(--quick-search-btn-empty-bg);
+border-color: var(--quick-search-btn-empty-border);
+}
+/* 操作方式选择圆球 */

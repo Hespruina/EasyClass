@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="../favicon.ico" type="image/x-icon">
+<title>上传名单</title>
+<style>
+    body { background: #23242a; color: #45f3ff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .box { background: #1c1c1c; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; }
+    textarea { width: 100%; height: 200px; background: #28292d; border: 1px solid #45f3ff; color: #45f3ff; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+    button { background: #45f3ff; color: #1c1c1c; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; width: 100%; }
+    .hidden { display: none; }
+    .success { color: #45f3ff; font-size: 1.2em; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="box" id="inputBox">
+    <h3>上传名单</h3>
+    <p style="font-size:0.8em; color:#888; margin-bottom:10px;">每行一个姓名</p>
+    <textarea id="nameInput" placeholder="张三&#10;李四"></textarea>
+    <button id="sendBtn">上传</button>
+</div>
+<div class="box hidden" id="successBox">
+    <div class="success">上传成功</div>
+    <p style="margin-top:10px; color:#888;">可以关闭页面了</p>
+    <button onclick="window.close()" style="margin-top:20px; background:#666; color:white;">关闭</button>
+</div>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    if (!code) {
+        document.body.innerHTML = '<div class="box"><h3>错误</h3><p>缺少 code 参数</p></div>';
+    }
+    // 构造原生 WebSocket URL（带 my_code 查询参数）
+    function getApiBasePath() {
+        const pathname = window.location.pathname;
+        if (pathname.includes('/randamer/')) {
+            const randamerIndex = pathname.indexOf('/randamer/');
+            const basePath = pathname.substring(0, randamerIndex);
+            return basePath + '/easycore/';
+        }
+        return '/';
+    }
+    
+    const basePath = getApiBasePath();
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = protocol + '//' + window.location.host + basePath + 'api/randamer/ws?my_code=' + encodeURIComponent(code);
+    console.log('Phone WebSocket URL:', wsUrl);
+    const phoneSocket = new WebSocket(wsUrl);
+    phoneSocket.onopen = () => {
+        console.log('Phone connected with code:', code);
+    };
+    phoneSocket.onmessage = (event) => {
+        console.log('Phone received message:', event.data);
+    };
+    phoneSocket.onerror = (err) => {
+        console.error('Phone connection error:', err);
+        alert('连接错误');
+    };
+    phoneSocket.onclose = (event) => {
+        console.log('Phone disconnected, code:', event.code);
+    };
+
+    function wsSend(data) {
+        if (phoneSocket && phoneSocket.readyState === WebSocket.OPEN) {
+            phoneSocket.send(JSON.stringify(data));
+            return true;
+        }
+        return false;
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', () => {
+        const text = document.getElementById('nameInput').value;
+        const list = text.split('\n').map(n => n.trim()).filter(n => n);
+        if (list.length === 0) {
+            alert('请输入名单');
+            return;
+        }
+        wsSend({ type: 'this_is_list', code: code, names: list });
+        document.getElementById('inputBox').classList.add('hidden');
+        document.getElementById('successBox').classList.remove('hidden');
+    });
+</script>
+</body>
+</html>

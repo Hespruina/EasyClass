@@ -1,0 +1,114 @@
+/* 导出方式选择弹窗样式 */
+.export-modal {
+display: none;
+position: fixed;
+z-index: 2500;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0);
+justify-content: center;
+align-items: center;
+padding: 20px;
+}
+.export-modal.show {
+display: flex;
+animation: fadeIn 0.3s ease forwards;
+}
+.export-modal.hiding {
+animation: fadeOut 0.3s ease forwards;
+}
+.export-panel {
+background: var(--card-bg);
+border: 1px solid rgba(69, 243, 255, 0.3);
+border-radius: 16px;
+padding: 30px;
+width: 90%;
+max-width: 500px;
+box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+animation: slideIn 0.3s ease;
+}
+.export-modal.hiding .export-panel {
+animation: slideOut 0.3s ease-out forwards;
+}
+.export-title {
+font-family: 'ZCOOL KuaiLe', cursive;
+color: var(--primary);
+font-size: 24px;
+text-align: center;
+margin-bottom: 25px;
+}
+.export-options {
+display: flex;
+flex-direction: column;
+gap: 12px;
+margin-bottom: 25px;
+}
+.export-option {
+display: flex;
+align-items: center;
+gap: 15px;
+padding: 15px 20px;
+background: rgba(255, 255, 255, 0.03);
+border: 2px solid rgba(69, 243, 255, 0.2);
+border-radius: 12px;
+cursor: pointer;
+transition: all 0.3s;
+}
+.export-option:hover {
+background: rgba(69, 243, 255, 0.1);
+border-color: rgba(69, 243, 255, 0.5);
+box-shadow: var(--export-btn-hover-shadow);
+transform: translateX(5px);
+}
+.export-icon {
+width: 48px;
+height: 48px;
+background: linear-gradient(135deg, rgba(69, 243, 255, 0.2), rgba(69, 243, 255, 0.05));
+border-radius: 12px;
+display: flex;
+align-items: center;
+justify-content: center;
+color: var(--primary);
+flex-shrink: 0;
+}
+.export-icon svg {
+width: 28px;
+height: 28px;
+}
+.export-label {
+font-size: 18px;
+font-weight: bold;
+color: var(--text-main);
+}
+.export-desc {
+font-size: 13px;
+color: var(--text-dim);
+margin-left: auto;
+}
+.export-buttons {
+display: flex;
+justify-content: center;
+}
+.export-btn {
+padding: 12px 30px;
+border-radius: 8px;
+font-size: 15px;
+font-weight: bold;
+cursor: pointer;
+transition: all 0.2s;
+font-family: 'Noto Sans SC', sans-serif;
+border: none;
+}
+.export-btn-cancel {
+background: rgba(255, 255, 255, 0.05);
+color: var(--text-dim);
+border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.export-btn-cancel:hover {
+background: rgba(255, 255, 255, 0.1);
+color: var(--text-main);
+}
+
+/* 名单更改标签样式 */

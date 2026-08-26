@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>名单获取接口</title>
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Noto Sans SC", sans-serif; }
+    body {
+        display: flex; justify-content: center; align-items: center;
+        min-height: 100vh; background: #23242a; color: #45f3ff;
+        flex-direction: column;
+    }
+    .container {
+        background: #1c1c1c; padding: 40px; border-radius: 12px;
+        width: 90%; max-width: 500px; text-align: center;
+        box-shadow: 0 0 20px rgba(69, 243, 255, 0.2);
+    }
+    h2 { margin-bottom: 20px; font-family: "ZCOOL KuaiLe", sans-serif; }
+    textarea {
+        width: 100%; height: 150px; background: #28292d; border: 1px solid #45f3ff;
+        color: #45f3ff; padding: 10px; border-radius: 8px; resize: none;
+        margin-bottom: 20px; outline: none;
+    }
+    button {
+        background: #45f3ff; color: #1c1c1c; border: none; padding: 12px 24px;
+        border-radius: 6px; cursor: pointer; font-weight: 600;
+        font-family: "ZCOOL KuaiLe", sans-serif; margin: 5px;
+        transition: background 0.3s;
+    }
+    button:hover { background: #35eaff; }
+    button:disabled { background: #666; cursor: not-allowed; }
+    .qr-box { margin-top: 20px; }
+    .qr-box img { width: 150px; height: 150px; border-radius: 8px; }
+    .status { margin-top: 10px; font-size: 0.9em; color: #8f8f8f; }
+    .hidden { display: none; }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #1c1c1c 0%, #23242a 50%, #1c1c1c 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+    }
+
+    .loading-overlay.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .loading-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .loading-text {
+        color: #45f3ff;
+        font-size: 1.5em;
+        font-family: "ZCOOL KuaiLe", sans-serif;
+        font-weight: 400;
+        text-align: center;
+        letter-spacing: 0.1em;
+        animation: text-pulse 1.5s ease-in-out infinite;
+        text-shadow: 0 0 10px rgba(69, 243, 255, 0.5), 0 0 20px rgba(69, 243, 255, 0.3);
+    }
+
+    @keyframes text-pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+    }
+
+    .loading-spinner {
+        position: relative;
+        width: 120px;
+        height: 120px;
+    }
+
+    .loading-spinner::before,
+    .loading-spinner::after,
+    .loading-spinner-inner {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        border: 4px solid transparent;
+    }
+
+    .loading-spinner::before {
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-top-color: #45f3ff;
+        border-right-color: #45f3ff;
+        animation: spin-fast 0.8s linear infinite;
+        box-shadow: 0 0 20px rgba(69, 243, 255, 0.3);
+    }
+
+    .loading-spinner::after {
+        top: 15px;
+        left: 15px;
+        width: calc(100% - 30px);
+        height: calc(100% - 30px);
+        border-bottom-color: #35eaff;
+        border-left-color: #35eaff;
+        animation: spin-fast-reverse 1.2s linear infinite;
+    }
+
+    .loading-spinner-inner {
+        top: 30px;
+        left: 30px;
+        width: calc(100% - 60px);
+        height: calc(100% - 60px);
+        border-top-color: #25daff;
+        border-right-color: #25daff;
+        animation: spin-fast 0.6s linear infinite;
+    }
+
+    .loading-spinner-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        background: radial-gradient(circle, #45f3ff 0%, transparent 70%);
+        border-radius: 50%;
+        animation: center-pulse 0.8s ease-in-out infinite;
+    }
+
+    @keyframes spin-fast {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin-fast-reverse {
+        0% {
+            transform: rotate(360deg);
+        }
+        100% {
+            transform: rotate(0deg);
+        }
+    }
+
+    @keyframes center-pulse {
+        0%, 100% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: translate(-50%, -50%) scale(1.3);
+            opacity: 0.7;
+        }
+    }
+</style>
+</head>
+<body>
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="loading-spinner">
+            <div class="loading-spinner-inner"></div>
+            <div class="loading-spinner-center"></div>
+        </div>
+        <p class="loading-text">正在初始化...</p>
+    </div>
+</div>
+
+<div class="container" id="mainContainer">
+    <h2>名单获取模式</h2>
+    <div id="loadingState" class="hidden">正在初始化...</div>
+    
+    <div id="inputState" class="hidden">
+        <p style="margin-bottom:10px;">本地无名单，请录入或扫码上传</p>
+        <textarea id="nameInput" placeholder="每行一个姓名"></textarea>
+        <div>
+            <button id="submitLocalBtn">确认并提交</button>
+        </div>
+        <div class="qr-box hidden" id="qrBox">
+            <img id="qrImage" src="" alt="QR">
+            <p>手机扫码上传</p>
+            <p class="status" id="qrStatus">等待连接...</p>
+        </div>
+    </div>
+
+    <div id="successState" class="hidden">
+        <p>名单已就绪，正在跳转...</p>
+    </div>
+</div>
+
+<script>
+    let socket;
+    let code = '';
+    let names = [];
+    let targetUrl = '';
+    
+    // 获取 API 基础路径（用于连接到 EasyCore）
+    function getApiBasePath() {
+        const pathname = window.location.pathname;
+        if (pathname.includes('/randamer/')) {
+            const randamerIndex = pathname.indexOf('/randamer/');
+            const basePath = pathname.substring(0, randamerIndex);
+            return basePath + '/easycore/';
+        }
+        return '/';
+    }
+
+    // 构造原生 WebSocket URL
+    function getWsUrl(params = {}) {
+        const basePath = getApiBasePath();
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        let url = protocol + '//' + window.location.host + basePath + 'api/randamer/ws';
+        const query = new URLSearchParams(params).toString();
+        if (query) url += '?' + query;
+        return url;
+    }
+
+    // 安全发送 JSON 消息
+    function wsSend(data) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify(data));
+            return true;
+        }
+        return false;
+    }
+
+    // 安全关闭 WebSocket
+    function wsSafeClose() {
+        if (socket) {
+            socket.onopen = null;
+            socket.onmessage = null;
+            socket.onerror = null;
+            socket.onclose = null;
+            try { socket.close(); } catch(e) {}
+            socket = null;
+        }
+    }
+    
+    // 新增状态标记，用于解决竞态条件
+    let isCodeReady = false;
+    let isNamesReady = false;
+    
+    // WebSocket 连接管理相关变量
+    let isConnecting = false;
+    let reconnectTimer = null;
+    let savedCode = '';
+    let codeTimeoutTimer = null;
+    const CODE_TIMEOUT = 3300;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    targetUrl = urlParams.get('url');
+
+    if (!targetUrl) {
+        document.getElementById('mainContainer').innerHTML = '<h2>错误</h2><p>缺少 url 参数</p>';
+        throw new Error('Missing url param');
+    }
+
+    // 检查本地存储
+    function checkLocalData() {
+        const saved = localStorage.getItem('xingming');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (parsed && parsed.length > 0) {
+                    names = parsed;
+                    return true;
+                }
+            } catch (e) {
+                console.error('Parse local names error', e);
+            }
+        }
+        return false;
+    }
+
+    // 显示/隐藏加载遮罩
+    function showLoadingOverlay(show) {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            if (show) {
+                loadingOverlay.classList.remove('hidden');
+            } else {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+    }
+
+    // 核心逻辑：只有当 code 和 names 都准备好时，才执行后续流程
+    function tryProceed() {
+        if (isCodeReady && isNamesReady) {
+            showLoadingOverlay(false);
+            
+            localStorage.setItem('xingming', JSON.stringify(names));
+            localStorage.setItem('isNamesLoaded', 'true');
+            
+            const allow = confirm(`允许 ${targetUrl} 获取名单列表吗？\n共 ${names.length} 人`);
+            if (allow) {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    submitNames();
+                } else {
+                    alert('WebSocket 连接未建立，请稍后重试');
+                }
+            } else {
+                document.getElementById('successState').innerHTML = '<p>已取消</p>';
+                document.getElementById('successState').classList.remove('hidden');
+                document.getElementById('inputState').classList.add('hidden');
+            }
+        }
+    }
+
+    // 清除code超时定时器
+    function clearCodeTimeout() {
+        if (codeTimeoutTimer) {
+            clearTimeout(codeTimeoutTimer);
+            codeTimeoutTimer = null;
+        }
+    }
+
+    // 启动code超时定时器
+    function startCodeTimeout() {
+        clearCodeTimeout();
+        codeTimeoutTimer = setTimeout(() => {
+            console.log('获取code超时，重置连接...');
+            wsSafeClose();
+            isConnecting = false;
+            initWebSocket();
+        }, CODE_TIMEOUT);
+    }
+
+    function initWebSocket(reconnectCode = null) {
+        if (isConnecting) {
+            console.log('连接正在进行中，跳过重复初始化');
+            return;
+        }
+
+        if (socket) {
+            console.log('关闭旧连接');
+            wsSafeClose();
+        }
+
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
+
+        isConnecting = true;
+
+        const wsParams = reconnectCode ? { in_reconnect: reconnectCode } : {};
+        if (reconnectCode) {
+            console.log('尝试重连，code:', reconnectCode);
+        }
+
+        socket = new WebSocket(getWsUrl(wsParams));
+        let hasConnected = false;
+
+        socket.onopen = function() {
+            hasConnected = true;
+            console.log('WebSocket连接已打开');
+            isConnecting = false;
+
+            if (reconnectCode) {
+                console.log('等待重连确认...');
+                startCodeTimeout();
+            } else {
+                // 首次连接，立即获取code
+                wsSend({ type: 'get_code' });
+                startCodeTimeout();
+            }
+        };
+
+        socket.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'set_code' && data.code) {
+                    clearCodeTimeout();
+                    code = data.code;
+                    savedCode = data.code;
+                    isCodeReady = true;
+                    
+                    document.getElementById('qrImage').src = `https://api.pwmqr.com/qrcode/create/?url=https://easyclass.zhrhello.top/randamer/upload_names/?code=${code}`;
+                    document.getElementById('qrBox').classList.remove('hidden');
+                    document.getElementById('qrStatus').textContent = '扫码上传可用';
+                    
+                    showLoadingOverlay(false);
+                    tryProceed();
+                } else if (data.type === 'reconnect_success' && data.code) {
+                    clearCodeTimeout();
+                    code = data.code;
+                    savedCode = data.code;
+                    isCodeReady = true;
+                    
+                    document.getElementById('qrImage').src = `https://api.pwmqr.com/qrcode/create/?url=https://easyclass.zhrhello.top/randamer/upload_names/?code=${code}`;
+                    document.getElementById('qrBox').classList.remove('hidden');
+                    document.getElementById('qrStatus').textContent = '扫码上传可用';
+                    
+                    console.log('重连成功，code:', code);
+                    showLoadingOverlay(false);
+                    tryProceed();
+                } else if (data.type === 'reconnect_failed') {
+                    console.log('重连失败，code已过期，原因:', data.reason);
+                    savedCode = '';
+                    code = '';
+                    isCodeReady = false;
+                    wsSend({ type: 'get_code' });
+                } else if (data.type === 'refuse_bcs_no_code_can_give') {
+                    console.log('服务器无可分配的遥控码');
+                    savedCode = '';
+                    code = '';
+                    isCodeReady = false;
+                    document.getElementById('qrStatus').textContent = '服务器繁忙，请稍后重试';
+                    showLoadingOverlay(false);
+                } else if (data.type === 'this_is_list' && data.names) {
+                    names = data.names;
+                    isNamesReady = true;
+                    tryProceed();
+                } else if (data.type === 'token_created' && data.token) {
+                    const finalUrl = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}names_get_token=${data.token}`;
+                    window.location.href = finalUrl;
+                } else if (data.type === 'token_error') {
+                    alert(data.message || '生成 Token 失败');
+                    showLoadingOverlay(false);
+                }
+            } catch (error) {
+                console.error('解析WebSocket消息失败:', error);
+            }
+        };
+
+        socket.onerror = function(error) {
+            console.error('WebSocket错误:', error);
+            clearCodeTimeout();
+        };
+
+        socket.onclose = function(event) {
+            console.log('WebSocket连接已关闭，代码:', event.code);
+            isConnecting = false;
+            clearCodeTimeout();
+
+            if (!hasConnected) {
+                reconnectTimer = setTimeout(() => {
+                    if (savedCode) {
+                        console.log('连接错误后尝试重连，code:', savedCode);
+                        initWebSocket(savedCode);
+                    } else {
+                        initWebSocket();
+                    }
+                }, 3000);
+            } else {
+                reconnectTimer = setTimeout(() => {
+                    if (savedCode) {
+                        console.log('尝试使用保存的code重连:', savedCode);
+                        initWebSocket(savedCode);
+                    } else {
+                        initWebSocket();
+                    }
+                }, 2000);
+            }
+        };
+    }
+
+    function submitNames() {
+        wsSend({ type: 'create_token', names: names });
+    }
+
+    window.onload = () => {
+        // 显示加载遮罩
+        showLoadingOverlay(true);
+        
+        // 初始化 UI 状态
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('inputState').classList.remove('hidden');
+        
+        // 先检查本地是否有数据
+        if (checkLocalData()) {
+            isNamesReady = true;
+            // 如果有本地数据，隐藏输入框提示，直接显示"准备中"或保持界面，等待 WS 连接
+            // 这里为了体验，暂时保留输入框，但逻辑上已经锁定了 names
+            // 如果想更友好，可以禁用 textarea
+            document.getElementById('nameInput').disabled = true;
+            document.getElementById('nameInput').placeholder = "已读取本地名单，等待服务器连接...";
+            document.getElementById('submitLocalBtn').disabled = true;
+            document.getElementById('submitLocalBtn').textContent = "等待连接中...";
+        }
+
+        // 启动 WS 连接
+        initWebSocket();
+    };
+
+    document.getElementById('submitLocalBtn').addEventListener('click', () => {
+        const text = document.getElementById('nameInput').value;
+        const list = text.split('\n').map(n => n.trim()).filter(n => n);
+        if (list.length > 0) {
+            names = list;
+            isNamesReady = true;
+            // 手动输入后，也需要等待 code _ready 才能提交，或者如果 code 已经有了就直接提交
+            tryProceed();
+        } else {
+            alert('请输入至少一个姓名');
+        }
+    });
+</script>
+</body>
+</html>

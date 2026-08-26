@@ -1,0 +1,3095 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>易点名 - 在线随机点名工具</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta name="description" content="易点名是一款免费的在线随机点名工具，支持电脑端和手机端远程控制。适用于课堂点名、抽奖活动、会议随机选人等场景，简单易用，功能强大。">
+    <meta name="keywords" content="随机点名,点名工具,课堂点名,在线点名,抽奖工具,随机选人,教学工具,老师必备">
+    <meta name="author" content="zhrhello.top">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#45f3ff">
+    <link rel="canonical" href="https://easyclass.zhrhello.top/randamer/">
+    
+    <!-- 搜索引擎验证（预留） -->
+    <!-- <meta name="google-site-verification" content="your-verification-code"> -->
+    <!-- <meta name="baidu-site-verification" content="your-verification-code"> -->
+    <style>
+/* 引入需要的字体 */
+@import url('https://fonts-googleapis-com.mirror.zhrhello.top/css2?family=Noto+Sans+SC:wght@100..900&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&display=swap');
+
+/* 重置样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Noto Sans SC", sans-serif;
+    font-optical-sizing: auto;
+}
+
+
+/* 设置页面背景和居中对齐 */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    flex-direction: column;
+    background: #23242a;
+    user-select: none; /* 禁用文本选择 */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    overflow: hidden; /* 禁止页面滚动 */
+    position: fixed; /* 固定页面位置 */
+    width: 100%;
+    height: 100%;
+}
+
+/* 定义点名框的基本样式 */
+.dianmingkuang {
+    position: relative;
+    width: 380px;
+    height: 420px;
+    background: #1c1c1c;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s;
+    background: linear-gradient(135deg, #1c1c1c, #23242a);
+}
+
+/* 加速旋转动画 */
+.dianmingkuang::before {
+    content: '';
+    z-index: 1;
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 380px;
+    height: 420px;
+    transform-origin: bottom right;
+    background: linear-gradient(0deg, transparent, #45f3ff, #45f3ff);
+    animation: donghua 0.1s linear infinite; /* 修改这里，将 0.1667s 改为 0.1s */
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* 定义点名框的背景脉冲动画 */
+.dianmingkuang::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+    animation: maichong 2s infinite;
+}
+
+/* 定义旋转动画 */
+@keyframes donghua {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* 定义脉冲动画 */
+@keyframes maichong {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.1;
+    }
+}
+
+/* 定义内容区域的样式 */
+.neirongquyu {
+    position: absolute;
+    inset: 2px;
+    background: #28292d;
+    padding: 50px 40px;
+    border-radius: 8px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 定义标题样式 */
+h1 {
+    color: #45f3ff;
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: 0.1em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 1.5em;
+}
+
+/* 定义显示姓名的样式 */
+/* 确保姓名显示框的尺寸固定 */
+.xingmingxianshi {
+    color: #45f3ff;
+    font-size: 2em;
+    margin: 20px 0;
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    width: 80%;
+    max-width: 300px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    transition: background 0.3s, box-shadow 0.3s;
+    font-family: "ZCOOL QingKe HuangYou", "Noto Sans SC", sans-serif; /* 添加备用字体 */
+    font-weight: 400;
+    font-style: normal;
+    line-height: 1.2; /* 控制行高，防止字体高度差异影响布局 */
+    word-wrap: break-word; /* 防止长单词导致布局破坏 */
+}
+
+/* 定义姓名显示框的呼吸效果 */
+/* 加速呼吸动画 */
+.xingmingxianshi.huxi {
+    animation: huxi 0.5s ease-in-out infinite; /* 修改这里，将 1s 改为 0.5s */
+}
+
+/* 定义呼吸效果的动画 */
+@keyframes huxi {
+    0%, 100% {
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    50% {
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    }
+}
+
+/* 定义按钮容器的样式 */
+.anniucontaner {
+    position: relative;
+    width: 100%;
+    margin-top: 50px; /* 下移按钮位置 */
+}
+
+/* 定义按钮的基本样式 */
+.anniu {
+    border: none;
+    outline: none;
+    padding: 11px 0;
+    background: #45f3ff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 600;
+    width: 100%;
+    text-align: center;
+    transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(20px); /* 初始状态向下偏移 */
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* 定义按钮的悬停效果 */
+.anniu:hover {
+    background: #35eaff;
+}
+
+/* 定义按钮的按下效果 */
+.anniu:active {
+    background: #25daff;
+    transform: scale(0.95);
+}
+
+/* 定义隐藏按钮的样式 */
+.yincang {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-20px);
+}
+
+/* 定义显示按钮的样式 */
+.chuxian {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-20px); /* 出现时向上移动 */
+}
+
+/* 定义停止动画的效果 */
+.tingzhi::before {
+    animation-play-state: paused;
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* 定义停止时隐藏动画的效果 */
+.yincangdonghua::before {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* 定义快速显示并启动动画的效果 */
+.kuaisuxianshi::before {
+    opacity: 1;
+    visibility: visible;
+    animation-play-state: running;
+    animation-duration: 0.3s;
+}
+
+/* 定义慢速显示并启动动画的效果 */
+.mansuxianshi::before {
+    opacity: 1;
+    visibility: visible;
+    animation-play-state: running;
+    animation-duration: 2s;
+}
+
+/* 定义慢速动画的效果 */
+.mansu::before {
+    animation-duration: 2s;
+    animation-timing-function: ease-out;
+}
+
+/* 定义二维码显示框的样式 */
+.erweimacontaner {
+    position: fixed;
+    bottom: 50px; /* 调整底部距离，避免与版权信息重叠 */
+    right: 20px;
+    background: #1c1c1c;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    overflow: visible;
+}
+
+.erweimacontaner img {
+    width: 150px;
+    height: 150px;
+    border-radius: 8px;
+}
+
+.erweimacontaner p {
+    color: #45f3ff;
+    font-size: 1em;
+    text-align: center;
+    margin-top: 10px;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.erweimacontaner .yuanchengma {
+    color: #45f3ff;
+    font-size: 1em;
+    text-align: center;
+    margin-top: 10px;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    transition: opacity 0.3s ease, color 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    position: relative;
+}
+
+.erweimacontaner .yuanchengma:hover {
+    color: #35eaff;
+    text-shadow: 0 0 8px rgba(69, 243, 255, 0.6);
+}
+
+.erweimacontaner .yuanchengma:active {
+    transform: scale(0.98);
+}
+
+/* 点击刷新提示文字 */
+.erweimacontaner .yuanchengma::after {
+    content: '点击刷新';
+    position: absolute;
+    right: -70px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75em;
+    color: #8f8f8f;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.erweimacontaner .yuanchengma:hover::after {
+    opacity: 1;
+}
+
+/* code刷新动画 - 淡出 */
+.yuanchengma.code-refresh-fadeout {
+    opacity: 0;
+}
+
+/* code刷新动画 - 旋转中 */
+.yuanchengma.code-refresh-spinning {
+    opacity: 1;
+    color: #45f3ff;
+    animation: code-refresh-spin 0.5s linear infinite;
+}
+
+/* code刷新动画 - 新code显示，黄色闪烁 */
+.yuanchengma.code-refresh-flash {
+    color: #ffd700;
+    animation: code-refresh-yellow-flash 0.6s ease-in-out 2;
+}
+
+@keyframes code-refresh-spin {
+    0% {
+        transform: rotateY(0deg);
+    }
+    100% {
+        transform: rotateY(360deg);
+    }
+}
+
+@keyframes code-refresh-yellow-flash {
+    0%, 100% {
+        color: #ffd700;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    50% {
+        color: #ff8c00;
+        text-shadow: 0 0 20px rgba(255, 140, 0, 0.8);
+    }
+}
+
+/* 隐藏二维码区域的样式 */
+.erweimacontaner.hidden {
+    display: none;
+}
+
+/* 二维码框水波纹动画效果 */
+.erweimacontaner.ripple-effect {
+    animation: ripple-pulse 2s ease-in-out infinite;
+    border: 2px solid #45f3ff;
+}
+
+.erweimacontaner.ripple-effect::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    border: 2px solid #45f3ff;
+    transform: translate(-50%, -50%);
+    animation: ripple-wave 2s ease-out infinite;
+    pointer-events: none;
+}
+
+.erweimacontaner.ripple-effect::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    border: 2px solid #45f3ff;
+    transform: translate(-50%, -50%);
+    animation: ripple-wave 2s ease-out infinite;
+    animation-delay: 1s;
+    pointer-events: none;
+}
+
+@keyframes ripple-pulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(69, 243, 255, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(69, 243, 255, 0.8), 0 0 50px rgba(69, 243, 255, 0.4);
+    }
+}
+
+@keyframes ripple-wave {
+    0% {
+        width: 100%;
+        height: 100%;
+        opacity: 1;
+    }
+    100% {
+        width: 180%;
+        height: 180%;
+        opacity: 0;
+    }
+}
+
+/* 定义翻页笔开关的样式 */
+.fanyebeikaiguan {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin-top: 20px; /* 调整与上方按钮的距离 */
+}
+
+/* 隐藏默认的复选框 */
+.fanyebeikaiguan input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* 创建滑块 */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+/* 当复选框被选中时，滑块向右移动 */
+input:checked + .slider {
+    background-color: #45f3ff;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* 圆角滑块 */
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* 定义开关文本的样式 */
+#fanyebeikaiguan-text {
+    color: #45f3ff;
+    font-size: 1.2em;
+    text-align: center;
+    margin-left: 10px;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+
+
+/* 定义设置按钮和设置框的样式 */
+.settings-container {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.settings-button {
+    border: none;
+    outline: none;
+    padding: 10px;
+    background: #45f3ff;
+    cursor: pointer;
+    border-radius: 50%;
+    font-size: 16px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.settings-button:hover {
+    background: #35eaff;
+    transform: scale(1.1);
+}
+
+/* 在此设备输入名单按钮容器 */
+.input-name-list-container {
+    position: absolute;
+    bottom: 20px;
+    left: 70px;
+    z-index: 1000;
+}
+
+.input-name-list-button {
+    border: none;
+    outline: none;
+    padding: 10px;
+    background: #45f3ff;
+    cursor: pointer;
+    border-radius: 50%;
+    font-size: 16px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s, transform 0.3s, opacity 0.3s, visibility 0.3s;
+    opacity: 1;
+    visibility: visible;
+}
+
+.input-name-list-button:hover {
+    background: #35eaff;
+    transform: scale(1.1);
+}
+
+.input-name-list-button.yincang {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: scale(0.8);
+}
+
+/* 名单编辑按钮水波纹效果 */
+.input-name-list-button.ripple-effect {
+    animation: ripple-pulse 2s ease-in-out infinite;
+    border: 2px solid #45f3ff;
+}
+
+.input-name-list-button.ripple-effect::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #45f3ff;
+    transform: translate(-50%, -50%);
+    animation: ripple-wave 2s ease-out infinite;
+    pointer-events: none;
+}
+
+.input-name-list-button.ripple-effect::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #45f3ff;
+    transform: translate(-50%, -50%);
+    animation: ripple-wave 2s ease-out infinite;
+    animation-delay: 1s;
+    pointer-events: none;
+}
+
+/* 聊天气泡提示样式 */
+.tooltip-bubble {
+    position: absolute;
+    background: #45f3ff;
+    color: #23242a;
+    padding: 12px 18px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    white-space: nowrap;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+    transform: translateY(0);
+    z-index: 1001;
+    pointer-events: none;
+    box-shadow: 0 4px 15px rgba(69, 243, 255, 0.4);
+    font-weight: 600;
+}
+
+.tooltip-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: #45f3ff transparent transparent transparent;
+}
+
+/* 二维码框的提示气泡 */
+.erweimacontaner .tooltip-bubble {
+    top: -55px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 名单编辑按钮的提示气泡 */
+.input-name-list-container .tooltip-bubble {
+    top: -55px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 设置模态框 */
+.settings-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.settings-modal.show {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
+.settings-modal.hiding {
+    opacity: 0;
+    visibility: hidden;
+}
+
+@keyframes fadeIn {
+    from { background-color: rgba(0,0,0,0); }
+    to { background-color: rgba(0,0,0,0.4); }
+}
+
+@keyframes fadeOut {
+    from { background-color: rgba(0,0,0,0.4); }
+    to { background-color: rgba(0,0,0,0); }
+}
+
+.settings-content {
+    background-color: #1c1c1c;
+    margin: 15% auto;
+    padding: 25px;
+    border: 2px solid #666;
+    width: 90%;
+    max-width: 450px;
+    border-radius: 16px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.3s;
+    position: relative;
+    z-index: 2001;
+}
+
+.settings-content h3 {
+    color: #45f3ff;
+    text-align: center;
+    margin-bottom: 20px;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+}
+
+.setting-item {
+    margin-bottom: 20px;
+}
+
+.setting-item label {
+    display: block;
+    color: #45f3ff;
+    margin-bottom: 5px;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+}
+
+.setting-item input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #45f3ff;
+    border-radius: 4px;
+    background: #1c1c1c;
+    color: #45f3ff;
+    font-size: 16px;
+}
+
+/* 滑块样式 */
+.slider-input {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: #1c1c1c;
+    outline: none;
+    margin: 10px 0;
+    background: linear-gradient(to right, #45f3ff 0%, #45f3ff 25%, #1c1c1c 25%, #1c1c1c 100%);
+    transition: background 0.3s;
+}
+
+.slider-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #45f3ff;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.slider-input::-webkit-slider-thumb:hover {
+    background: #35eaff;
+    transform: scale(1.2);
+}
+
+.slider-input::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #45f3ff;
+    cursor: pointer;
+    border: none;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.slider-input::-moz-range-thumb:hover {
+    background: #35eaff;
+    transform: scale(1.2);
+}
+
+.slider-info {
+    display: flex;
+    justify-content: space-between;
+    color: #45f3ff;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+/* 本地保存开关样式 */
+.local-storage-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #45f3ff;
+    margin-bottom: 5px;
+}
+
+.local-storage-label span {
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.local-storage-desc {
+    color: #8f8f8f;
+    font-size: 0.85em;
+    margin-top: 5px;
+    font-family: "Noto Sans SC", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+#save-settings, #close-settings {
+    border: none;
+    outline: none;
+    padding: 10px 20px;
+    margin: 10px 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+#save-settings {
+    background: #45f3ff;
+    color: #1c1c1c;
+}
+
+#save-settings:hover {
+    background: #35eaff;
+}
+
+#close-settings {
+    background: #666;
+    color: white;
+}
+
+#close-settings:hover {
+    background: #555;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+@keyframes slideIn {
+    from {transform: translateY(-50px); opacity: 0;}
+    to {transform: translateY(0); opacity: 1;}
+}
+
+@keyframes slideOut {
+    from {transform: translateY(0); opacity: 1;}
+    to {transform: translateY(50px); opacity: 0;}
+}
+
+
+
+/* 定义淡出效果 */
+.fade-out {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* 定义淡入效果 */
+.fade-in {
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* 定义连接状态显示的样式 */
+.connection-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(28, 28, 28, 0.9);
+    border-radius: 8px;
+    z-index: 1000;
+}
+
+.status-text {
+    color: #45f3ff;
+    font-size: 0.9em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.status-text.disconnected {
+    color: #ff6b6b;
+}
+
+/* 定义左侧保护池面板的样式 */
+.protection-pool-panel {
+    position: fixed;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 200px;
+    background: rgba(28, 28, 28, 0.95);
+    border-radius: 12px;
+    padding: 20px;
+    z-index: 1000;
+    pointer-events: none;
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.protection-pool-panel h3 {
+    color: #45f3ff;
+    font-size: 1.1em;
+    text-align: center;
+    margin-bottom: 15px;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    border-bottom: 1px solid rgba(69, 243, 255, 0.3);
+    padding-bottom: 10px;
+}
+
+.protection-pool-list {
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    pointer-events: auto;
+}
+
+.protection-pool-item {
+    background: rgba(69, 243, 255, 0.1);
+    color: #45f3ff;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 0.95em;
+    text-align: center;
+    font-family: "ZCOOL QingKe HuangYou", "Noto Sans SC", sans-serif;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    border: 1px solid rgba(69, 243, 255, 0.2);
+    animation: fadeInItem 0.3s ease-in;
+    pointer-events: auto;
+    flex-shrink: 0;
+}
+
+.protection-pool-item.removing {
+    animation: fadeOutItem 0.3s ease-out forwards;
+}
+
+.protection-pool-empty {
+    color: rgba(69, 243, 255, 0.5);
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+}
+
+.protection-pool-count {
+    text-align: center;
+    color: rgba(69, 243, 255, 0.7);
+    font-size: 0.85em;
+    margin-top: 10px;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+}
+
+@keyframes fadeInItem {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOutItem {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+}
+
+/* 自定义滚动条 */
+.protection-pool-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.protection-pool-list::-webkit-scrollbar-track {
+    background: rgba(28, 28, 28, 0.5);
+    border-radius: 3px;
+}
+
+.protection-pool-list::-webkit-scrollbar-thumb {
+    background: rgba(69, 243, 255, 0.3);
+    border-radius: 3px;
+}
+
+.protection-pool-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(69, 243, 255, 0.5);
+}
+
+/* 定义全屏遮罩的样式 */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1c1c1c 0%, #23242a 50%, #1c1c1c 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+.loading-text {
+    color: #45f3ff;
+    font-size: 1.5em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
+    text-align: center;
+    letter-spacing: 0.1em;
+    animation: text-pulse 1.5s ease-in-out infinite;
+    text-shadow: 0 0 10px rgba(69, 243, 255, 0.5), 0 0 20px rgba(69, 243, 255, 0.3);
+}
+
+@keyframes text-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+/* 炫酷的加载动画 - 多层旋转圆环 */
+.loading-spinner {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.loading-spinner::before,
+.loading-spinner::after,
+.loading-spinner-inner {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    border: 4px solid transparent;
+}
+
+.loading-spinner::before {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-top-color: #45f3ff;
+    border-right-color: #45f3ff;
+    animation: spin-fast 0.8s linear infinite;
+    box-shadow: 0 0 20px rgba(69, 243, 255, 0.3);
+}
+
+.loading-spinner::after {
+    top: 15px;
+    left: 15px;
+    width: calc(100% - 30px);
+    height: calc(100% - 30px);
+    border-bottom-color: #35eaff;
+    border-left-color: #35eaff;
+    animation: spin-fast-reverse 1.2s linear infinite;
+}
+
+.loading-spinner-inner {
+    top: 30px;
+    left: 30px;
+    width: calc(100% - 60px);
+    height: calc(100% - 60px);
+    border-top-color: #25daff;
+    border-right-color: #25daff;
+    animation: spin-fast 0.6s linear infinite;
+}
+
+/* 中心发光点 */
+.loading-spinner-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, #45f3ff 0%, transparent 70%);
+    border-radius: 50%;
+    animation: center-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes spin-fast {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes spin-fast-reverse {
+    0% {
+        transform: rotate(360deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes center-pulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.3);
+        opacity: 0.7;
+    }
+}
+
+/* 定义版权信息的样式 */
+footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+    background: #1c1c1c;
+    color: #45f3ff;
+    font-size: 0.9em;
+}
+
+/* 通用弹窗样式 */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    z-index: 3000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.show {
+    display: flex;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+.modal-overlay.hiding {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+.prompt-panel {
+    background: #1c1c1c;
+    border: 2px solid #666;
+    border-radius: 16px;
+    padding: 25px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    animation: slideIn 0.3s;
+}
+
+.modal-overlay.hiding .prompt-panel {
+    animation: slideOut 0.3s ease-out forwards;
+}
+
+.prompt-title {
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    color: #45f3ff;
+    font-size: 22px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.prompt-text {
+    color: #ddd;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.btn-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+    font-family: "Noto Sans SC", sans-serif;
+}
+
+.btn-confirm {
+    background: rgba(69, 243, 255, 0.2);
+    color: #45f3ff;
+    border: 1px solid rgba(69, 243, 255, 0.4);
+}
+
+.btn-confirm:hover {
+    background: rgba(69, 243, 255, 0.3);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ccc;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+@keyframes fadeIn {
+    from { background-color: rgba(0,0,0,0); }
+    to { background-color: rgba(0,0,0,0.85); }
+}
+
+@keyframes fadeOut {
+    from { background-color: rgba(0,0,0,0.85); }
+    to { background-color: rgba(0,0,0,0); }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(50px); opacity: 0; }
+}
+
+/* 名单选择弹窗样式 */
+.name-select-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.name-select-modal.show {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
+.name-select-modal.hiding {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.name-select-content {
+    background-color: #1c1c1c;
+    margin: 10% auto;
+    padding: 30px;
+    border: 2px solid #666;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 16px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.3s;
+    position: relative;
+    z-index: 2001;
+}
+
+.name-select-content h3 {
+    color: #45f3ff;
+    text-align: center;
+    margin-bottom: 10px;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-size: 1.4em;
+}
+
+.name-select-content p {
+    color: #8f8f8f;
+    font-size: 0.9em;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.name-select-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.name-select-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: rgba(69, 243, 255, 0.05);
+    border: 2px solid rgba(69, 243, 255, 0.2);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.name-select-option:hover {
+    background: rgba(69, 243, 255, 0.1);
+    border-color: rgba(69, 243, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(69, 243, 255, 0.2);
+}
+
+.name-select-option:active {
+    transform: translateY(0);
+}
+
+.option-icon {
+    color: #45f3ff;
+    margin-bottom: 10px;
+}
+
+.option-text {
+    color: #45f3ff;
+    font-size: 1.1em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
+    margin-bottom: 5px;
+}
+
+.option-desc {
+    color: #8f8f8f;
+    font-size: 0.85em;
+}
+
+/* 放大版二维码弹窗样式 */
+.qr-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.qr-modal.show {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
+.qr-modal.hiding {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.qr-content {
+    background-color: #1c1c1c;
+    margin: 10% auto;
+    padding: 30px;
+    border: 2px solid #666;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 16px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.3s;
+    position: relative;
+    z-index: 2001;
+    text-align: center;
+}
+
+.qr-content h3 {
+    color: #45f3ff;
+    text-align: center;
+    margin-bottom: 10px;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-size: 1.4em;
+}
+
+.qr-content p {
+    color: #8f8f8f;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.qr-code-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 25px;
+    background: rgba(69, 243, 255, 0.05);
+    border: 2px solid rgba(69, 243, 255, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.qr-code-container img {
+    width: 280px;
+    height: 280px;
+    border-radius: 8px;
+}
+
+.qr-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.qr-buttons button {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+}
+
+.qr-buttons button:hover {
+    transform: scale(1.02);
+}
+
+.qr-buttons button:active {
+    transform: scale(0.98);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 编辑名单弹窗样式 */
+.edit-names-panel {
+    background: #1c1c1c;
+    border: 2px solid #666;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    animation: slideIn 0.3s ease;
+}
+
+.modal-overlay.hiding .edit-names-panel {
+    animation: slideOut 0.3s ease-out forwards;
+}
+
+/* 顶层弹窗样式：批量添加应显示在编辑名单弹窗之上 */
+.modal-overlay.top-layer {
+    z-index: 3100;
+}
+
+/* 最顶层弹窗样式：提示/确认弹窗应始终显示在所有弹窗之上 */
+.modal-overlay.top-most {
+    z-index: 3200;
+}
+
+.edit-names-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid rgba(69, 243, 255, 0.2);
+}
+
+.name-textarea {
+    width: 100%;
+    height: 200px;
+    min-height: 200px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(69, 243, 255, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    color: #45f3ff;
+    font-size: 16px;
+    font-family: "Noto Sans SC", sans-serif;
+    resize: none;
+    outline: none;
+}
+
+.name-textarea:focus {
+    border-color: #45f3ff;
+    box-shadow: 0 0 10px rgba(69, 243, 255, 0.2);
+}
+
+.name-textarea::placeholder {
+    color: #8f8f8f;
+}
+
+.edit-names-title {
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    color: #45f3ff;
+    font-size: 24px;
+    margin: 0;
+}
+
+.edit-names-close {
+    background: none;
+    border: none;
+    color: #8f8f8f;
+    font-size: 28px;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.edit-names-close:hover {
+    color: #45f3ff;
+    background: rgba(69, 243, 255, 0.1);
+}
+
+.edit-names-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    min-height: 300px;
+    max-height: calc(85vh - 180px);
+}
+
+.edit-names-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    width: 100%;
+}
+
+.edit-name-card {
+    background: linear-gradient(135deg, #1c1c1c, #2a2b33);
+    border: 1px solid rgba(69, 243, 255, 0.15);
+    border-radius: 12px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    overflow: hidden;
+    min-width: 90px;
+    min-height: 90px;
+}
+
+.edit-name-card:hover {
+    border-color: rgba(69, 243, 255, 0.4);
+    box-shadow: 0 0 15px rgba(69, 243, 255, 0.2);
+}
+
+.edit-name-card.selected {
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
+    animation: selected-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes selected-glow {
+    from {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    }
+    to {
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+    }
+}
+
+.edit-name-card.selected .edit-name-display {
+    color: #ffd700;
+}
+
+.edit-name-card.selected .edit-name-edit-btn,
+.edit-name-card.selected .edit-name-delete-btn {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.edit-name-card-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px dashed rgba(69, 243, 255, 0.4);
+    border-radius: 8px;
+    padding: 10px;
+    color: #45f3ff;
+    font-size: 16px;
+    width: 100%;
+    text-align: center;
+    resize: none;
+    font-family: "Noto Sans SC", sans-serif;
+    height: 60px;
+    margin-bottom: 8px;
+}
+
+.edit-name-card-input:focus {
+    outline: none;
+    border-color: #45f3ff;
+    box-shadow: 0 0 10px rgba(69, 243, 255, 0.2);
+}
+
+.edit-name-card-input::placeholder {
+    color: #8f8f8f;
+}
+
+.edit-name-input-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.edit-name-confirm-btn,
+.edit-name-cancel-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-family: "Noto Sans SC", sans-serif;
+}
+
+.edit-name-confirm-btn {
+    background: linear-gradient(135deg, rgba(69, 243, 255, 0.2), rgba(69, 243, 255, 0.1));
+    color: #45f3ff;
+    border: 1px solid rgba(69, 243, 255, 0.4);
+}
+
+.edit-name-confirm-btn:hover {
+    background: linear-gradient(135deg, rgba(69, 243, 255, 0.3), rgba(69, 243, 255, 0.2));
+    box-shadow: 0 0 15px rgba(69, 243, 255, 0.3);
+}
+
+.edit-name-cancel-btn {
+    background: rgba(255, 255, 255, 0.05);
+    color: #8f8f8f;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.edit-name-cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #45f3ff;
+}
+
+.edit-name-display {
+    color: #45f3ff;
+    padding: 2px;
+    border-radius: 6px;
+    font-size: clamp(13px, 1.5vw, 16px);
+    font-weight: 800;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+    line-height: 1.3;
+}
+
+.edit-name-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.edit-name-edit-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 215, 0, 0.15);
+    border: 2px solid rgba(255, 215, 0, 0.5);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #ffd700;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.edit-name-edit-btn:hover {
+    background: rgba(255, 215, 0, 0.3);
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.edit-name-edit-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+
+.edit-name-delete-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 107, 107, 0.15);
+    border: 2px solid rgba(255, 107, 107, 0.5);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #ff6b6b;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.edit-name-delete-btn:hover {
+    background: rgba(255, 107, 107, 0.3);
+    border-color: #ff6b6b;
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.4);
+}
+
+.edit-name-delete-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+
+.edit-names-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    border-top: 1px solid rgba(69, 243, 255, 0.2);
+}
+
+.edit-names-footer-left {
+    display: flex;
+    gap: 10px;
+}
+
+.edit-names-footer-right {
+    display: flex;
+    gap: 12px;
+}
+
+/* 名单更改标签样式 */
+.name-change-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 15px 0;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.name-change-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.name-change-tag.add {
+    background: rgba(76, 175, 80, 0.2);
+    border: 1px solid rgba(76, 175, 80, 0.5);
+    color: #4caf50;
+}
+
+.name-change-tag.remove {
+    background: rgba(244, 67, 54, 0.2);
+    border: 1px solid rgba(244, 67, 54, 0.5);
+    color: #f44336;
+}
+
+.name-change-tag .icon {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.name-change-tag .name {
+    white-space: nowrap;
+}
+
+.action-btn-inline {
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(135deg, rgba(69, 243, 255, 0.1), rgba(69, 243, 255, 0.05));
+    border: 1px solid rgba(69, 243, 255, 0.3);
+    border-radius: 8px;
+    color: #45f3ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: "Noto Sans SC", sans-serif;
+    font-size: 14px;
+}
+
+.action-btn-inline svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+    transition: transform 0.3s;
+}
+
+.action-btn-inline:hover {
+    background: linear-gradient(135deg, rgba(69, 243, 255, 0.2), rgba(69, 243, 255, 0.1));
+    border-color: rgba(69, 243, 255, 0.5);
+    box-shadow: 0 0 15px rgba(69, 243, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+    .edit-names-cards-container {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 5px;
+    }
+    .edit-name-card {
+        min-width: 70px;
+        min-height: 70px;
+        padding: 10px 6px;
+    }
+    .edit-name-display {
+        font-size: clamp(12px, 1.4vw, 14px);
+        line-height: 1.2;
+    }
+    .edit-name-actions {
+        gap: 4px;
+        margin-top: 6px;
+    }
+    .edit-name-edit-btn,
+    .edit-name-delete-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+    .edit-name-edit-btn svg,
+    .edit-name-delete-btn svg {
+        width: 12px;
+        height: 12px;
+    }
+    .edit-names-footer {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .edit-names-footer-left,
+    .edit-names-footer-right {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+    </style>
+    <style>
+.hidden {
+    display: none !important;
+}
+
+/* 保存到云名单弹窗样式 */
+.save-cloud-option {
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.save-cloud-option:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+}
+.save-cloud-option-new.selected {
+    border-color: rgba(69, 243, 255, 0.8);
+    background: rgba(69, 243, 255, 0.08);
+    box-shadow: 0 0 15px rgba(69, 243, 255, 0.2);
+}
+.save-cloud-option-overwrite.selected {
+    border-color: rgba(255, 215, 0, 0.8);
+    background: rgba(255, 215, 0, 0.08);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+}
+.save-cloud-option-title {
+    color: #45f3ff;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+.save-cloud-option-overwrite .save-cloud-option-title {
+    color: #ffd700;
+}
+.save-cloud-option-desc {
+    color: #8f8f8f;
+    font-size: 0.85em;
+}
+.save-cloud-input {
+    width: 100%;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(69, 243, 255, 0.3);
+    border-radius: 8px;
+    color: #45f3ff;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s;
+}
+.save-cloud-input:focus {
+    border-color: rgba(69, 243, 255, 0.6);
+    box-shadow: 0 0 10px rgba(69, 243, 255, 0.15);
+}
+.save-cloud-input::placeholder {
+    color: #8f8f8f;
+}
+.save-cloud-list-item {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.save-cloud-list-item:hover {
+    border-color: rgba(255, 215, 0, 0.5);
+    background: rgba(255, 255, 255, 0.06);
+}
+.save-cloud-list-item.selected {
+    border-color: rgba(255, 215, 0, 0.8);
+    background: rgba(255, 215, 0, 0.08);
+}
+.save-cloud-list-name {
+    color: #ffd700;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.save-cloud-list-info {
+    color: #8f8f8f;
+    font-size: 0.85em;
+}
+
+/* 用户头像样式 */
+.user-avatar-container {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    z-index: 1500;
+    cursor: pointer;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(28, 28, 28, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.user-avatar:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.user-avatar:active {
+    transform: scale(0.95);
+}
+
+.user-avatar svg {
+    width: 24px;
+    height: 24px;
+    fill: rgba(255, 255, 255, 0.7);
+    transition: fill 0.3s ease;
+}
+
+.user-avatar:hover svg {
+    fill: rgba(255, 255, 255, 0.9);
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.user-avatar.logged-in {
+    padding: 0;
+}
+
+.user-avatar-tooltip {
+    position: absolute;
+    left: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(28, 28, 28, 0.95);
+    color: #45f3ff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    border: 1px solid rgba(69, 243, 255, 0.3);
+    pointer-events: none;
+}
+
+.user-avatar-container:hover .user-avatar-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%) translateX(5px);
+}
+
+/* 用户信息弹窗样式 */
+.user-info-modal {
+    display: none;
+    position: fixed;
+    z-index: 2500;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.user-info-modal.show {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    visibility: visible;
+}
+
+.user-info-modal.hiding {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.user-info-content {
+    background-color: #1c1c1c;
+    padding: 30px;
+    border: 2px solid #666;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 16px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.3s;
+    position: relative;
+    z-index: 2501;
+}
+
+.user-info-modal.hiding .user-info-content {
+    animation: slideOut 0.3s ease-out forwards;
+}
+
+.user-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(69, 243, 255, 0.2);
+}
+
+.user-info-header h3 {
+    color: #45f3ff;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-size: 1.4em;
+    margin: 0;
+}
+
+.user-info-close {
+    background: none;
+    border: none;
+    color: #8f8f8f;
+    font-size: 28px;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.user-info-close:hover {
+    color: #45f3ff;
+    background: rgba(69, 243, 255, 0.1);
+}
+
+.user-info-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-info-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(69, 243, 255, 0.1);
+    border: 2px solid rgba(69, 243, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.user-info-avatar svg {
+    width: 48px;
+    height: 48px;
+    fill: #45f3ff;
+}
+
+.user-info-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.user-info-details {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.user-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(69, 243, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(69, 243, 255, 0.15);
+}
+
+.user-info-label {
+    color: #8f8f8f;
+    font-size: 0.9em;
+    font-family: "Noto Sans SC", sans-serif;
+}
+
+.user-info-value {
+    color: #45f3ff;
+    font-size: 0.95em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    text-align: right;
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-info-footer {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+}
+
+.user-logout-btn {
+    padding: 12px 40px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    background: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 107, 107, 0.4);
+}
+
+.user-logout-btn:hover {
+    background: rgba(255, 107, 107, 0.3);
+    box-shadow: 0 0 15px rgba(255, 107, 107, 0.3);
+    transform: scale(1.02);
+}
+
+.user-logout-btn:active {
+    transform: scale(0.98);
+}
+
+.login-btn {
+    padding: 12px 40px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.4);
+}
+
+.login-btn:hover {
+    background: rgba(76, 175, 80, 0.3);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+    transform: scale(1.02);
+}
+
+.login-btn:active {
+    transform: scale(0.98);
+}
+
+/* 云名单选择面板样式 */
+.cloud-list-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.cloud-list-modal.show {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
+.cloud-list-modal.hiding {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.cloud-list-content {
+    background-color: #1c1c1c;
+    margin: 5% auto;
+    padding: 0;
+    border: 2px solid #666;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 16px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.3s;
+    position: relative;
+    z-index: 2001;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.cloud-list-modal.hiding .cloud-list-content {
+    animation: slideOut 0.3s ease-out forwards;
+}
+
+.cloud-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid rgba(69, 243, 255, 0.2);
+}
+
+.cloud-list-header h3 {
+    color: #45f3ff;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-size: 1.4em;
+    margin: 0;
+}
+
+.cloud-list-close {
+    background: none;
+    border: none;
+    color: #8f8f8f;
+    font-size: 28px;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.cloud-list-close:hover {
+    color: #45f3ff;
+    background: rgba(69, 243, 255, 0.1);
+}
+
+.cloud-list-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 25px;
+    min-height: 200px;
+    max-height: calc(85vh - 100px);
+}
+
+.cloud-list-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.cloud-list-item {
+    background: rgba(69, 243, 255, 0.05);
+    border: 2px solid rgba(69, 243, 255, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cloud-list-item:hover {
+    background: rgba(69, 243, 255, 0.1);
+    border-color: rgba(69, 243, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(69, 243, 255, 0.2);
+}
+
+.cloud-list-item:active {
+    transform: translateY(0);
+}
+
+.cloud-list-item.loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.cloud-list-name {
+    color: #45f3ff;
+    font-size: 1.1em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cloud-list-info {
+    color: #8f8f8f;
+    font-size: 0.9em;
+    margin-bottom: 15px;
+}
+
+.cloud-list-info span {
+    margin-right: 15px;
+}
+
+.cloud-list-select-btn {
+    background: rgba(69, 243, 255, 0.2);
+    color: #45f3ff;
+    border: 1px solid rgba(69, 243, 255, 0.4);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+    font-family: "Noto Sans SC", sans-serif;
+}
+
+.cloud-list-select-btn:hover {
+    background: rgba(69, 243, 255, 0.3);
+    border-color: rgba(69, 243, 255, 0.6);
+}
+
+.cloud-list-select-btn:disabled {
+    background: rgba(102, 102, 102, 0.2);
+    color: #666;
+    border-color: rgba(102, 102, 102, 0.4);
+    cursor: not-allowed;
+}
+
+.cloud-list-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8f8f8f;
+}
+
+.cloud-list-empty svg {
+    fill: rgba(143, 143, 143, 0.3);
+    margin-bottom: 20px;
+}
+
+.cloud-list-empty p {
+    font-size: 1.2em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    margin-bottom: 10px;
+    color: #666;
+}
+
+.cloud-list-empty span {
+    font-size: 0.9em;
+}
+
+/* 用户信息弹窗中的云名单导入区域样式 */
+.cloud-list-section-user {
+    width: 100%;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(69, 243, 255, 0.2);
+}
+
+.cloud-list-title-user {
+    color: #45f3ff;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.cloud-list-container-user {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+.cloud-list-item-user {
+    background: rgba(69, 243, 255, 0.05);
+    border: 2px solid rgba(69, 243, 255, 0.2);
+    border-radius: 8px;
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cloud-list-item-user:hover {
+    background: rgba(69, 243, 255, 0.1);
+    border-color: rgba(69, 243, 255, 0.4);
+    transform: translateX(3px);
+}
+
+.cloud-list-item-user:active {
+    transform: translateX(0);
+}
+
+.cloud-list-item-user.loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.cloud-list-item-user .cloud-list-name-user {
+    color: #45f3ff;
+    font-size: 1em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.cloud-list-item-user .cloud-list-info-user {
+    color: #8f8f8f;
+    font-size: 0.85em;
+    margin-right: 12px;
+}
+
+.cloud-list-select-btn-user {
+    background: rgba(69, 243, 255, 0.2);
+    color: #45f3ff;
+    border: 1px solid rgba(69, 243, 255, 0.4);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: "Noto Sans SC", sans-serif;
+}
+
+.cloud-list-select-btn-user:hover {
+    background: rgba(69, 243, 255, 0.3);
+    border-color: rgba(69, 243, 255, 0.6);
+}
+
+.cloud-list-select-btn-user:disabled {
+    background: rgba(102, 102, 102, 0.2);
+    color: #666;
+    border-color: rgba(102, 102, 102, 0.4);
+    cursor: not-allowed;
+}
+
+.cloud-list-empty-user {
+    text-align: center;
+    padding: 30px 20px;
+    color: #8f8f8f;
+}
+
+.cloud-list-empty-user svg {
+    fill: rgba(143, 143, 143, 0.3);
+    margin-bottom: 10px;
+}
+
+.cloud-list-empty-user p {
+    font-size: 1em;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    margin-bottom: 8px;
+    color: #666;
+}
+
+.cloud-list-empty-user span {
+    font-size: 0.85em;
+}
+
+    </style>
+</head>
+
+<body>
+<!-- 结构化数据 - Schema.org -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "易点名",
+  "description": "易点名是一款免费的在线随机点名工具，支持电脑端和手机端远程控制。适用于课堂点名、抽奖活动、会议随机选人等场景。",
+  "url": "https://easyclass.zhrhello.top/randamer/",
+  "applicationCategory": "EducationApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "zhrhello.top",
+    "url": "https://zhrhello.top"
+  },
+  "inLanguage": "zh-CN",
+  "featureList": [
+    "随机点名",
+    "手机远程控制",
+    "防重复保护池",
+    "翻页笔支持",
+    "本地数据保存"
+  ]
+}
+</script>
+
+<!-- 全屏遮罩 - 获取代号时显示 -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="loading-spinner">
+            <div class="loading-spinner-inner"></div>
+            <div class="loading-spinner-center"></div>
+        </div>
+        <p class="loading-text">正在获取唯一代号...</p>
+    </div>
+</div>
+
+<!-- 设置按钮和设置框 -->
+<div class="settings-container">
+    <button id="settings-button" class="settings-button"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/></svg></button>
+    <div id="settings-modal" class="settings-modal">
+        <div class="settings-content">
+            <h3>设置</h3>
+            <div class="setting-item">
+                <label for="protection-pool-size">不重复保护池数量: <span id="pool-size-value">5</span></label>
+                <input type="range" id="protection-pool-size" min="1" max="20" step="0.01" value="5" class="slider-input">
+                <div class="slider-info">
+                    <span>1</span>
+                    <span id="total-count">20</span>
+                </div>
+            </div>
+            <div class="setting-item">
+                <label class="local-storage-label">
+                    <span>本地保存数据</span>
+                    <label class="fanyebeikaiguan" style="margin-top: 0; margin-left: 10px;">
+                        <input type="checkbox" id="local-storage-checkbox" checked />
+                        <span class="slider round"></span>
+                    </label>
+                </label>
+                <p class="local-storage-desc">开启后名单和设置将保存在浏览器本地</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 在此设备输入名单按钮 -->
+<div class="input-name-list-container">
+    <div class="tooltip-bubble">点我也能输入名单</div>
+    <button id="inputNameListBtn" class="input-name-list-button"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04Z"/></svg></button>
+</div>
+
+    <!-- 用户头像 -->
+    <div class="user-avatar-container" id="userAvatarContainer">
+        <div class="user-avatar" id="userAvatar">
+            <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+        </div>
+        <div class="user-avatar-tooltip">点击查看用户信息</div>
+    </div>
+
+    <!-- 连接状态显示 -->
+    <div class="connection-status" id="connectionStatus">
+        <span class="status-text" id="statusText">服务器连接正常</span>
+    </div>
+
+    <!-- 左侧防重复保护池面板 -->
+    <div class="protection-pool-panel" id="protectionPoolPanel">
+        <h3>防重复保护池</h3>
+        <div class="protection-pool-list" id="protectionPoolList">
+            <div class="protection-pool-empty">暂无已点名单</div>
+        </div>
+        <div class="protection-pool-count" id="protectionPoolCount">0 / 5</div>
+    </div>
+
+    <!-- 点名框的 HTML 结构 -->
+<main class="dianmingkuang" role="main" aria-label="随机点名主区域">
+    <section class="neirongquyu">
+        <h1>随机点名</h1>
+        <div class="xingmingxianshi" id="xingmingxianshi" role="status" aria-live="polite" aria-atomic="true">就很随机</div>
+        <div class="anniucontaner">
+            <button class="anniu chuxian" id="kaishianniu" type="button" aria-label="开始随机点名">开始</button>
+            <button class="anniu yincang" id="tingzhianniu" type="button" aria-label="停止随机点名">停止</button>
+        </div>
+        <!-- 翻页笔开关 -->
+        <div class="anniucontaner">
+            <label class="fanyebeikaiguan" id="fanyebeikaiguan" aria-label="翻页笔遥控开关">
+                <input type="checkbox" id="fanyebeikaiguan-checkbox" checked aria-label="启用或禁用翻页笔遥控功能" />
+                <span class="slider round"></span>
+            </label>
+            <span id="fanyebeikaiguan-text">翻页笔遥控（下键控制）</span>
+        </div>
+        
+    </section>
+</main>
+    <div class="erweimacontaner">
+        <div class="tooltip-bubble">扫码上传名单</div>
+        <img src="https://api.pwmqr.com/qrcode/create/?url=https://easyclass.zhrhello.top/randamer/phone/index.html?code=" alt="二维码" id="erweimaimage">
+        <p>手机扫码 远程遥控</p>
+        <div class="yuanchengma" id="yuanchengma"></div>
+    </div>
+    
+    <footer role="contentinfo">
+        <p>&copy; 2026 <a href="https://zhrhello.top" target="_blank" rel="noopener noreferrer" style="color: #45f3ff; text-decoration: none;">zhrhello.top</a> 保留所有权利。</p>
+    </footer>
+
+    <!-- 名单选择弹窗 -->
+    <div class="name-select-modal" id="nameSelectModal">
+        <div class="name-select-content">
+            <h3>选择名单来源</h3>
+            <p>请选择如何获取点名名单</p>
+            <div class="name-select-options">
+                <div class="name-select-option" id="manualInputOption">
+                    <div class="option-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04Z"/></svg>
+                    </div>
+                    <div class="option-text">手动输入名单</div>
+                    <div class="option-desc">手动输入姓名，每行一个</div>
+                </div>
+                <div class="name-select-option" id="cloudListOption">
+                    <div class="option-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+                    </div>
+                    <div class="option-text">使用云名单</div>
+                    <div class="option-desc">从云端导入已保存的名单</div>
+                </div>
+                <div class="name-select-option" id="qrcodeOption">
+                    <div class="option-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+                    </div>
+                    <div class="option-text">扫码上传名单</div>
+                    <div class="option-desc">使用手机扫码上传名单</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 云名单选择面板 -->
+    <div class="cloud-list-modal" id="cloudListModal">
+        <div class="cloud-list-content">
+            <div class="cloud-list-header">
+                <h3>选择云名单</h3>
+                <button class="cloud-list-close" id="closeCloudListBtn">&times;</button>
+            </div>
+            <div class="cloud-list-body" id="cloudListBody">
+                <div class="cloud-list-container" id="cloudListContainer">
+                </div>
+                <div class="cloud-list-empty hidden" id="cloudListEmpty">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+                    <p>暂无云名单</p>
+                    <span>请先在云端创建名单</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 放大版二维码弹窗 -->
+    <div class="qr-modal" id="qrModal">
+        <div class="qr-content">
+            <h3>扫码上传名单</h3>
+            <p>请使用手机扫描下方二维码</p>
+            <div class="qr-code-container">
+                <img src="" alt="上传名单二维码" id="uploadQrCode">
+            </div>
+            <div class="qr-buttons">
+                <button class="btn-cancel" id="backToSelectFromQrBtn">返回</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通用提示弹窗 -->
+    <div class="modal-overlay top-most" id="customAlertModal">
+        <div class="prompt-panel" style="max-width: 400px;">
+            <div class="prompt-title" id="customAlertTitle">提示</div>
+            <div class="prompt-text" id="customAlertText"></div>
+            <div class="btn-group">
+                <button class="action-btn btn-confirm" id="customAlertBtn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通用确认弹窗 -->
+    <div class="modal-overlay top-most" id="customConfirmModal">
+        <div class="prompt-panel" style="max-width: 400px;">
+            <div class="prompt-title" id="customConfirmTitle">确认</div>
+            <div class="prompt-text" id="customConfirmText"></div>
+            <div class="btn-group">
+                <button class="action-btn btn-secondary" id="customConfirmCancelBtn">取消</button>
+                <button class="action-btn btn-confirm" id="customConfirmOkBtn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑名单弹窗 -->
+    <div class="modal-overlay" id="editNamesModal">
+        <div class="edit-names-panel">
+            <div class="edit-names-header">
+                <div class="edit-names-title">编辑名单</div>
+                <button class="edit-names-close" id="closeEditNamesBtn">&times;</button>
+            </div>
+            <div class="edit-names-body">
+                <div class="edit-names-cards-container" id="editNamesCardsContainer">
+                </div>
+            </div>
+            <div class="edit-names-footer">
+                <div class="edit-names-footer-left">
+                    <button class="action-btn-inline" id="addNameBtn" style="width: auto; padding: 10px 20px;">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                        <span>添加名字</span>
+                    </button>
+                    <button class="action-btn-inline" id="batchAddNamesBtn" style="width: auto; padding: 10px 20px;">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                        <span>批量添加</span>
+                    </button>
+                    <button class="action-btn-inline" id="batchSelectBtn" style="width: auto; padding: 10px 20px;">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
+                        <span>多选</span>
+                    </button>
+                    <button class="action-btn-inline" id="clearAllNamesBtn" style="width: auto; padding: 10px 20px; background: rgba(255, 107, 107, 0.1); border-color: rgba(255, 107, 107, 0.4); color: #ff6b6b;">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                        <span>清空名单</span>
+                    </button>
+                </div>
+                <div class="edit-names-footer-right">
+                    <div id="batchOperations" style="display: none; gap: 10px;">
+                        <button class="action-btn-inline" id="batchDeleteBtn" style="width: auto; padding: 10px 20px; background: rgba(255, 107, 107, 0.2); border-color: rgba(255, 107, 107, 0.5); color: #ff6b6b;">
+                            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            <span>批量删除</span>
+                        </button>
+                        <button class="action-btn btn-secondary" id="cancelBatchBtn">取消多选</button>
+                    </div>
+                    <div id="singleOperations" style="display: flex; gap: 12px;">
+                        <button class="action-btn btn-secondary" id="cancelEditNamesBtn">取消</button>
+                        <button class="action-btn btn-confirm" id="saveNamesBtn">保存</button>
+                        <button class="action-btn btn-cloud-save hidden" id="saveCloudNamesBtn" style="background: rgba(76, 175, 80, 0.2); border-color: rgba(76, 175, 80, 0.5); color: #4caf50;">
+                            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px; fill: currentColor;"><path d="M544 864V672h128L512 480 352 672h128v192H320v-1.6c-5.376.32-10.496 1.6-16 1.6A240 240 0 0 1 64 624c0-123.136 93.12-223.488 212.608-237.248A239.808 239.808 0 0 1 512 192a239.872 239.872 0 0 1 235.456 194.752c119.488 13.76 212.48 114.112 212.48 237.248a240 240 0 0 1-240 240c-5.376 0-10.56-1.28-16-1.6v1.6H544z"></path></svg>
+                            <span>保存到云端</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="prompt-text" style="color: #f44336; font-size: 12px; margin-top: 10px; margin-bottom: 0;">⚠ 注意：保存后将更新名单</div>
+        </div>
+    </div>
+
+    <!-- 批量添加名字弹窗 -->
+    <div class="modal-overlay top-layer" id="batchAddNamesModal">
+        <div class="prompt-panel" style="max-width: 500px;">
+            <div class="prompt-title">批量添加名字</div>
+            <div class="prompt-text" style="text-align: left; margin-bottom: 15px;">
+                请输入要添加的名字，每行一个：
+            </div>
+            <textarea class="name-textarea" id="batchAddNamesInput" style="height: 200px; min-height: 200px;" placeholder="张三&#10;李四&#10;王五&#10;..."></textarea>
+            <div class="btn-group">
+                <button class="action-btn btn-secondary" id="cancelBatchAddBtn">取消</button>
+                <button class="action-btn btn-confirm" id="confirmBatchAddBtn">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户信息弹窗 -->
+    <div class="user-info-modal" id="userInfoModal">
+        <div class="user-info-content">
+            <div class="user-info-header">
+                <h3>用户信息</h3>
+                <button class="user-info-close" id="closeUserInfoBtn">&times;</button>
+            </div>
+            <div class="user-info-body">
+                <div class="user-info-avatar" id="userInfoAvatar">
+                    <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+                </div>
+                <div class="user-info-details">
+                    <div class="user-info-item">
+                        <span class="user-info-label">用户名</span>
+                        <span class="user-info-value" id="userInfoUsername">未登录</span>
+                    </div>
+                    <div class="user-info-item">
+                        <span class="user-info-label">邮箱</span>
+                        <span class="user-info-value" id="userInfoEmail">-</span>
+                    </div>
+                </div>
+                <div class="cloud-list-section-user hidden" id="cloudListSectionUser">
+                    <div class="cloud-list-title-user">云名单导入</div>
+                    <div class="cloud-list-container-user" id="cloudListContainerUser">
+                    </div>
+                    <div class="cloud-list-empty-user hidden" id="cloudListEmptyUser">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+                        <p>暂无云名单</p>
+                        <span>请先在云端创建名单</span>
+                    </div>
+                </div>
+            </div>
+            <div class="user-info-footer">
+                <button class="user-logout-btn" id="userLogoutBtn">登出</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存到云名单弹窗 -->
+    <div class="modal-overlay top-most" id="saveCloudNamesModal">
+        <div class="prompt-panel" style="max-width: 500px;">
+            <div class="prompt-title">保存到云名单</div>
+            <div class="prompt-text" style="text-align: left; margin-bottom: 15px;">
+                请选择保存方式：
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                <div class="save-cloud-option save-cloud-option-new" id="createNewListOption">
+                    <div class="save-cloud-option-title">新建名单</div>
+                    <div class="save-cloud-option-desc">创建新的云名单</div>
+                </div>
+                <div class="save-cloud-option save-cloud-option-overwrite" id="overwriteListOption">
+                    <div class="save-cloud-option-title">覆盖现有名单</div>
+                    <div class="save-cloud-option-desc">选择一个已有的云名单覆盖</div>
+                </div>
+            </div>
+            <div id="newListInputArea" style="display: none; margin-bottom: 15px;">
+                <input type="text" class="save-cloud-input" id="newListNameInput" placeholder="输入新名单名称">
+            </div>
+            <div id="existingListSelectArea" style="display: none; margin-bottom: 15px; max-height: 200px; overflow-y: auto;">
+                <div id="existingListContainer" style="display: flex; flex-direction: column; gap: 10px;">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="action-btn btn-secondary" id="cancelSaveCloudBtn">取消</button>
+                <button class="action-btn btn-confirm" id="confirmSaveCloudBtn" disabled>保存</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('contextmenu', function(e) {
+        // 不禁用输入框的右键菜单
+        const target = e.target;
+        if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') {
+            return;
+        }
+        e.preventDefault(); // 禁用右键菜单
+    });
+
+    document.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) {
+            e.preventDefault(); // 禁用多点触控（长按）
+        }
+    }, { passive: false });
+
+    // 禁止按下F12以及相关快捷键
+    document.addEventListener('keydown', function(event) {
+        // 禁止F12
+        if (event.key === 'F12' || (event.key === 'F12' && event.code === 'F12')) {
+            event.preventDefault();
+        }
+
+        // 禁止Ctrl+Shift+I
+        if (event.ctrlKey && event.shiftKey && event.key === 'I') {
+            event.preventDefault();
+        }
+
+        // 禁止Ctrl+Shift+J
+        if (event.ctrlKey && event.shiftKey && event.key === 'J') {
+            event.preventDefault();
+        }
+
+        // 禁止Ctrl+U
+        if (event.ctrlKey && event.key === 'U') {
+            event.preventDefault();
+        }
+
+        // 禁止F12（另一种检测方式）
+        if (event.keyCode === 123) {
+            event.preventDefault();
+        }
+
+        // 禁止Ctrl+Shift+I（另一种检测方式）
+        if (event.keyCode === 73 && event.ctrlKey && event.shiftKey) {
+            event.preventDefault();
+        }
+
+        // 禁止Ctrl+Shift+J（另一种检测方式）
+        if (event.keyCode === 74 && event.ctrlKey && event.shiftKey) {
+            event.preventDefault();
+        }
+
+        // 禁止Ctrl+U（另一种检测方式）
+        if (event.keyCode === 85 && event.ctrlKey) {
+            event.preventDefault();
+        }
+    });
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 检测用户代理字符串
+    const userAgent = navigator.userAgent.toLowerCase();
+
+    // 检测是否为Chrome或Firefox
+    const isChrome = /chrome/.test(userAgent) && /google inc/.test(navigator.vendor.toLowerCase());
+    const isFirefox = /firefox/.test(userAgent);
+
+    // 如果不是Chrome或Firefox，弹出警告框
+    if (!isChrome && !isFirefox) {
+        alert("您的浏览器内核不符合要求，请使用Chrome、Microsoft Edge或Firefox浏览器以获得最佳体验！（在此类设备中出现任何问题概不负责）");
+    }
+
+    // 检测用户代理字符串
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // 如果是移动设备，弹出提示框
+    if (isMobile) {
+        alert("您似乎正在使用移动设备访问，为避免影响使用的bug出现，请使用电脑设备！（在此类设备中出现任何问题概不负责）");
+    }
+});
+
+// 检测浏览器内核版本
+function checkBrowserVersion() {
+    const userAgent = navigator.userAgent;
+    const chromeAgent = userAgent.indexOf("Chrome") > -1;
+    const edgeAgent = userAgent.indexOf("Edg") > -1; // Edge (Chromium-based)
+    const safariAgent = userAgent.indexOf("Safari") > -1 && userAgent.indexOf("Chrome") == -1 && userAgent.indexOf("Edg") == -1;
+    const firefoxAgent = userAgent.indexOf("Firefox") > -1;
+
+    let browserName = "Unknown";
+    let fullVersion = "Unknown";
+
+    if (chromeAgent || edgeAgent) {
+        const temp = userAgent.split(/(?:Chrome|Edg|Safari)[\/]+(\d+\.\d+\.\d+\.\d+)/)[1];
+        if (temp) {
+            fullVersion = temp;
+            browserName = chromeAgent ? "Chrome" : "Edge";
+        }
+    } else if (firefoxAgent) {
+        const temp = userAgent.split(/Firefox\/(\d+\.\d+)/)[1];
+        if (temp) {
+            fullVersion = temp;
+            browserName = "Firefox";
+        }
+    } else if (safariAgent) {
+        const temp = userAgent.split(/Version\/(\d+\.\d+\.\d+)/)[1];
+        if (temp) {
+            fullVersion = temp;
+            browserName = "Safari";
+        }
+    }
+
+    const versionNumber = parseInt(fullVersion.split('.')[0], 10);
+
+    // 设置最低版本要求
+    const minVersion = 80;
+
+    if (browserName === "Chrome" && versionNumber < minVersion) {
+        alert(`您的Chrome浏览器版本过低，请升级到至少版本 ${minVersion} 以获得最佳体验。`);
+    } else if (browserName === "Edge" && versionNumber < minVersion) {
+        alert(`您的Edge浏览器版本过低，请升级到至少版本 ${minVersion} 以获得最佳体验。`);
+    }
+}
+
+// 页面加载完成后执行检测
+window.onload = function() {
+    checkBrowserVersion();
+};
+</script>
+
+
+    <script src="./js/script.js?v=202607290121"></script>
+</body>
+
+</html>

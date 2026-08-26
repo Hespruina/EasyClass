@@ -1,0 +1,41 @@
+/* 操作按钮容器（在快速搜索框下方） */
+.action-buttons-container {
+padding: 10px;
+border-top: 1px solid var(--quick-search-container-border);
+background: var(--quick-search-container-bg);
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+.action-btn-inline {
+width: 100%;
+padding: 10px;
+background: var(--action-btn-bg);
+border: 1px solid var(--action-btn-border);
+border-radius: 8px;
+color: var(--primary);
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+cursor: pointer;
+transition: all 0.3s;
+font-family: 'Noto Sans SC', sans-serif;
+font-size: 14px;
+}
+.action-btn-inline svg {
+width: 18px;
+height: 18px;
+fill: currentColor;
+transition: transform 0.3s;
+}
+.action-btn-inline:hover {
+background: var(--action-btn-hover-bg);
+border-color: var(--action-btn-hover-border);
+box-shadow: var(--action-btn-hover-shadow);
+}
+#settingsBtn:active svg {
+transform: rotate(90deg);
+}
+/* 海报生成区域 */

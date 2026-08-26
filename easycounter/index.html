@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>易计票 - 在线投票计票工具</title>
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<meta name="description" content="易计票是一款免费的在线投票计票工具，支持实时投票统计、自动排名、多候选人管理。适用于比赛投票、评选活动、班级选举等场景。无需注册，即开即用。">
+<meta name="keywords" content="投票工具,计票系统,在线投票,投票统计,实时计票,比赛投票,评选投票,投票排名">
+<meta name="author" content="易计票">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#23242a">
+<link rel="canonical" href="https://easyclass.zhrhello.top/easycounter/">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "易计票",
+  "description": "在线投票计票工具，支持实时投票统计、自动排名、多候选人管理",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "inLanguage": "zh-CN"
+}
+</script>
+
+<script src="/assets/js/html2canvas.min.js"></script>
+
+<!-- CSS Modules -->
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/vote-rank.css">
+<link rel="stylesheet" href="css/search.css">
+<link rel="stylesheet" href="css/mode-detection.css">
+<link rel="stylesheet" href="css/buttons.css">
+<link rel="stylesheet" href="css/poster.css">
+<link rel="stylesheet" href="css/export.css">
+<link rel="stylesheet" href="css/name-tags.css">
+<link rel="stylesheet" href="css/edit-names.css">
+<link rel="stylesheet" href="css/account.css">
+
+</head>
+<body>
+<!-- 名单输入界面 -->
+<div class="name-input-screen" id="nameInputScreen">
+<div class="name-input-container">
+<h1 class="name-input-title">易计票</h1>
+<p class="name-input-subtitle">请输入投票名单，每行一个姓名</p>
+<textarea class="name-textarea" id="nameInput" placeholder="张三&#10;李四&#10;王五&#10;赵六..."></textarea>
+<div style="display: flex; flex-direction: row; gap: 10px; margin-top: 15px;">
+<button class="upload-btn" id="uploadBtn" style="flex: 1;">开始计票</button>
+<button class="upload-btn" id="importBtn" style="flex: 1; background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)); border-color: rgba(255, 215, 0, 0.4); color: #ffd700;">从易点名导入</button>
+</div>
+<div style="margin-top: 10px;">
+<button class="upload-btn" id="cloudImportBtn" style="width: 100%; background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1)); border-color: rgba(76, 175, 80, 0.4); color: #4caf50;">从云名单导入</button>
+</div>
+</div>
+</div>
+<!-- 主应用界面 -->
+<div class="main-app" id="mainApp">
+<header>
+<h1>易计票</h1>
+<div class="header-controls">
+<div class="total-score">总票数：<span id="totalScore">0</span></div>
+<button class="finish-btn" id="finishBtn">完成计票</button>
+</div>
+</header>
+<div class="workspace">
+<div class="rank-panel" id="rankPanel">
+<div class="rank-header">
+<h2>实时排名</h2>
+</div>
+<div class="rank-list" id="rankList"></div>
+<div class="quick-search-container" id="quickSearchContainer">
+<div class="quick-search-grid" id="quickSearchGrid">
+<!-- 字母按钮将通过 JS 生成 -->
+</div>
+</div>
+<!-- 搜索、编辑名单和设置按钮移到快速搜索框下方 -->
+<div class="action-buttons-container" id="actionButtonsContainer">
+<button class="action-btn-inline" id="searchBtn" title="按拼音首字母查找">
+<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+<span>搜索</span>
+</button>
+<button class="action-btn-inline" id="editNamesBtn" title="编辑名单">
+<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+<span>编辑名单</span>
+</button>
+<button class="action-btn-inline" id="settingsBtn" title="设置">
+<svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.49l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+<span>设置</span>
+</button>
+</div>
+<div class="resize-handle" id="resizeHandle"></div>
+</div>
+<div class="vote-area">
+<div class="vote-grid" id="voteGrid"></div>
+</div>
+</div>
+</div>
+<!-- 拼音首字母查找弹窗 -->
+<div class="letter-search-modal" id="letterSearchModal">
+<div class="letter-search-panel">
+<div class="letter-grid" id="letterGrid">
+<!-- 字母按钮将通过 JS 生成 -->
+</div>
+</div>
+</div>
+<!-- 全屏设置面板 -->
+<div class="settings-fullscreen-overlay" id="settingsModal">
+<div class="settings-fullscreen-container">
+<div class="settings-fullscreen-header">
+<div class="settings-fullscreen-title">系统设置</div>
+<button class="settings-fullscreen-close" id="closeSettingsBtn">&times;</button>
+</div>
+<div class="settings-tabs">
+<div class="settings-tab active" data-tab="settings">设置</div>
+<div class="settings-tab" data-tab="account">我的</div>
+</div>
+<div class="settings-fullscreen-body">
+<div class="settings-tab-content active" id="settingsTab">
+<div class="setting-item">
+<label class="setting-label">操作模式</label>
+<div class="toggle-group">
+<div class="toggle-option" data-mode="mouse" id="modeMouse">鼠标操作 (标准)</div>
+<div class="toggle-option" data-mode="touch" id="modeTouch">触屏操作 (大屏)</div>
+</div>
+<div style="font-size: 12px; color: #666; margin-top: 8px;">
+鼠标：点击加分，支持右键菜单禁用<br>
+触屏：按压即计分，支持多人同时极速操作
+</div>
+</div>
+<div class="setting-item">
+<label class="setting-label">快速查找</label>
+<div class="toggle-group">
+<div class="toggle-option" data-search="permanent" id="searchPermanent">常驻显示</div>
+<div class="toggle-option" data-search="modal" id="searchModal">弹窗模式</div>
+</div>
+<div style="font-size: 12px; color: #666; margin-top: 8px;">
+常驻：搜索框固定在排名面板下方<br>
+弹窗：点击搜索按钮弹出字母面板
+</div>
+</div>
+<div class="setting-item">
+<label class="setting-label">外观主题</label>
+<div class="toggle-group three-options" id="themeToggleGroup">
+<div class="toggle-option" data-theme="system" id="themeSystem">跟随系统</div>
+<div class="toggle-option" data-theme="light" id="themeLight">浅色模式</div>
+<div class="toggle-option" data-theme="dark" id="themeDark">深色模式</div>
+</div>
+<div style="font-size: 12px; color: var(--text-dim); margin-top: 8px;">
+跟随系统：自动匹配操作系统主题设置
+</div>
+</div>
+<div class="btn-group">
+<button class="action-btn btn-reset" id="resetDataBtn">清空所有票数</button>
+</div>
+<div class="data-info" style="color: #4caf50;">✓ 设置已自动保存</div>
+</div>
+<div class="settings-tab-content" id="accountTab">
+<div class="account-section" id="accountSection">
+<div class="account-loading" id="accountLoading">
+<div class="loading-spinner"></div>
+<span>加载中...</span>
+</div>
+<div class="account-logged-in hidden" id="accountLoggedIn">
+<div class="account-header">
+<div class="account-avatar-container" id="accountAvatarContainer">
+<div class="account-avatar" id="accountAvatar"></div>
+</div>
+<div class="account-details">
+<div class="account-name" id="accountName">-</div>
+<div class="account-email" id="accountEmail">-</div>
+</div>
+</div>
+<div class="account-actions">
+<button class="account-logout-btn" id="accountLogoutBtn">登出</button>
+</div>
+</div>
+<div class="account-logged-out hidden" id="accountLoggedOut">
+<div class="account-avatar-default">
+<svg viewBox="0 0 24 24" fill="currentColor" width="64" height="64"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+</div>
+<div class="account-logged-out-text">
+<p>未登录</p>
+<span>登录后可查看和管理云名单</span>
+</div>
+<button class="account-login-btn" id="accountLoginBtn">登录 EasyCore</button>
+</div>
+<div class="cloud-list-section hidden" id="cloudListSection">
+<h3 class="cloud-list-title">云名单导入</h3>
+<div class="cloud-list-container" id="cloudListContainer"></div>
+<div class="cloud-list-empty hidden" id="cloudListEmpty">
+<svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+<p>暂无云名单</p>
+<span>请先在云端创建名单</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 操作方式确认弹窗 -->
+<div class="modal-overlay" id="inputModeModal">
+<div class="prompt-panel" style="max-width: 400px;">
+<div class="prompt-title">确认操作方式</div>
+<div class="prompt-text" style="margin-bottom: 20px;">
+请点击下方圆球<br/>系统将自动检测您的操作方式
+</div>
+<div style="display: flex; justify-content: center; align-items: center; margin: 30px 0;">
+<div class="mode-ball-large" id="detectModeBall"></div>
+</div>
+<div class="prompt-text" style="font-size: 13px; color: #888;">
+点击后自动识别：触屏 / 鼠标
+</div>
+</div>
+</div>
+<!-- 操作方式不匹配提醒弹窗 -->
+<div class="modal-overlay" id="modeMismatchModal">
+<div class="prompt-panel">
+<div class="prompt-title">操作方式提示</div>
+<div class="prompt-text" id="modeMismatchText">
+检测到您使用了不同的操作方式，是否切换到更适合的模式？
+</div>
+<div class="checkbox-group">
+<input type="checkbox" id="suppressMismatchPrompt">
+<label for="suppressMismatchPrompt">本次不再提示</label>
+</div>
+<div class="btn-group">
+<button class="action-btn btn-secondary" id="keepCurrentModeBtn">保持当前</button>
+<button class="action-btn btn-confirm" id="switchModeBtn">切换模式</button>
+</div>
+</div>
+</div>
+<!-- 编辑名单弹窗 -->
+<div class="modal-overlay" id="editNamesModal">
+<div class="edit-names-panel">
+<div class="edit-names-header">
+<div class="edit-names-title">编辑名单</div>
+<button class="edit-names-close" id="closeEditNamesBtn">&times;</button>
+</div>
+<div class="edit-names-body">
+<div class="edit-names-cards-container" id="editNamesCardsContainer">
+<!-- 名字卡片将通过 JS 生成 -->
+</div>
+</div>
+<div class="edit-names-footer">
+<div class="edit-names-footer-left">
+<button class="action-btn-inline" id="addNameBtn" style="width: auto; padding: 10px 20px;">
+<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+<span>添加名字</span>
+</button>
+<button class="action-btn-inline" id="batchAddNamesBtn" style="width: auto; padding: 10px 20px;">
+<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+<span>批量添加</span>
+</button>
+<button class="action-btn-inline" id="batchSelectBtn" style="width: auto; padding: 10px 20px;">
+<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
+<span>多选</span>
+</button>
+<button class="action-btn-inline" id="clearAllNamesBtn" style="width: auto; padding: 10px 20px; background: rgba(255, 107, 107, 0.1); border-color: rgba(255, 107, 107, 0.4); color: #ff6b6b;">
+<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+<span>清空名单</span>
+</button>
+</div>
+<div class="edit-names-footer-right">
+<div id="batchOperations" style="display: none; gap: 10px;">
+<button class="action-btn-inline" id="batchDeleteBtn" style="width: auto; padding: 10px 20px; background: rgba(255, 107, 107, 0.2); border-color: rgba(255, 107, 107, 0.5); color: #ff6b6b;">
+<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+<span>批量删除</span>
+</button>
+<button class="action-btn btn-secondary" id="cancelBatchBtn">取消多选</button>
+</div>
+<div id="singleOperations" style="display: flex; gap: 12px;">
+<button class="action-btn btn-secondary" id="cancelEditNamesBtn">取消</button>
+<button class="action-btn btn-confirm" id="saveNamesBtn">保存</button>
+<button class="action-btn btn-cloud-save hidden" id="saveCloudNamesBtn" style="background: rgba(76, 175, 80, 0.2); border-color: rgba(76, 175, 80, 0.5); color: #4caf50;">
+                            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px; fill: currentColor;"><path d="M544 864V672h128L512 480 352 672h128v192H320v-1.6c-5.376.32-10.496 1.6-16 1.6A240 240 0 0 1 64 624c0-123.136 93.12-223.488 212.608-237.248A239.808 239.808 0 0 1 512 192a239.872 239.872 0 0 1 235.456 194.752c119.488 13.76 212.48 114.112 212.48 237.248a240 240 0 0 1-240 240c-5.376 0-10.56-1.28-16-1.6v1.6H544z"></path></svg>
+                            <span>保存到云端</span>
+                        </button>
+</div>
+</div>
+</div>
+<div class="data-info">⚠ 注意：修改名单将重置所有票数</div>
+</div>
+</div>
+<!-- 通用提示弹窗 -->
+<div class="modal-overlay" id="customAlertModal">
+<div class="prompt-panel" style="max-width: 400px;">
+<div class="prompt-title" id="customAlertTitle">提示</div>
+<div class="prompt-text" id="customAlertText"></div>
+<div class="btn-group">
+<button class="action-btn btn-confirm" id="customAlertBtn">确定</button>
+</div>
+</div>
+</div>
+<!-- 重名处理弹窗 -->
+<div class="modal-overlay" id="duplicateHandleModal">
+<div class="prompt-panel" style="max-width: 420px;">
+<div class="prompt-title">检测到重名</div>
+<div class="prompt-text" id="duplicateList" style="margin-bottom: 15px; max-height: 150px; overflow-y: auto; padding: 8px; background: var(--input-bg); border-radius: 8px; font-size: 13px;"></div>
+<div class="btn-group" style="flex-direction: column; gap: 10px;">
+<button class="action-btn btn-confirm" id="duplicateKeepAllBtn">全部保留</button>
+<button class="action-btn btn-secondary" id="duplicateDedupBtn">去重处理</button>
+</div>
+</div>
+</div>
+<!-- 通用确认弹窗 -->
+<div class="modal-overlay" id="customConfirmModal">
+<div class="prompt-panel" style="max-width: 400px;">
+<div class="prompt-title" id="customConfirmTitle">确认</div>
+<div class="prompt-text" id="customConfirmText"></div>
+<div class="btn-group">
+<button class="action-btn btn-secondary" id="customConfirmCancelBtn">取消</button>
+<button class="action-btn btn-confirm" id="customConfirmOkBtn">确定</button>
+</div>
+</div>
+</div>
+<!-- 继续计票确认弹窗 -->
+<div class="modal-overlay" id="continueVoteModal">
+<div class="prompt-panel" style="max-width: 400px;">
+<div class="prompt-title">继续上次计票？</div>
+<div class="prompt-text" id="continueVoteText">
+检测到未完成的计票<br>
+上次更新时间: <span id="lastVoteTime">--</span><br>
+参与人数: <span id="lastVoteCount">0</span>人<br>
+当前总票数: <span id="lastTotalVotes">0</span>票
+</div>
+<div class="btn-group">
+<button class="action-btn btn-secondary" id="newVoteBtn">开始新计票</button>
+<button class="action-btn btn-confirm" id="continueVoteBtn">继续计票</button>
+</div>
+</div>
+</div>
+<!-- 海报生成容器 (隐藏) -->
+<div id="posterBox"></div>
+
+<!-- 导出方式选择弹窗 -->
+<div class="export-modal" id="exportModal">
+<div class="export-panel">
+<div class="export-title">选择导出方式</div>
+<div class="export-options">
+<div class="export-option" id="exportExcelOption">
+<div class="export-icon">
+<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+</div>
+<div class="export-label">Excel</div>
+<div class="export-desc">导出排名数据表格</div>
+</div>
+<div class="export-option" id="exportPosterOption">
+<div class="export-icon">
+<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+</div>
+<div class="export-label">海报</div>
+<div class="export-desc">生成排名海报图片</div>
+</div>
+<div class="export-option" id="exportBothOption">
+<div class="export-icon">
+<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+</div>
+<div class="export-label">都要</div>
+<div class="export-desc">同时导出Excel和海报</div>
+</div>
+</div>
+<div class="export-buttons">
+<button class="export-btn export-btn-cancel" id="cancelExportBtn">取消</button>
+</div>
+</div>
+</div>
+
+<!-- 海报编辑页面 -->
+<div class="poster-edit-modal" id="posterEditModal">
+<div class="poster-edit-container">
+<div class="poster-edit-header">
+<h2 class="poster-edit-title">海报编辑</h2>
+<button class="poster-edit-close" id="closePosterEditBtn">&times;</button>
+</div>
+<div class="poster-edit-body">
+<div class="poster-preview-section">
+<div class="poster-preview-label">预览</div>
+<div class="poster-preview-wrapper">
+<img id="posterPreviewImage" src="" alt="海报预览">
+</div>
+</div>
+<div class="poster-settings-section">
+<div class="poster-setting-group">
+<label class="poster-setting-label">海报主题</label>
+<div class="custom-select-wrapper" id="posterThemeSelectWrapper">
+<div class="custom-select-trigger" id="posterThemeSelect">
+<span class="custom-select-label">
+<span class="custom-select-theme-icon"></span>
+<span class="custom-select-text">选择主题</span>
+</span>
+<svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</div>
+<div class="custom-select-dropdown" id="posterThemeDropdown">
+</div>
+</div>
+</div>
+<div class="poster-setting-group">
+<label class="poster-setting-label">标题文字</label>
+<input type="text" class="poster-setting-input" id="posterTitleInput" value="易计票 结果">
+</div>
+<div class="poster-setting-group">
+<label class="poster-setting-label">标题颜色</label>
+<div class="color-picker-wrapper">
+<input type="color" class="poster-color-picker" id="posterTitleColor" value="#45f3ff">
+<span class="color-value" id="posterTitleColorValue">#45f3ff</span>
+</div>
+</div>
+<div class="poster-setting-group">
+<label class="poster-setting-label">背景颜色</label>
+<div class="color-picker-wrapper">
+<input type="color" class="poster-color-picker" id="posterBgColor" value="#23242a">
+<span class="color-value" id="posterBgColorValue">#23242a</span>
+</div>
+</div>
+<div class="poster-setting-group">
+<label class="poster-setting-label">排名文字颜色</label>
+<div class="color-picker-wrapper">
+<input type="color" class="poster-color-picker" id="posterRankColor" value="#ffffff">
+<span class="color-value" id="posterRankColorValue">#ffffff</span>
+</div>
+</div>
+<div class="poster-setting-group">
+<label class="poster-setting-label">分数颜色</label>
+<div class="color-picker-wrapper">
+<input type="color" class="poster-color-picker" id="posterScoreColor" value="#45f3ff">
+<span class="color-value" id="posterScoreColorValue">#45f3ff</span>
+</div>
+</div>
+<div class="poster-setting-group">
+<label class="poster-setting-label">显示人数</label>
+<div class="poster-range-wrapper">
+<input type="range" class="poster-range" id="posterTopCount" min="3" max="100" value="10">
+<span class="range-value" id="posterTopCountValue">10</span>
+</div>
+</div>
+</div>
+</div>
+<div class="poster-edit-footer">
+<button class="poster-btn poster-btn-secondary" id="regeneratePosterBtn">重新生成</button>
+<button class="poster-btn poster-btn-primary" id="downloadPosterBtn">下载海报</button>
+</div>
+</div>
+</div>
+
+<!-- 批量添加名字弹窗 -->
+<div class="modal-overlay" id="batchAddNamesModal" style="z-index: 9999;">
+<div class="prompt-panel" style="max-width: 500px;">
+<div class="prompt-title">批量添加名字</div>
+<div class="prompt-text" style="text-align: left; margin-bottom: 15px;">
+请输入要添加的名字，每行一个：
+</div>
+<textarea class="name-textarea" id="batchAddNamesInput" style="height: 200px; min-height: 200px;" placeholder="张三&#10;李四&#10;王五&#10;..."></textarea>
+<div class="btn-group">
+<button class="action-btn btn-secondary" id="cancelBatchAddBtn">取消</button>
+<button class="action-btn btn-confirm" id="confirmBatchAddBtn">添加</button>
+</div>
+</div>
+</div>
+
+<!-- 保存到云名单弹窗 -->
+<div class="modal-overlay" id="saveCloudNamesModal" style="z-index: 10000;">
+<div class="prompt-panel" style="max-width: 500px;">
+<div class="prompt-title">保存到云名单</div>
+<div class="prompt-text" style="text-align: left; margin-bottom: 15px;">
+请选择保存方式：
+</div>
+<div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+<div class="save-cloud-option save-cloud-option-new" id="createNewListOption">
+<div class="save-cloud-option-title">新建名单</div>
+<div class="save-cloud-option-desc">创建新的云名单</div>
+</div>
+<div class="save-cloud-option save-cloud-option-overwrite" id="overwriteListOption">
+<div class="save-cloud-option-title">覆盖现有名单</div>
+<div class="save-cloud-option-desc">选择一个已有的云名单覆盖</div>
+</div>
+</div>
+<div id="newListInputArea" style="display: none; margin-bottom: 15px;">
+<input type="text" class="save-cloud-input" id="newListNameInput" placeholder="输入新名单名称">
+</div>
+<div id="existingListSelectArea" style="display: none; margin-bottom: 15px; max-height: 200px; overflow-y: auto;">
+<div id="existingListContainer" style="display: flex; flex-direction: column; gap: 10px;">
+</div>
+</div>
+<div class="btn-group">
+<button class="action-btn btn-secondary" id="cancelSaveCloudBtn">取消</button>
+<button class="action-btn btn-confirm" id="confirmSaveCloudBtn" disabled>保存</button>
+</div>
+</div>
+</div>
+
+<!-- JS Modules - 按依赖顺序加载 -->
+<script src="js/poster-themes.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/theme-manager.js"></script>
+<script src="js/state.js"></script>
+<script src="js/dialogs.js"></script>
+<script src="js/session.js"></script>
+<script src="js/search.js"></script>
+<script src="js/import.js"></script>
+<script src="js/init.js"></script>
+<script src="js/core.js"></script>
+<script src="js/edit-names.js"></script>
+<script src="js/poster.js"></script>
+<script src="js/export.js"></script>
+<script src="js/events.js"></script>
+<script src="js/browser-detect.js"></script>
+<script src="js/account.js"></script>
+<script src="js/batch-add.js"></script>
+</body>
+</html>

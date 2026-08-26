@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>EasyClass 课易 · 在线教学工具箱</title>
+    <meta name="description" content="EasyClass课易是一款免费的在线教学工具集，包含易计票、随机点名器、投票计票等实用工具，助力课堂教学和班级管理。">
+    <meta name="keywords" content="在线教学工具,课堂点名,投票计票,随机分组,教学辅助工具,班级管理">
+    <meta name="author" content="zhrhello.top">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#45f3ff">
+    <link rel="canonical" href="https://easyclass.zhrhello.top/">
+
+    <style>
+        @import url('https://fonts-googleapis-com.mirror.zhrhello.top/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --font-main: "Noto Sans SC", sans-serif;
+            --transition-speed: 0.4s;
+            --max-width: 1200px;
+            --header-height: 64px;
+            --section-padding: 80px;
+            --mobile-section-padding: 48px;
+
+            --bg-primary: #23242a;
+            --bg-secondary: #1c1c1c;
+            --bg-tertiary: #2a2b33;
+            --text-primary: #ffffff;
+            --text-secondary: #b8b8b8;
+            --text-tertiary: #8f8f8f;
+            --accent-primary: #45f3ff;
+            --accent-primary-dim: rgba(69, 243, 255, 0.1);
+            --accent-primary-hover: rgba(69, 243, 255, 0.8);
+            --accent-secondary: #ff6b6b;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-color-hover: rgba(69, 243, 255, 0.3);
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --header-bg: rgba(28, 28, 28, 0.85);
+            --footer-bg: #1a1a1a;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background var(--transition-speed), color var(--transition-speed);
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--header-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .header-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 18px;
+            color: var(--bg-primary);
+            border-radius: 4px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .logo-text .sub {
+            font-weight: 300;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-left: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar-container {
+            cursor: pointer;
+            position: relative;
+            z-index: 1001;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .user-avatar:hover {
+            border-color: var(--border-color-hover);
+            transform: scale(1.05);
+            box-shadow: 0 0 16px rgba(69, 243, 255, 0.25);
+        }
+
+        .user-avatar.active {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px rgba(69, 243, 255, 0.35);
+            animation: avatarPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes avatarPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 16px rgba(69, 243, 255, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 28px rgba(69, 243, 255, 0.55);
+            }
+        }
+
+        .user-avatar svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-secondary);
+            transition: fill 0.2s;
+        }
+
+        .user-avatar:hover svg {
+            fill: var(--accent-primary);
+        }
+
+        .user-avatar.active svg {
+            fill: var(--accent-primary);
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .user-avatar.logged-in {
+            padding: 0;
+        }
+
+        .hero {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: calc(var(--header-height) + var(--section-padding)) 24px var(--section-padding);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 60px 60px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: var(--accent-primary);
+            opacity: 0.03;
+            filter: blur(120px);
+            pointer-events: none;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            transition: opacity 0.5s;
+        }
+
+        .hero-glow.dimmed {
+            opacity: 0.015;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hero-content.shrink-out {
+            transform: translateY(-40px) scale(0.85);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .hero-title {
+            font-size: clamp(36px, 5vw, 64px);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-title .highlight {
+            color: var(--accent-primary);
+        }
+
+        .hero-subtitle {
+            font-size: clamp(16px, 2vw, 20px);
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 48px;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            font-family: var(--font-main);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: #0f0f0f;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(69, 243, 255, 0.25);
+        }
+
+        .hero-account-panel {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            clip-path: inset(100% 0 0 0);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 24px;
+        }
+
+        .hero-account-panel.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .account-back-btn {
+            position: absolute;
+            top: 28px;
+            left: 28px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(69, 243, 255, 0.06);
+            border: 1px solid rgba(69, 243, 255, 0.2);
+            color: var(--accent-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            z-index: 10;
+            padding: 0;
+            backdrop-filter: blur(6px);
+        }
+
+        .account-back-btn:hover {
+            background: rgba(69, 243, 255, 0.15);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 18px rgba(69, 243, 255, 0.3);
+            transform: scale(1.08);
+        }
+
+        .account-back-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: var(--accent-primary);
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.2s;
+        }
+
+        .account-back-btn:hover svg {
+            transform: translateX(-2px);
+        }
+
+        .account-info-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .account-avatar-large {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            background: var(--accent-primary-dim);
+            border: 2px solid rgba(69, 243, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            flex-shrink: 0;
+        }
+
+        .account-avatar-large:hover {
+            border-color: rgba(69, 243, 255, 0.55);
+            box-shadow: 0 0 24px rgba(69, 243, 255, 0.2);
+        }
+
+        .account-avatar-large svg {
+            width: 44px;
+            height: 44px;
+            fill: var(--accent-primary);
+            opacity: 0.8;
+        }
+
+        .account-avatar-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .account-name {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            letter-spacing: 0.02em;
+        }
+
+        .account-email {
+            font-size: 14px;
+            color: var(--text-tertiary);
+            margin-bottom: 28px;
+            letter-spacing: 0.03em;
+        }
+
+        .account-divider {
+            width: 50px;
+            height: 1px;
+            background: rgba(69, 243, 255, 0.3);
+            margin-bottom: 28px;
+        }
+
+        .account-action-btn {
+            padding: 13px 36px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-family: var(--font-main);
+            letter-spacing: 0.03em;
+            min-width: 160px;
+        }
+
+        .account-logout-btn {
+            background: rgba(255, 107, 107, 0.12);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.25);
+        }
+
+        .account-logout-btn:hover {
+            background: rgba(255, 107, 107, 0.22);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .account-login-btn {
+            background: rgba(76, 175, 80, 0.12);
+            color: #4caf50;
+            border: 1px solid rgba(76, 175, 80, 0.25);
+        }
+
+        .account-login-btn:hover {
+            background: rgba(76, 175, 80, 0.22);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            z-index: 4;
+            pointer-events: none;
+            opacity: 0;
+            background: var(--accent-primary);
+        }
+
+        .scan-line::before {
+            display: none;
+        }
+
+        .scan-line::after {
+            display: none;
+        }
+
+        .products {
+            padding: var(--section-padding) 24px;
+            max-width: var(--max-width);
+            margin: 0 auto;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+            position: relative;
+        }
+
+        .section-header::before {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 2px;
+            background: var(--accent-primary);
+            margin: 0 auto 24px;
+            opacity: 0.6;
+        }
+
+        .section-title {
+            font-size: clamp(24px, 3vw, 36px);
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .product-card {
+            padding: 32px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .product-card:hover {
+            border-color: var(--border-color-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .product-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .product-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .product-desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .product-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .product-tag {
+            padding: 4px 10px;
+            border: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--text-tertiary);
+            transition: all 0.2s;
+            border-radius: 4px;
+        }
+
+        .product-card:hover .product-tag {
+            border-color: var(--border-color-hover);
+            color: var(--accent-primary);
+        }
+
+        .product-link {
+            color: var(--accent-primary);
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.2s;
+        }
+
+        .product-card:hover .product-link {
+            gap: 10px;
+        }
+
+        .footer {
+            background: var(--footer-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 48px 24px;
+            margin-top: var(--section-padding);
+        }
+
+        .footer-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-brand .logo-text {
+            font-size: 16px;
+        }
+
+        .footer-copyright {
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .footer-link:hover {
+            color: var(--accent-primary);
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --section-padding: var(--mobile-section-padding);
+            }
+
+            .hero {
+                min-height: 60vh;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                justify-content: center;
+            }
+
+            .account-back-btn {
+                top: 20px;
+                left: 20px;
+                width: 36px;
+                height: 36px;
+            }
+
+            .account-avatar-large {
+                width: 70px;
+                height: 70px;
+            }
+
+            .account-avatar-large svg {
+                width: 36px;
+                height: 36px;
+            }
+
+            .account-name {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-text .sub {
+                display: none;
+            }
+
+            .header-inner {
+                padding: 0 16px;
+            }
+
+            .account-back-btn {
+                top: 16px;
+                left: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <a href="/" class="logo">
+                <div class="logo-icon">EC</div>
+                <div class="logo-text">EasyClass<span class="sub">课易</span></div>
+            </a>
+            <div class="header-actions">
+                <div class="user-avatar-container" id="userAvatarContainer" title="查看账号信息">
+                    <div class="user-avatar" id="userAvatar">
+                        <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero" id="heroSection">
+        <div class="hero-glow" id="heroGlow"></div>
+
+        <div class="hero-content" id="heroContent">
+            <h1 class="hero-title">让教学更<span class="highlight">"易"</span></h1>
+            <p class="hero-subtitle">
+                EasyClass提供一些实用教学工具，包括投票计票、随机点名、课堂互动等功能，助力高效课堂。
+            </p>
+            <div class="hero-actions">
+                <a href="#products" class="btn btn-primary">浏览工具</a>
+            </div>
+        </div>
+
+        <div class="hero-account-panel" id="heroAccountPanel">
+            <button class="account-back-btn" id="accountBackBtn" title="返回">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </button>
+            <div class="account-info-wrapper" id="accountInfoWrapper">
+                <div class="account-avatar-large" id="accountAvatarLarge">
+                    <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+                </div>
+                <div class="account-name" id="accountName">未登录</div>
+                <div class="account-email" id="accountEmail">-</div>
+                <div class="account-divider"></div>
+                <button class="account-action-btn account-login-btn" id="accountActionBtn">去登录</button>
+            </div>
+        </div>
+
+        <div class="scan-line" id="scanLine"></div>
+    </section>
+
+    <section class="products" id="products">
+        <div class="section-header">
+            <h2 class="section-title">实用工具</h2>
+            <p class="section-subtitle">在线工具-无需安装-即开即用</p>
+        </div>
+        <div class="products-grid">
+            <a href="easycore/" class="product-card" target="_blank" rel="noopener noreferrer">
+                <div class="product-icon"><img src="easycore/logo.png" alt="EasyCore"></div>
+                <h3 class="product-name">EasyCore 易核</h3>
+                <p class="product-desc">
+                    EasyCore是EasyClass的核心账户系统，提供统一的用户认证、数据管理和云端同步服务。支持多设备登录、名单云存储、历史记录同步等功能。
+                </p>
+                <div class="product-tags">
+                    <span class="product-tag">账户系统</span>
+                    <span class="product-tag">云端同步</span>
+                    <span class="product-tag">数据管理</span>
+                    <span class="product-tag">多设备支持</span>
+                </div>
+                <span class="product-link">进入Dashboard →</span>
+            </a>
+            <a href="randamer/" class="product-card" target="_blank" rel="noopener noreferrer">
+                <div class="product-icon"><img src="randamer/logo.png" alt="易点名"></div>
+                <h3 class="product-name">易点名</h3>
+                <p class="product-desc">
+                    在线随机点名工具，支持自定义名单、动画效果、历史记录。适用于课堂点名、现场抽背、会议选人等场景。
+                </p>
+                <div class="product-tags">
+                    <span class="product-tag">随机点名</span>
+                    <span class="product-tag">课堂互动</span>
+                    <span class="product-tag">抽人抽背</span>
+                </div>
+                <span class="product-link">立即使用 →</span>
+            </a>
+            <a href="easycounter/" class="product-card" target="_blank" rel="noopener noreferrer">
+                <div class="product-icon"><img src="easycounter/logo.png" alt="易计票"></div>
+                <h3 class="product-name">易计票</h3>
+                <p class="product-desc">
+                    在线投票计票工具，支持实时投票统计、自动排名、多候选人管理。适用于比赛投票、评选活动、班内选举等场景。
+                </p>
+                <div class="product-tags">
+                    <span class="product-tag">投票工具</span>
+                    <span class="product-tag">实时统计</span>
+                    <span class="product-tag">自动排名</span>
+                </div>
+                <span class="product-link">立即使用 →</span>
+            </a>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="logo-text">EasyClass</div>
+            </div>
+            <p class="footer-copyright">Copyright © 2026 zhrhello.top. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="easycore/" class="footer-link" target="_blank" rel="noopener noreferrer">EasyCore</a>
+                <a href="randamer/" class="footer-link" target="_blank" rel="noopener noreferrer">易点名</a>
+                <a href="easycounter/" class="footer-link" target="_blank" rel="noopener noreferrer">易计票</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function() {
+            const html = document.documentElement;
+            html.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        })();
+
+        (function() {
+            // ============ 状态 ============
+            let isLoggedIn = false;
+            let currentUser = null;
+
+            // ============ 扫描线/面板动画状态（支持打断反向） ============
+            // currentP: 0 = 面板隐藏（扫描线在底部 startTop），1 = 面板展开（扫描线在顶部 endTop）
+            let panelShown = false;   // 目标状态：是否要展示面板
+            let currentP = 0;         // 当前动画进度
+            let targetP = 0;          // 目标进度
+            let rafId = null;         // 当前 requestAnimationFrame 句柄
+            let lastFrameTime = 0;    // 上一帧时间戳
+            const SCAN_DURATION = 300; // 完整一次扫描（0→1）所需毫秒
+
+            // ============ DOM 引用 ============
+            const heroSection = document.getElementById('heroSection');
+            const heroContent = document.getElementById('heroContent');
+            const heroGlow = document.getElementById('heroGlow');
+            const heroAccountPanel = document.getElementById('heroAccountPanel');
+            const scanLine = document.getElementById('scanLine');
+            const userAvatar = document.getElementById('userAvatar');
+            const userAvatarContainer = document.getElementById('userAvatarContainer');
+            const accountBackBtn = document.getElementById('accountBackBtn');
+            const accountAvatarLarge = document.getElementById('accountAvatarLarge');
+            const accountName = document.getElementById('accountName');
+            const accountEmail = document.getElementById('accountEmail');
+            const accountActionBtn = document.getElementById('accountActionBtn');
+            const accountInfoWrapper = document.getElementById('accountInfoWrapper');
+
+            // ============ 获取用户信息 ============
+            async function fetchUserInfo() {
+                try {
+                    const response = await fetch('/easycore/api/user/info', {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.user) {
+                            isLoggedIn = true;
+                            currentUser = data.user;
+                        } else {
+                            isLoggedIn = false;
+                            currentUser = null;
+                        }
+                    } else {
+                        isLoggedIn = false;
+                        currentUser = null;
+                    }
+                } catch (error) {
+                    console.error('获取用户信息失败:', error);
+                    isLoggedIn = false;
+                    currentUser = null;
+                }
+                updateUserAvatar();
+                updateAccountPanelContent();
+            }
+
+            // ============ 更新右上角头像 ============
+            function updateUserAvatar() {
+                if (!userAvatar) return;
+
+                if (isLoggedIn && currentUser && currentUser.avatar_url) {
+                    userAvatar.innerHTML =
+                        `<img src="${currentUser.avatar_url}" alt="用户头像" onerror="this.style.display='none'; this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\'><path d=\\'M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z\\'/></svg>';">`;
+                    userAvatar.classList.add('logged-in');
+                } else {
+                    userAvatar.innerHTML =
+                        '<svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>';
+                    userAvatar.classList.remove('logged-in');
+                }
+            }
+
+            // ============ 更新账号面板内容 ============
+            function updateAccountPanelContent() {
+                if (!accountAvatarLarge || !accountName || !accountEmail || !accountActionBtn) return;
+
+                if (isLoggedIn && currentUser) {
+                    if (currentUser.avatar_url) {
+                        accountAvatarLarge.innerHTML =
+                            `<img src="${currentUser.avatar_url}" alt="用户头像" onerror="this.style.display='none'; this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\'><path d=\\'M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z\\'/></svg>';">`;
+                    } else {
+                        accountAvatarLarge.innerHTML =
+                            '<svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>';
+                    }
+                    accountName.textContent = currentUser.name || '未设置用户名';
+                    accountEmail.textContent = currentUser.email || '未设置邮箱';
+                    accountActionBtn.textContent = '登出';
+                    accountActionBtn.classList.remove('account-login-btn');
+                    accountActionBtn.classList.add('account-logout-btn');
+                } else {
+                    accountAvatarLarge.innerHTML =
+                        '<svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>';
+                    accountName.textContent = '未登录';
+                    accountEmail.textContent = '登录以使用云端同步等功能';
+                    accountActionBtn.textContent = '去登录';
+                    accountActionBtn.classList.remove('account-logout-btn');
+                    accountActionBtn.classList.add('account-login-btn');
+                }
+            }
+
+            // ============ 工具函数 ============
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // 获取扫描线动画的起点和终点（基于账号信息包装器的位置）
+            function getScanRange() {
+                const heroRect = heroSection.getBoundingClientRect();
+                const wrapperRect = accountInfoWrapper.getBoundingClientRect();
+                const heroHeight = heroRect.height;
+                // 起点：wrapper底部向下偏移30px
+                const rawBottom = wrapperRect.bottom - heroRect.top + 30;
+                // 终点：wrapper顶部向上偏移20px，且不小于0
+                const rawTop = Math.max(0, wrapperRect.top - heroRect.top - 20);
+                const startTop = Math.min(100, (rawBottom / heroHeight) * 100);
+                const endTop = (rawTop / heroHeight) * 100;
+                return { startTop, endTop };
+            }
+
+            // ============ 根据当前进度 p 应用扫描线与面板的视觉状态 ============
+            // p: 0 = 隐藏/底部(startTop)，1 = 展开/顶部(endTop)
+            function applyScanProgress(p) {
+                const { startTop, endTop } = getScanRange();
+                const currentTop = startTop + (endTop - startTop) * p;
+                heroAccountPanel.style.clipPath = `inset(${currentTop}% 0 0 0)`;
+                scanLine.style.top = `${currentTop}%`;
+
+                // 扫描线透明度：两端淡出(0)，中段全亮(1)，到达终点即消失
+                const fadeInEnd = 0.3;
+                const fadeOutStart = 0.6;
+                let opacity;
+                if (p < fadeInEnd) {
+                    opacity = p / fadeInEnd;
+                } else if (p < fadeOutStart) {
+                    opacity = 1;
+                } else {
+                    opacity = 1 - (p - fadeOutStart) / (1 - fadeOutStart);
+                }
+                scanLine.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+            }
+
+            // ============ 动画主循环：朝 targetP 匀速运动，可在任意位置反向 ============
+            function animStep(now) {
+                if (lastFrameTime === 0) lastFrameTime = now;
+                const delta = now - lastFrameTime;
+                lastFrameTime = now;
+
+                if (currentP !== targetP) {
+                    const dir = targetP > currentP ? 1 : -1;
+                    const speed = 1 / SCAN_DURATION; // 每毫秒推进的进度
+                    currentP += dir * speed * delta;
+                    if ((dir > 0 && currentP >= targetP) || (dir < 0 && currentP <= targetP)) {
+                        currentP = targetP;
+                    }
+                    applyScanProgress(currentP);
+                }
+
+                if (currentP === targetP) {
+                    rafId = null;
+                    finalizeScan();
+                } else {
+                    rafId = requestAnimationFrame(animStep);
+                }
+            }
+
+            function startScanAnimation() {
+                if (rafId !== null) return; // 已在运行，仅改变 targetP 即可实现反向
+                lastFrameTime = 0;
+                rafId = requestAnimationFrame(animStep);
+            }
+
+            // ============ 到达目标后的收尾 ============
+            function finalizeScan() {
+                if (targetP >= 1) {
+                    // 完全展开
+                    panelShown = true;
+                    scanLine.style.opacity = '0';
+                    scanLine.style.top = `${getScanRange().endTop}%`;
+                } else {
+                    // 完全隐藏
+                    panelShown = false;
+                    heroAccountPanel.classList.remove('visible');
+                    heroAccountPanel.style.opacity = '0';
+                    heroAccountPanel.style.pointerEvents = 'none';
+                    heroAccountPanel.style.clipPath = 'inset(100% 0 0 0)';
+                    scanLine.style.opacity = '0';
+                }
+            }
+
+            // ============ 请求展示/收起面板（动画中再次调用将反向还原） ============
+            function requestPanel(show) {
+                // 已处于目标态且无进行中的动画：忽略
+                if (show === panelShown && currentP === targetP) return;
+
+                panelShown = show;
+                targetP = show ? 1 : 0;
+
+                if (show) {
+                    updateAccountPanelContent();
+                    heroAccountPanel.classList.add('visible');
+                    heroAccountPanel.style.opacity = '1';
+                    heroAccountPanel.style.pointerEvents = 'auto';
+                }
+
+                // 同步 Hero 背景/头像的装饰态（按目标切换，保证反向时也正确还原）
+                heroContent.classList.toggle('shrink-out', show);
+                heroGlow.classList.toggle('dimmed', show);
+                userAvatar.classList.toggle('active', show);
+
+                startScanAnimation();
+                applyScanProgress(currentP); // 立即应用首帧，避免闪烁
+            }
+
+            // ============ 登出 ============
+            async function handleLogout() {
+                try {
+                    const response = await fetch('/easycore/api/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        isLoggedIn = false;
+                        currentUser = null;
+                        updateUserAvatar();
+                        updateAccountPanelContent();
+                        await sleep(400);
+                        requestPanel(false);
+                    } else {
+                        alert('登出失败，请重试');
+                    }
+                } catch (error) {
+                    console.error('登出失败:', error);
+                    alert('登出失败，请重试');
+                }
+            }
+
+            // ============ 事件绑定 ============
+            function initEvents() {
+                // 点击头像：在“展示/收起”间切换；动画进行中再次点击则反向运动还原
+                userAvatarContainer.addEventListener('click', () => {
+                    requestPanel(!panelShown);
+                });
+
+                accountBackBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    requestPanel(false); // 返回即收起（动画中点击则反向还原）
+                });
+
+                accountActionBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (isLoggedIn) {
+                        handleLogout();
+                    } else {
+                        window.open('/easycore/', '_blank', 'noopener');
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    // ESC：面板已展开或正在展开/收起时，收起（可反向）
+                    if (e.key === 'Escape' && (panelShown || currentP > 0)) {
+                        requestPanel(false);
+                    }
+                });
+            }
+
+            // ============ 初始化 ============
+            async function init() {
+                heroAccountPanel.style.clipPath = 'inset(100% 0 0 0)';
+                heroAccountPanel.style.opacity = '0';
+                heroAccountPanel.style.pointerEvents = 'none';
+                scanLine.style.top = '100%';
+                scanLine.style.opacity = '0';
+
+                initEvents();
+                await fetchUserInfo();
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html>

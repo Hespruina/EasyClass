@@ -1,0 +1,140 @@
+/* 操作方式选择圆球 */
+.mode-select-item {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 10px;
+cursor: pointer;
+transition: transform 0.2s;
+}
+.mode-select-item:hover {
+transform: scale(1.05);
+}
+.mode-ball {
+width: 60px;
+height: 60px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.3s;
+border: 3px solid transparent;
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+.touch-ball {
+background: var(--touch-ball-bg);
+border-color: var(--touch-ball-border);
+}
+.mouse-ball {
+background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.1));
+border-color: rgba(255, 215, 0, 0.5);
+}
+.mode-ball:hover {
+box-shadow: var(--mode-ball-hover-shadow);
+}
+.mouse-ball:hover {
+box-shadow: var(--mode-ball-mouse-hover-shadow);
+}
+.mode-ball.selected {
+transform: scale(1.15);
+box-shadow: 0 0 30px currentColor;
+}
+.mode-ball-large {
+width: 150px;
+height: 150px;
+border-radius: 50%;
+background: var(--mode-ball-large-bg);
+border: 3px solid var(--mode-ball-large-border);
+box-shadow: var(--mode-ball-large-shadow);
+cursor: pointer;
+transition: all 0.3s ease;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 24px;
+font-weight: bold;
+color: var(--mode-ball-large-color);
+user-select: none;
+position: relative;
+overflow: hidden;
+}
+.mode-ball-large::before {
+content: '';
+position: absolute;
+top: -50%;
+left: -50%;
+width: 200%;
+height: 200%;
+background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+animation: pulse-glow 3s ease-in-out infinite;
+}
+.mode-ball-large:hover {
+transform: scale(1.05);
+border-color: var(--mode-ball-large-hover-border);
+box-shadow: var(--mode-ball-large-hover-shadow);
+}
+.mode-ball-large:active {
+transform: scale(0.95);
+}
+.mode-ball-large.detecting {
+animation: detecting-mode 0.5s ease;
+}
+.mode-ball-large.touch-mode {
+background: var(--mode-ball-large-touch-bg);
+border-color: var(--mode-ball-large-touch-border);
+box-shadow: var(--mode-ball-large-touch-shadow);
+color: var(--primary);
+}
+.mode-ball-large.mouse-mode {
+background: var(--mode-ball-large-mouse-bg);
+border-color: var(--mode-ball-large-mouse-border);
+box-shadow: var(--mode-ball-large-mouse-shadow);
+color: var(--gold);
+}
+@keyframes pulse-glow {
+0%, 100% {
+transform: scale(1);
+opacity: 0.5;
+}
+50% {
+transform: scale(1.1);
+opacity: 0.8;
+}
+}
+@keyframes detecting-mode {
+0% {
+transform: scale(1);
+}
+50% {
+transform: scale(1.1);
+}
+100% {
+transform: scale(1);
+}
+}
+.touch-ball.selected {
+background: var(--touch-ball-selected-bg);
+border-color: var(--primary);
+box-shadow: var(--touch-ball-selected-shadow);
+}
+.mouse-ball.selected {
+background: var(--mouse-ball-selected-bg);
+border-color: var(--gold);
+box-shadow: var(--mouse-ball-selected-shadow);
+}
+.mode-label {
+font-size: 14px;
+color: var(--text-dim);
+transition: color 0.3s;
+}
+.mode-select-item.selected .mode-label {
+color: var(--text-main);
+font-weight: bold;
+}
+#selectTouchMode.selected .mode-label {
+color: var(--primary);
+}
+#selectMouseMode.selected .mode-label {
+color: var(--gold);
+}
+/* 操作按钮容器（在快速搜索框下方） */

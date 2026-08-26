@@ -1,0 +1,68 @@
+/* 主应用界面 */
+.main-app {
+display: none;
+flex: 1;
+flex-direction: column;
+height: 100vh;
+}
+.main-app.visible {
+display: flex;
+}
+header {
+height: 60px;
+min-height: 60px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 0 20px;
+background: linear-gradient(90deg, var(--header-bg-start), var(--header-bg-end), var(--header-bg-start));
+border-bottom: 1px solid var(--primary-border);
+z-index: 100;
+flex-shrink: 0;
+}
+header h1 {
+font-family: 'ZCOOL KuaiLe', cursive;
+color: var(--primary);
+font-size: clamp(18px, 2.5vw, 24px);
+letter-spacing: 2px;
+white-space: nowrap;
+}
+.header-controls {
+display: flex;
+align-items: center;
+gap: 15px;
+}
+.total-score {
+font-size: clamp(14px, 1.5vw, 18px);
+color: var(--text-dim);
+white-space: nowrap;
+}
+.total-score span {
+color: var(--primary);
+font-weight: bold;
+font-size: clamp(18px, 2vw, 24px);
+}
+.settings-btn {
+width: 36px;
+height: 36px;
+border-radius: 50%;
+background: var(--primary-dim);
+border: 1px solid var(--primary-border-strong);
+color: var(--primary);
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+transition: all 0.2s;
+flex-shrink: 0;
+padding: 0;
+}
+.settings-btn svg {
+width: 18px;
+height: 18px;
+fill: currentColor;
+}
+.settings-btn:active {
+transform: rotate(90deg);
+background: var(--primary-border-strong);
+}

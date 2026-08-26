@@ -1,0 +1,26 @@
+# ========== 数据文件 ==========
+# SQLite 数据库（运行时生成，如 EasyCore/data.db、lists.db）
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+
+# 其他数据 / 日志 / 缓存
+*.dat
+*.csv
+*.jsonl
+*.log
+*.pkl
+
+# ========== Python 缓存 ==========
+__pycache__/
+*.py[cod]
+
+# ========== 隐藏文件/目录（以 . 开头） ==========
+.*
+!.gitignore
+!.git/
+
+# ========== 文档（Markdown） ==========
+*.md

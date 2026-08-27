@@ -1587,6 +1587,12 @@ footer {
     z-index: 3200;
 }
 
+/* 提示/确认弹窗最顶层：需高于保存云名单等 top-most 弹窗（如 saveCloudNamesModal），
+   避免错误提示框出现在保存方式选择框之下 */
+.modal-overlay.top-alert {
+    z-index: 3300;
+}
+
 .edit-names-header {
     display: flex;
     justify-content: space-between;
@@ -2889,7 +2895,7 @@ footer {
     </div>
 
     <!-- 通用提示弹窗 -->
-    <div class="modal-overlay top-most" id="customAlertModal">
+    <div class="modal-overlay top-most top-alert" id="customAlertModal">
         <div class="prompt-panel" style="max-width: 400px;">
             <div class="prompt-title" id="customAlertTitle">提示</div>
             <div class="prompt-text" id="customAlertText"></div>
@@ -2900,7 +2906,7 @@ footer {
     </div>
 
     <!-- 通用确认弹窗 -->
-    <div class="modal-overlay top-most" id="customConfirmModal">
+    <div class="modal-overlay top-most top-alert" id="customConfirmModal">
         <div class="prompt-panel" style="max-width: 400px;">
             <div class="prompt-title" id="customConfirmTitle">确认</div>
             <div class="prompt-text" id="customConfirmText"></div>
@@ -3178,7 +3184,7 @@ window.onload = function() {
 </script>
 
 
-    <script src="./js/script.js?v=2026082622"></script>
+    <script src="./js/script.js?v=202608271056"></script>
 </body>
 
 </html>

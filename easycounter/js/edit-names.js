@@ -1,3 +1,14 @@
+// 名单限制（与云端 EasyCore 保持一致）
+const MAX_NAMES_COUNT = 1000; // 名单人数上限
+const MIN_NAME_LENGTH = 1;    // 单个名字最少字数
+const MAX_NAME_LENGTH = 5;    // 单个名字最多字数
+
+// 校验单个名字长度是否符合要求（按 Unicode 字符数计算）
+function isValidNameLength(name) {
+const len = [...name].length;
+return len >= MIN_NAME_LENGTH && len <= MAX_NAME_LENGTH;
+}
+
 // 渲染编辑名单的卡片
 function renderEditNameCards() {
 const names = getCurrentEditNames();
@@ -124,10 +135,20 @@ showCustomAlert('请输入有效的姓名');
 return;
 }
 
+if (!isValidNameLength(name)) {
+showCustomAlert(`姓名长度需为 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字`);
+return;
+}
+
 // 检查是否重复
 const currentNames = getCurrentEditNames();
 if (currentNames.includes(name)) {
 showCustomAlert('该姓名已存在');
+return;
+}
+
+if (currentNames.length >= MAX_NAMES_COUNT) {
+showCustomAlert(`名单人数已达上限 (${MAX_NAMES_COUNT} 人)`);
 return;
 }
 
@@ -170,6 +191,12 @@ function saveEdit() {
 const newName = input.value.trim();
 if (!newName) {
 showCustomAlert('请输入有效的姓名');
+input.focus();
+return;
+}
+
+if (!isValidNameLength(newName)) {
+showCustomAlert(`姓名长度需为 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字`);
 input.focus();
 return;
 }
@@ -456,6 +483,19 @@ async function handleConfirmSaveCloud() {
         showCustomAlert('名单为空，无法保存', '提示');
         return;
     }
+
+    // 名单人数上限校验（与云端 EasyCore 一致）
+    if (names.length > MAX_NAMES_COUNT) {
+        showCustomAlert(`名单人数超过上限 (${MAX_NAMES_COUNT} 人)，无法保存到云端`, '提示');
+        return;
+    }
+
+    // 名字长度校验
+    const invalidName = names.find(name => !isValidNameLength(name));
+    if (invalidName) {
+        showCustomAlert(`名字「${invalidName}」长度不合规（需 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字），无法保存到云端`, '提示');
+        return;
+    }
     
     const confirmBtn = document.getElementById('confirmSaveCloudBtn');
     confirmBtn.disabled = true;
@@ -540,6 +580,19 @@ async function saveEditedNames() {
 const newNames = getCurrentEditNames();
 if (newNames.length === 0) {
 showCustomAlert('请输入至少一个有效的姓名');
+return;
+}
+
+// 名单人数上限校验
+if (newNames.length > MAX_NAMES_COUNT) {
+showCustomAlert(`名单人数超过上限 (${MAX_NAMES_COUNT} 人)`);
+return;
+}
+
+// 名字长度校验
+const invalidName = newNames.find(name => !isValidNameLength(name));
+if (invalidName) {
+showCustomAlert(`名字「${invalidName}」长度不合规（需 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字）`);
 return;
 }
 
@@ -744,21 +797,42 @@ return;
 const currentNames = getCurrentEditNames();
 const currentNamesSet = new Set(currentNames);
 
-// 过滤掉重复的名字
+// 过滤掉重复和长度不合规的名字
 const newNames = [];
 const duplicates = [];
+const invalidLengths = [];
 names.forEach(name => {
 if (currentNamesSet.has(name)) {
 duplicates.push(name);
+} else if (!isValidNameLength(name)) {
+invalidLengths.push(name);
 } else {
 newNames.push(name);
 currentNamesSet.add(name);
 }
 });
 
-// 如果有重复，提示用户
+// 数量上限：最多补充到 MAX_NAMES_COUNT
+const remainingSlots = MAX_NAMES_COUNT - currentNames.length;
+let overflowCount = 0;
+if (newNames.length > remainingSlots) {
+overflowCount = newNames.length - remainingSlots;
+newNames.length = Math.max(0, remainingSlots);
+}
+
+// 汇总跳过原因
+const skipMessages = [];
 if (duplicates.length > 0) {
-showCustomAlert(`以下名字已存在，已自动跳过：\n${duplicates.join('\n')}`);
+skipMessages.push(`以下名字已存在，已自动跳过：\n${duplicates.slice(0, 10).join('\n')}${duplicates.length > 10 ? `\n...等 ${duplicates.length} 个` : ''}`);
+}
+if (invalidLengths.length > 0) {
+skipMessages.push(`以下名字长度不合规（需 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字），已自动跳过：\n${invalidLengths.slice(0, 10).join('\n')}${invalidLengths.length > 10 ? `\n...等 ${invalidLengths.length} 个` : ''}`);
+}
+if (overflowCount > 0) {
+skipMessages.push(`名单人数已达上限 (${MAX_NAMES_COUNT} 人)，仅添加前 ${newNames.length} 个，剩余 ${overflowCount} 个被跳过`);
+}
+if (skipMessages.length > 0) {
+showCustomAlert(skipMessages.join('\n\n'));
 }
 
 // 添加新名字到列表

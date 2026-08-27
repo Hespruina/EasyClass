@@ -292,8 +292,8 @@
 <div class="data-info">⚠ 注意：修改名单将重置所有票数</div>
 </div>
 </div>
-<!-- 通用提示弹窗 -->
-<div class="modal-overlay" id="customAlertModal">
+<!-- 通用提示弹窗（z-index 需高于 saveCloudNamesModal 10000 / batchAddNamesModal 9999，避免提示框被盖住） -->
+<div class="modal-overlay" id="customAlertModal" style="z-index: 10001;">
 <div class="prompt-panel" style="max-width: 400px;">
 <div class="prompt-title" id="customAlertTitle">提示</div>
 <div class="prompt-text" id="customAlertText"></div>
@@ -313,8 +313,8 @@
 </div>
 </div>
 </div>
-<!-- 通用确认弹窗 -->
-<div class="modal-overlay" id="customConfirmModal">
+<!-- 通用确认弹窗（z-index 需高于 saveCloudNamesModal 10000 / batchAddNamesModal 9999，避免确认框被盖住） -->
+<div class="modal-overlay" id="customConfirmModal" style="z-index: 10001;">
 <div class="prompt-panel" style="max-width: 400px;">
 <div class="prompt-title" id="customConfirmTitle">确认</div>
 <div class="prompt-text" id="customConfirmText"></div>

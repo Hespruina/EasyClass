@@ -4,6 +4,7 @@ let yuanchengma;
 let xingming = [];
 let dangqianshixian = 0;
 let paichuleibiao = [];
+let availableNamesCache = []; // 可用名单缓存（已排除保护池），点名定时器只从此数组取值
 let protectionPoolSize = 5;
 let isNamesLoaded = false;  // 标记是否已从手机端获取名单
 let localStorageEnabled = true; // 本地保存数据开关状态
@@ -13,6 +14,17 @@ let currentUser = null; // 当前用户信息 {user_id, name, email, avatar_url}
 let broadcastEnabled = false;          // 自定义播报消息开关
 let broadcastPrefixes = [];            // 播报可用前缀文本列表（含 {name} 占位符）
 let isBroadcastOverlayVisible = false; // 点名播报遮罩显示状态
+
+// 名单限制（与云端 EasyCore 保持一致）
+const MAX_NAMES_COUNT = 1000; // 名单人数上限
+const MIN_NAME_LENGTH = 1;    // 单个名字最少字数
+const MAX_NAME_LENGTH = 5;    // 单个名字最多字数
+
+// 校验单个名字长度是否符合要求（按 Unicode 字符数计算）
+function isValidNameLength(name) {
+    const len = [...name].length;
+    return len >= MIN_NAME_LENGTH && len <= MAX_NAME_LENGTH;
+}
 
 // WebSocket连接相关变量
 let socket;
@@ -398,6 +410,9 @@ function setNamesFromPhone(names) {
         // 更新滑块的最大值为总人数
         updateSliderMax();
 
+        // 名单已更新，重新缓存可用名单（点名运行中也能立即生效）
+        rebuildAvailableNamesCache();
+
         // 更新显示
         const xingmingxianshi = document.getElementById('xingmingxianshi');
         if (xingmingxianshi && xingming.length > 0) {
@@ -480,6 +495,9 @@ function setNamesFromLocal(names) {
         // 更新滑块的最大值为总人数
         updateSliderMax();
 
+        // 名单已更新，重新缓存可用名单（点名运行中也能立即生效）
+        rebuildAvailableNamesCache();
+
         // 更新显示
         const xingmingxianshi = document.getElementById('xingmingxianshi');
         if (xingmingxianshi && xingming.length > 0) {
@@ -537,6 +555,14 @@ document.getElementById('tingzhianniu').addEventListener('click', () => {
     tingzhiSuijiDianming();
 });
 
+// 重建可用名单缓存：一次性计算未被保护池排除的名单
+// 点名定时器只从缓存取值，避免每次 tick 都重复过滤
+function rebuildAvailableNamesCache() {
+    const excluded = new Set(paichuleibiao);
+    availableNamesCache = xingming.filter(name => !excluded.has(name));
+    return availableNamesCache;
+}
+
 // 开始随机点名的函数
 function kaishiSuijiDianming() {
     // 若播报遮罩仍显示，先关闭（防残留）
@@ -556,12 +582,13 @@ function kaishiSuijiDianming() {
     const dianmingkuang = document.querySelector('.dianmingkuang');
     const xingmingxianshi = document.getElementById('xingmingxianshi');
 
-    // 检查是否有可点名的名字
-    const guolvxingming = xingming.filter(xingming => !paichuleibiao.includes(xingming));
-    if (guolvxingming.length === 0) {
+    // 一次性计算可用名单缓存（排除保护池），后续定时器只从缓存取值
+    rebuildAvailableNamesCache();
+    if (availableNamesCache.length === 0) {
         // 没有可点名的名字，清空最早的一个保护池名字
         if (paichuleibiao.length > 0) {
             paichuleibiao.shift();
+            rebuildAvailableNamesCache(); // 保护池更新，重新缓存
             updateProtectionPoolDisplay();
         }
         return;
@@ -586,12 +613,11 @@ function kaishiSuijiDianming() {
 
     // 清除之前的定时器
     clearInterval(dingshiqiID);
-    // 每 1 毫秒按顺序显示下一个姓名
+    // 每 1 毫秒按顺序显示下一个姓名（只从缓存数组取值，不重复过滤）
     dingshiqiID = setInterval(() => {
-        const availableNames = xingming.filter(xingming => !paichuleibiao.includes(xingming));
-        if (availableNames.length > 0) {
-            xingmingxianshi.textContent = availableNames[dangqianshixian % availableNames.length];
-            dangqianshixian = (dangqianshixian + 1) % availableNames.length;
+        if (availableNamesCache.length > 0) {
+            xingmingxianshi.textContent = availableNamesCache[dangqianshixian % availableNamesCache.length];
+            dangqianshixian = (dangqianshixian + 1) % availableNamesCache.length;
         }
     }, 1);
 }
@@ -632,6 +658,9 @@ function tingzhiSuijiDianming() {
     if (paichuleibiao.length > protectionPoolSize) {
         paichuleibiao.shift();
     }
+
+    // 保护池已更新，重新缓存可用名单（下次点名直接使用）
+    rebuildAvailableNamesCache();
 
     // 更新防重复保护池显示
     updateProtectionPoolDisplay();
@@ -1288,6 +1317,9 @@ function handleNamesFromEasyCore(names) {
         // 更新滑块的最大值
         updateSliderMax();
 
+        // 名单已更新，重新缓存可用名单
+        rebuildAvailableNamesCache();
+
         // 更新显示
         const xingmingxianshi = document.getElementById('xingmingxianshi');
         if (xingmingxianshi) {
@@ -1505,6 +1537,8 @@ async function importCloudListByToken(token) {
         
         saveToLocalStorage();
         updateSliderMax();
+        // 名单已更新，重新缓存可用名单
+        rebuildAvailableNamesCache();
         
         const xingmingxianshi = document.getElementById('xingmingxianshi');
         if (xingmingxianshi) {
@@ -1913,6 +1947,8 @@ async function importCloudListByTokenForUser(token) {
         
         saveToLocalStorage();
         updateSliderMax();
+        // 名单已更新，重新缓存可用名单
+        rebuildAvailableNamesCache();
         
         const xingmingxianshi = document.getElementById('xingmingxianshi');
         if (xingmingxianshi) {
@@ -2332,6 +2368,9 @@ function initSettings() {
                 paichuleibiao.shift();
             }
 
+            // 保护池更新，重新缓存可用名单
+            rebuildAvailableNamesCache();
+
             // 更新防重复保护池显示
             updateProtectionPoolDisplay();
             
@@ -2590,10 +2629,20 @@ function handleAddNameConfirm(value) {
         return;
     }
 
+    if (!isValidNameLength(name)) {
+        showCustomAlert(`姓名长度需为 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字`);
+        return;
+    }
+
     // 检查是否重复
     const currentNames = getCurrentEditNames();
     if (currentNames.includes(name)) {
         showCustomAlert('该姓名已存在');
+        return;
+    }
+
+    if (currentNames.length >= MAX_NAMES_COUNT) {
+        showCustomAlert(`名单人数已达上限 (${MAX_NAMES_COUNT} 人)`);
         return;
     }
 
@@ -2636,6 +2685,12 @@ function handleEditName(card, nameDisplay) {
         const newName = input.value.trim();
         if (!newName) {
             showCustomAlert('请输入有效的姓名');
+            input.focus();
+            return;
+        }
+
+        if (!isValidNameLength(newName)) {
+            showCustomAlert(`姓名长度需为 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字`);
             input.focus();
             return;
         }
@@ -2850,6 +2905,19 @@ function saveEditedNames() {
         return;
     }
 
+    // 名单人数上限校验
+    if (newNames.length > MAX_NAMES_COUNT) {
+        showCustomAlert(`名单人数超过上限 (${MAX_NAMES_COUNT} 人)`);
+        return;
+    }
+
+    // 名字长度校验
+    const invalidName = newNames.find(name => !isValidNameLength(name));
+    if (invalidName) {
+        showCustomAlert(`名字「${invalidName}」长度不合规（需 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字）`);
+        return;
+    }
+
     // 计算更改内容
     const changes = calculateNameChanges(newNames);
 
@@ -2878,6 +2946,7 @@ ${changesHTML}`;
 
         // 清空保护池
         paichuleibiao = [];
+        rebuildAvailableNamesCache(); // 保护池更新，重新缓存可用名单
         updateProtectionPoolDisplay();
 
         // 保存到本地存储
@@ -2977,21 +3046,42 @@ function batchAddNames() {
     const currentNames = getCurrentEditNames();
     const currentNamesSet = new Set(currentNames);
 
-    // 过滤掉重复的名字
+    // 过滤掉重复和长度不合规的名字
     const newNames = [];
     const duplicates = [];
+    const invalidLengths = [];
     names.forEach(name => {
         if (currentNamesSet.has(name)) {
             duplicates.push(name);
+        } else if (!isValidNameLength(name)) {
+            invalidLengths.push(name);
         } else {
             newNames.push(name);
             currentNamesSet.add(name);
         }
     });
 
-    // 如果有重复，提示用户
+    // 数量上限：最多补充到 MAX_NAMES_COUNT
+    const remainingSlots = MAX_NAMES_COUNT - currentNames.length;
+    let overflowCount = 0;
+    if (newNames.length > remainingSlots) {
+        overflowCount = newNames.length - remainingSlots;
+        newNames.length = Math.max(0, remainingSlots);
+    }
+
+    // 汇总跳过原因
+    const skipMessages = [];
     if (duplicates.length > 0) {
-        showCustomAlert(`以下名字已存在，已自动跳过：\n${duplicates.join('\n')}`);
+        skipMessages.push(`以下名字已存在，已自动跳过：\n${duplicates.slice(0, 10).join('\n')}${duplicates.length > 10 ? `\n...等 ${duplicates.length} 个` : ''}`);
+    }
+    if (invalidLengths.length > 0) {
+        skipMessages.push(`以下名字长度不合规（需 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字），已自动跳过：\n${invalidLengths.slice(0, 10).join('\n')}${invalidLengths.length > 10 ? `\n...等 ${invalidLengths.length} 个` : ''}`);
+    }
+    if (overflowCount > 0) {
+        skipMessages.push(`名单人数已达上限 (${MAX_NAMES_COUNT} 人)，仅添加前 ${newNames.length} 个，剩余 ${overflowCount} 个被跳过`);
+    }
+    if (skipMessages.length > 0) {
+        showCustomAlert(skipMessages.join('\n\n'));
     }
 
     // 添加新名字到列表
@@ -3326,6 +3416,19 @@ async function handleConfirmSaveCloud() {
 
     if (names.length === 0) {
         showCustomAlert('名单为空，无法保存', '提示');
+        return;
+    }
+
+    // 名单人数上限校验（与云端 EasyCore 一致）
+    if (names.length > MAX_NAMES_COUNT) {
+        showCustomAlert(`名单人数超过上限 (${MAX_NAMES_COUNT} 人)，无法保存到云端`, '提示');
+        return;
+    }
+
+    // 名字长度校验
+    const invalidName = names.find(name => !isValidNameLength(name));
+    if (invalidName) {
+        showCustomAlert(`名字「${invalidName}」长度不合规（需 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字），无法保存到云端`, '提示');
         return;
     }
 

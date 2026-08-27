@@ -12,6 +12,7 @@
 *.jsonl
 *.log
 *.pkl
+EasyCore/config.yml
 
 # ========== Python 缓存 ==========
 __pycache__/

@@ -1037,6 +1037,70 @@ input:checked + .slider:before {
     pointer-events: none;
 }
 
+/* ============ 点名播报遮罩 ============ */
+.broadcast-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    cursor: pointer;
+    animation: broadcastFadeIn 0.35s ease-out;
+}
+
+.broadcast-content {
+    text-align: center;
+    max-width: 88%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding: 40px;
+}
+
+.broadcast-name {
+    color: #45f3ff;
+    font-family: "ZCOOL QingKe HuangYou", "Noto Sans SC", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: clamp(3rem, 10vw, 7rem);
+    line-height: 1.2;
+    text-shadow: 0 0 30px rgba(69, 243, 255, 0.6);
+    word-break: break-word;
+}
+
+.broadcast-message {
+    color: #ffffff;
+    font-family: "SimHei", "黑体", "Noto Sans SC", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: clamp(1.4rem, 4vw, 2.6rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90vw;
+}
+
+.broadcast-hint {
+    color: #ffffff;
+    font-family: "SimHei", "黑体", "Noto Sans SC", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: clamp(0.8rem, 1.6vw, 1rem);
+    opacity: 0.75;
+    margin-top: 8px;
+}
+
+@keyframes broadcastFadeIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
 .loading-content {
     display: flex;
     flex-direction: column;
@@ -2648,6 +2712,15 @@ footer {
     </div>
 </div>
 
+<!-- 点名播报遮罩 -->
+<div id="broadcastOverlay" class="broadcast-overlay" style="display:none;">
+    <div class="broadcast-content">
+        <div class="broadcast-name" id="broadcastName"></div>
+        <div class="broadcast-message" id="broadcastMessage"></div>
+        <div class="broadcast-hint">点击屏幕 或使用 翻页笔/手机 任意键关掉遮罩~</div>
+    </div>
+</div>
+
 <!-- 设置按钮和设置框 -->
 <div class="settings-container">
     <button id="settings-button" class="settings-button"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/></svg></button>
@@ -2671,6 +2744,22 @@ footer {
                     </label>
                 </label>
                 <p class="local-storage-desc">开启后名单和设置将保存在浏览器本地</p>
+            </div>
+            <div class="setting-item">
+                <label class="local-storage-label">
+                    <span>自定义播报消息</span>
+                    <label class="fanyebeikaiguan" style="margin-top: 0; margin-left: 10px;">
+                        <input type="checkbox" id="custom-broadcast-checkbox" />
+                        <span class="slider round"></span>
+                    </label>
+                </label>
+                <p class="local-storage-desc">点名结束后全屏播报一条前缀消息</p>
+            </div>
+            <div class="setting-item">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <span class="local-storage-desc" style="margin: 0;">管理可用的点名消息前缀</span>
+                    <button id="manage-prefixes-btn" type="button" style="border: none; outline: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; font-weight: 600; background: #45f3ff; color: #0a0a0c; font-family: 'Noto Sans SC', sans-serif; transition: background 0.3s, transform 0.2s;">管理前缀列表</button>
+                </div>
             </div>
         </div>
     </div>
@@ -3089,7 +3178,7 @@ window.onload = function() {
 </script>
 
 
-    <script src="./js/script.js?v=202607290121"></script>
+    <script src="./js/script.js?v=2026082622"></script>
 </body>
 
 </html>

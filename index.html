@@ -848,6 +848,7 @@
         (function() {
             // ============ 状态 ============
             let isLoggedIn = false;
+            let isGuest = false;      // 是否游客账号
             let currentUser = null;
 
             // ============ 扫描线/面板动画状态（支持打断反向） ============
@@ -887,17 +888,21 @@
                         if (data && data.user) {
                             isLoggedIn = true;
                             currentUser = data.user;
+                            isGuest = !!(data.user.is_guest);
                         } else {
                             isLoggedIn = false;
+                            isGuest = false;
                             currentUser = null;
                         }
                     } else {
                         isLoggedIn = false;
+                        isGuest = false;
                         currentUser = null;
                     }
                 } catch (error) {
                     console.error('获取用户信息失败:', error);
                     isLoggedIn = false;
+                    isGuest = false;
                     currentUser = null;
                 }
                 updateUserAvatar();
@@ -923,7 +928,16 @@
             function updateAccountPanelContent() {
                 if (!accountAvatarLarge || !accountName || !accountEmail || !accountActionBtn) return;
 
-                if (isLoggedIn && currentUser) {
+                if (isLoggedIn && currentUser && isGuest) {
+                    // 游客模式：突出登录/注册引导
+                    accountAvatarLarge.innerHTML =
+                        '<svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>';
+                    accountName.textContent = '游客';
+                    accountEmail.textContent = '游客模式 · 登录可同步保存数据';
+                    accountActionBtn.textContent = '登录 / 注册';
+                    accountActionBtn.classList.remove('account-logout-btn');
+                    accountActionBtn.classList.add('account-login-btn');
+                } else if (isLoggedIn && currentUser) {
                     if (currentUser.avatar_url) {
                         accountAvatarLarge.innerHTML =
                             `<img src="${currentUser.avatar_url}" alt="用户头像" onerror="this.style.display='none'; this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\'><path d=\\'M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z\\'/></svg>';">`;
@@ -1062,6 +1076,8 @@
 
             // ============ 登出 ============
             async function handleLogout() {
+                // 游客登出 = 放弃数据，先确认
+                if (isGuest && !window.confirm('退出游客模式将删除本机游客数据（名单、前缀等），确定退出吗？')) return;
                 try {
                     const response = await fetch('/easycore/api/logout', {
                         method: 'POST',
@@ -1070,6 +1086,7 @@
 
                     if (response.ok) {
                         isLoggedIn = false;
+                        isGuest = false;
                         currentUser = null;
                         updateUserAvatar();
                         updateAccountPanelContent();
@@ -1098,8 +1115,11 @@
 
                 accountActionBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    if (isLoggedIn) {
+                    if (isLoggedIn && !isGuest) {
                         handleLogout();
+                    } else if (isGuest) {
+                        // 游客 -> 登录/注册正式账号（SSO 登录后可合并游客数据）
+                        window.location.href = '/easycore/login';
                     } else {
                         window.open('/easycore/', '_blank', 'noopener');
                     }

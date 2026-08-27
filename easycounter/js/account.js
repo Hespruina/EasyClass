@@ -1,5 +1,6 @@
 // EasyCounter账户系统集成
 let isLoggedIn = false;
+let isGuest = false;      // 是否游客账号
 let currentUser = null;
 
 // 获取API基础路径
@@ -32,21 +33,25 @@ async function fetchUserInfo() {
             if (data && data.user) {
                 isLoggedIn = true;
                 currentUser = data.user;
+                isGuest = !!(data.user.is_guest);
                 updateAccountUI();
                 fetchAndRenderCloudLists();
             } else {
                 isLoggedIn = false;
+                isGuest = false;
                 currentUser = null;
                 updateAccountUI();
             }
         } else {
             isLoggedIn = false;
+            isGuest = false;
             currentUser = null;
             updateAccountUI();
         }
     } catch (error) {
         console.error('获取用户信息失败:', error);
         isLoggedIn = false;
+        isGuest = false;
         currentUser = null;
         updateAccountUI();
     }
@@ -61,6 +66,7 @@ function updateAccountUI() {
     const accountName = document.getElementById('accountName');
     const accountEmail = document.getElementById('accountEmail');
     const saveCloudNamesBtn = document.getElementById('saveCloudNamesBtn');
+    const accountLogoutBtn = document.getElementById('accountLogoutBtn');
     
     if (accountLoading) accountLoading.classList.add('hidden');
     
@@ -69,14 +75,32 @@ function updateAccountUI() {
         if (accountLoggedOut) accountLoggedOut.classList.add('hidden');
         if (saveCloudNamesBtn) saveCloudNamesBtn.classList.remove('hidden');
         
-        if (accountName) accountName.textContent = currentUser.name || '-';
-        if (accountEmail) accountEmail.textContent = currentUser.email || '-';
-        
-        if (accountAvatar) {
-            if (currentUser.avatar_url) {
-                accountAvatar.innerHTML = `<img src="${currentUser.avatar_url}" alt="用户头像" onerror="this.style.display='none'; this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z\\'/></svg>';">`;
-            } else {
+        if (isGuest) {
+            // 游客模式：名称/邮箱 + 登录注册引导
+            if (accountName) accountName.textContent = '游客';
+            if (accountEmail) accountEmail.textContent = '游客模式 · 登录可同步保存数据';
+            if (accountLogoutBtn) {
+                accountLogoutBtn.textContent = '登录 / 注册';
+                accountLogoutBtn.classList.remove('account-logout-btn');
+                accountLogoutBtn.classList.add('account-login-btn');
+            }
+            if (accountAvatar) {
                 accountAvatar.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>`;
+            }
+        } else {
+            if (accountName) accountName.textContent = currentUser.name || '-';
+            if (accountEmail) accountEmail.textContent = currentUser.email || '-';
+            if (accountLogoutBtn) {
+                accountLogoutBtn.textContent = '登出';
+                accountLogoutBtn.classList.remove('account-login-btn');
+                accountLogoutBtn.classList.add('account-logout-btn');
+            }
+            if (accountAvatar) {
+                if (currentUser.avatar_url) {
+                    accountAvatar.innerHTML = `<img src="${currentUser.avatar_url}" alt="用户头像" onerror="this.style.display='none'; this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z\\'/></svg>';">`;
+                } else {
+                    accountAvatar.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>`;
+                }
             }
         }
     } else {
@@ -86,8 +110,9 @@ function updateAccountUI() {
     }
 }
 
-// 登出
+// 登出（游客登出 = 放弃数据，先确认）
 async function handleLogout() {
+    if (isGuest && !window.confirm('退出游客模式将删除本机游客数据（名单、前缀等），确定退出吗？')) return;
     try {
         const response = await fetch(getEasyCoreApiPath() + 'api/logout', {
             method: 'POST',
@@ -96,6 +121,7 @@ async function handleLogout() {
         
         if (response.ok) {
             isLoggedIn = false;
+            isGuest = false;
             currentUser = null;
             updateAccountUI();
             
@@ -112,9 +138,9 @@ async function handleLogout() {
     }
 }
 
-// 登录跳转
+// 登录跳转（游客升级正式账号走 SSO）
 function handleLogin() {
-    window.location.href = 'https://easyclass.zhrhello.top/easycore/';
+    window.location.href = getEasyCoreApiPath() + 'login';
 }
 
 // 获取云名单列表
@@ -431,7 +457,10 @@ function initAccountSystem() {
     }
     
     if (accountLogoutBtn) {
-        accountLogoutBtn.addEventListener('click', handleLogout);
+        accountLogoutBtn.addEventListener('click', () => {
+            if (isGuest) handleLogin();      // 游客 -> 登录/注册正式账号
+            else handleLogout();
+        });
     }
     
     // 页面加载时获取用户信息

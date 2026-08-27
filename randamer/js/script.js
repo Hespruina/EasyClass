@@ -8,7 +8,11 @@ let protectionPoolSize = 5;
 let isNamesLoaded = false;  // 标记是否已从手机端获取名单
 let localStorageEnabled = true; // 本地保存数据开关状态
 let isLoggedIn = false; // 用户登录状态
+let isGuest = false;    // 是否游客账号
 let currentUser = null; // 当前用户信息 {user_id, name, email, avatar_url}
+let broadcastEnabled = false;          // 自定义播报消息开关
+let broadcastPrefixes = [];            // 播报可用前缀文本列表（含 {name} 占位符）
+let isBroadcastOverlayVisible = false; // 点名播报遮罩显示状态
 
 // WebSocket连接相关变量
 let socket;
@@ -152,6 +156,7 @@ function saveToLocalStorage() {
         localStorage.removeItem('xingming');
         localStorage.removeItem('protectionPoolSize');
         localStorage.removeItem('isNamesLoaded');
+        localStorage.removeItem('customBroadcastEnabled');
         return;
     }
     // 开启状态下保存所有数据
@@ -534,6 +539,10 @@ document.getElementById('tingzhianniu').addEventListener('click', () => {
 
 // 开始随机点名的函数
 function kaishiSuijiDianming() {
+    // 若播报遮罩仍显示，先关闭（防残留）
+    if (isBroadcastOverlayVisible) {
+        hideBroadcastOverlay();
+    }
     if (shifouzaiyunxing) return; // 如果已经在运行，则不执行
 
     // 检查是否已获取名单
@@ -629,6 +638,9 @@ function tingzhiSuijiDianming() {
 
     // 对姓名列表进行高强度打乱重排
     xingming = fisherYatesShuffle(xingming);
+
+    // 点名播报：全屏展示随机前缀消息
+    showBroadcastOverlay(zuizhongxuanzhong);
 }
 
 // Fisher-Yates 洗牌算法
@@ -787,6 +799,7 @@ function resetSocketMessageHandlers() {
             if (data.type === 'set_code' && data.code) {
                 // 首次获取code
                 clearCodeTimeout();
+                reconnectFailCount = 0;
                 savedCode = data.code;
                 yuanchengma = data.code;
                 document.getElementById('yuanchengma').textContent = `遥控码：${yuanchengma}`;
@@ -894,7 +907,10 @@ function resetSocketMessageHandlers() {
             } else if (data.type === 'clicked_1') {
                 // 接收到手机端点击消息
                 console.log('收到手机端点击消息');
-                if (shifouzaiyunxing) {
+                if (isBroadcastOverlayVisible) {
+                    // 播报遮罩显示时：优先关闭遮罩，不切换点名状态
+                    hideBroadcastOverlay();
+                } else if (shifouzaiyunxing) {
                     tingzhiSuijiDianming();
                 } else {
                     kaishiSuijiDianming();
@@ -1013,8 +1029,17 @@ function startCodeTimeout() {
         // 关闭当前连接
         wsSafeClose();
         isConnecting = false;
-        // 重新初始化连接
-        initWebSocket();
+        reconnectFailCount++;
+        if (savedCode && reconnectFailCount < MAX_RECONNECT_FAILS) {
+            // 重连确认超时：保留旧 code 重试（服务端重连窗口内可继承）
+            console.log(`重连确认超时，第 ${reconnectFailCount} 次重试...`);
+            initWebSocket(savedCode);
+        } else {
+            // 多次失败或首次连接：清空旧 code，重新获取
+            savedCode = '';
+            reconnectFailCount = 0;
+            initWebSocket();
+        }
     }, CODE_TIMEOUT);
 }
 
@@ -1057,8 +1082,9 @@ function initWebSocket(reconnectCode = null) {
         isConnecting = false;
 
         if (reconnectCode) {
-            // 重连模式，等待服务端确认
+            // 重连模式：主动告知服务端重连（消息协议，绕开 URL 参数解析问题）
             console.log('等待重连确认...');
+            wsSend({ type: 'reconnect', code: reconnectCode });
             startCodeTimeout();
         } else {
             // 首次连接，立即获取遥控码
@@ -1073,6 +1099,7 @@ function initWebSocket(reconnectCode = null) {
             if (data.type === 'set_code' && data.code) {
                 // 接收到遥控码，清除超时定时器
                 clearCodeTimeout();
+                reconnectFailCount = 0;
                 savedCode = data.code;
                 yuanchengma = data.code;
                 document.getElementById('yuanchengma').textContent = `遥控码：${yuanchengma}`;
@@ -1092,6 +1119,7 @@ function initWebSocket(reconnectCode = null) {
                 handlePendingToken();
             } else if (data.type === 'reconnect_success' && data.code) {
                 clearCodeTimeout();
+                reconnectFailCount = 0;
                 savedCode = data.code;
                 yuanchengma = data.code;
                 document.getElementById('yuanchengma').textContent = `遥控码：${yuanchengma}`;
@@ -1168,7 +1196,10 @@ function initWebSocket(reconnectCode = null) {
                 showCustomAlert('获取名单失败：' + data.message);
             } else if (data.type === 'clicked_1') {
                 console.log('收到手机端点击消息');
-                if (shifouzaiyunxing) {
+                if (isBroadcastOverlayVisible) {
+                    // 播报遮罩显示时：优先关闭遮罩，不切换点名状态
+                    hideBroadcastOverlay();
+                } else if (shifouzaiyunxing) {
                     tingzhiSuijiDianming();
                 } else {
                     kaishiSuijiDianming();
@@ -1580,6 +1611,10 @@ window.addEventListener('load', async () => {
     // 初始化设置功能（在名单加载完成后）
     initSettings();
 
+    // 初始化点名播报开关并加载前缀
+    initBroadcastSetting();
+    loadBroadcastPrefixes();
+
     // 保存 token 以便在 WebSocket 连接后使用
     window.pendingToken = token;
 
@@ -1741,20 +1776,24 @@ async function fetchUserInfo() {
             if (data && data.user) {
                 isLoggedIn = true;
                 currentUser = data.user;
+                isGuest = !!(data.user.is_guest);
                 updateUserAvatar();
             } else {
                 isLoggedIn = false;
+                isGuest = false;
                 currentUser = null;
                 updateUserAvatar();
             }
         } else {
             isLoggedIn = false;
+            isGuest = false;
             currentUser = null;
             updateUserAvatar();
         }
     } catch (error) {
         console.error('获取用户信息失败:', error);
         isLoggedIn = false;
+        isGuest = false;
         currentUser = null;
         updateUserAvatar();
     }
@@ -1925,7 +1964,22 @@ function showUserInfoModal() {
     if (!modal) return;
 
     // 更新弹窗中的用户信息
-    if (isLoggedIn && currentUser) {
+    if (isLoggedIn && currentUser && isGuest) {
+        // 游客模式：显示游客标识 + 登录/注册引导
+        userInfoUsername.textContent = '游客';
+        userInfoEmail.textContent = '游客模式 · 登录可同步保存数据';
+        userInfoAvatar.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>';
+        if (userLogoutBtn) {
+            userLogoutBtn.textContent = '登录 / 注册';
+            userLogoutBtn.classList.remove('user-logout-btn');
+            userLogoutBtn.classList.add('login-btn');
+        }
+        // 游客同样可使用云名单
+        if (cloudListSectionUser) {
+            cloudListSectionUser.classList.remove('hidden');
+            fetchAndRenderCloudListsForUser();
+        }
+    } else if (isLoggedIn && currentUser) {
         userInfoUsername.textContent = currentUser.name || '未设置用户名';
         userInfoEmail.textContent = currentUser.email || '未设置邮箱';
 
@@ -1987,8 +2041,9 @@ function hideUserInfoModal() {
     }, 300);
 }
 
-// 登出功能
+// 登出功能（游客登出 = 放弃数据，先确认）
 async function handleLogout() {
+    if (isGuest && !window.confirm('退出游客模式将删除本机游客数据（名单、前缀等），确定退出吗？')) return;
     try {
         const response = await fetch(`${getApiBasePath()}api/logout`, {
             method: 'POST',
@@ -1997,6 +2052,7 @@ async function handleLogout() {
         
         if (response.ok) {
             isLoggedIn = false;
+            isGuest = false;
             currentUser = null;
             updateUserAvatar();
             hideUserInfoModal();
@@ -2042,10 +2098,13 @@ function initUserAvatar() {
         closeUserInfoBtn.addEventListener('click', hideUserInfoModal);
     }
     
-    // 点击底部按钮（登出/去登录）
+    // 点击底部按钮（登出/去登录/游客升级）
     if (userLogoutBtn) {
         userLogoutBtn.addEventListener('click', () => {
-            if (isLoggedIn) {
+            if (isLoggedIn && isGuest) {
+                // 游客 -> 登录/注册正式账号（SSO 登录后可合并游客数据）
+                window.location.href = `${getApiBasePath()}login`;
+            } else if (isLoggedIn) {
                 handleLogout();
             } else {
                 window.location.href = 'https://easyclass.zhrhello.top/easycore/';
@@ -2114,6 +2173,112 @@ function initProtectionPoolScroll() {
             protectionPoolList.style.cursor = 'default';
         }
     });
+}
+
+// ============ 点名播报前缀 ============
+
+// 初始化「自定义播报消息」开关（从 localStorage 读取，默认关闭）
+function initBroadcastSetting() {
+    const checkbox = document.getElementById('custom-broadcast-checkbox');
+    if (!checkbox) return;
+
+    // 读取保存的开关状态（默认关闭）
+    const saved = localStorage.getItem('customBroadcastEnabled');
+    broadcastEnabled = saved === 'true';
+    checkbox.checked = broadcastEnabled;
+
+    checkbox.addEventListener('change', () => {
+        broadcastEnabled = checkbox.checked;
+        if (broadcastEnabled) {
+            localStorage.setItem('customBroadcastEnabled', 'true');
+        } else {
+            localStorage.setItem('customBroadcastEnabled', 'false');
+        }
+        // 若本地保存被关闭，则不持久化开关
+        if (!localStorageEnabled) {
+            localStorage.removeItem('customBroadcastEnabled');
+        }
+    });
+
+    // 管理前缀列表：新标签页打开 EasyCore 前缀管理页
+    const manageBtn = document.getElementById('manage-prefixes-btn');
+    if (manageBtn) {
+        manageBtn.addEventListener('click', () => {
+            let base = getApiBasePath();
+            // getApiBasePath() 返回以 /easycore/ 结尾的路径
+            if (base && base !== '/') {
+                window.open(base + '?tab=prefixes', '_blank');
+            } else {
+                window.open('https://easyclass.zhrhello.top/easycore/?tab=prefixes', '_blank');
+            }
+        });
+    }
+
+    // 遮罩点击关闭
+    const overlay = document.getElementById('broadcastOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', hideBroadcastOverlay);
+    }
+}
+
+// 加载播报前缀列表：已登录走个人 API；未登录或接口异常时回退系统默认前缀公开接口
+async function loadBroadcastPrefixes() {
+    try {
+        const base = getApiBasePath();
+        let res = await fetch(base + 'api/prefixes');
+        if (res.ok) {
+            const data = await res.json();
+            const defaults = (data.defaults || []).map(p => p.text);
+            const customs = (data.customs || []).map(p => p.text);
+            broadcastPrefixes = defaults.concat(customs);
+            console.log('[Randamer] 已获取个人前缀列表:', broadcastPrefixes.length, '条');
+            return;
+        }
+        // 未登录(401)或接口异常(404/500)：回退系统默认前缀公开接口
+        console.warn('[Randamer] 个人前缀接口不可用 (status=' + res.status + ')，回退系统默认前缀');
+        res = await fetch(base + 'api/prefixes/default');
+        if (res.ok) {
+            const data = await res.json();
+            broadcastPrefixes = data.prefixes || [];
+            console.log('[Randamer] 已获取系统默认前缀:', broadcastPrefixes.length, '条');
+        } else {
+            broadcastPrefixes = [];
+            console.error('[Randamer] 系统默认前缀接口也失败 (status=' + res.status + ')');
+        }
+    } catch (e) {
+        console.error('[Randamer] 加载播报前缀失败:', e);
+        broadcastPrefixes = [];
+    }
+}
+
+// 显示点名播报遮罩
+function showBroadcastOverlay(name) {
+    if (!broadcastEnabled || broadcastPrefixes.length === 0) {
+        console.log('[Randamer] 播报跳过: broadcastEnabled=' + broadcastEnabled + ', prefixCount=' + broadcastPrefixes.length);
+        return;
+    }
+
+    const overlay = document.getElementById('broadcastOverlay');
+    const nameEl = document.getElementById('broadcastName');
+    const msgEl = document.getElementById('broadcastMessage');
+    if (!overlay || !nameEl || !msgEl) return;
+
+    // 随机选一条前缀并替换 {name} 占位符
+    const prefix = broadcastPrefixes[Math.floor(Math.random() * broadcastPrefixes.length)];
+    const message = prefix.replaceAll('{name}', name);
+
+    nameEl.textContent = name;
+    msgEl.textContent = message;
+    overlay.style.display = 'flex';
+    isBroadcastOverlayVisible = true;
+}
+
+// 关闭点名播报遮罩
+function hideBroadcastOverlay() {
+    if (!isBroadcastOverlayVisible) return;
+    const overlay = document.getElementById('broadcastOverlay');
+    if (overlay) overlay.style.display = 'none';
+    isBroadcastOverlayVisible = false;
 }
 
 // 初始化设置功能
@@ -2257,6 +2422,11 @@ document.getElementById('fanyebeikaiguan-checkbox').addEventListener('change', (
 
 // 定义键盘事件处理函数
 function handleKeyDown(event) {
+    // 点名播报遮罩显示时：任意键关闭遮罩，不触发其他按键行为
+    if (isBroadcastOverlayVisible) {
+        hideBroadcastOverlay();
+        return;
+    }
     // 按下 PageDown、ArrowRight 或 ArrowDown 键时模拟按下按钮
     if (event.key === 'PageDown' || event.key === 'ArrowRight' || event.key === 'ArrowDown') {
         if (shifouzaiyunxing) {

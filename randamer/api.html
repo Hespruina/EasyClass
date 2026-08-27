@@ -262,6 +262,7 @@
     let reconnectTimer = null;
     let savedCode = '';
     let codeTimeoutTimer = null;
+    let reconnectFailCount = 0;
     const CODE_TIMEOUT = 3300;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -339,7 +340,17 @@
             console.log('获取code超时，重置连接...');
             wsSafeClose();
             isConnecting = false;
-            initWebSocket();
+            reconnectFailCount++;
+            if (savedCode && reconnectFailCount < 5) {
+                // 重连确认超时：保留旧 code 重试（服务端重连窗口内可继承）
+                console.log(`重连确认超时，第 ${reconnectFailCount} 次重试...`);
+                initWebSocket(savedCode);
+            } else {
+                // 多次失败或首次连接：清空旧 code，重新获取
+                savedCode = '';
+                reconnectFailCount = 0;
+                initWebSocket();
+            }
         }, CODE_TIMEOUT);
     }
 
@@ -375,7 +386,9 @@
             isConnecting = false;
 
             if (reconnectCode) {
+                // 重连模式：主动告知服务端重连（消息协议，绕开 URL 参数解析问题）
                 console.log('等待重连确认...');
+                wsSend({ type: 'reconnect', code: reconnectCode });
                 startCodeTimeout();
             } else {
                 // 首次连接，立即获取code
@@ -389,6 +402,7 @@
                 const data = JSON.parse(event.data);
                 if (data.type === 'set_code' && data.code) {
                     clearCodeTimeout();
+                    reconnectFailCount = 0;
                     code = data.code;
                     savedCode = data.code;
                     isCodeReady = true;
@@ -401,6 +415,7 @@
                     tryProceed();
                 } else if (data.type === 'reconnect_success' && data.code) {
                     clearCodeTimeout();
+                    reconnectFailCount = 0;
                     code = data.code;
                     savedCode = data.code;
                     isCodeReady = true;
@@ -410,6 +425,22 @@
                     document.getElementById('qrStatus').textContent = '扫码上传可用';
                     
                     console.log('重连成功，code:', code);
+                    showLoadingOverlay(false);
+                    tryProceed();
+                } else if (data.type === 'code_refreshed') {
+                    // code 已过期，服务端下发新 code：保存并继续
+                    const newCode = data.new_code;
+                    console.log(`code已刷新: ${data.old_code} -> ${newCode}`);
+                    clearCodeTimeout();
+                    reconnectFailCount = 0;
+                    code = newCode;
+                    savedCode = newCode;
+                    isCodeReady = true;
+                    
+                    document.getElementById('qrImage').src = `https://api.pwmqr.com/qrcode/create/?url=https://easyclass.zhrhello.top/randamer/upload_names/?code=${code}`;
+                    document.getElementById('qrBox').classList.remove('hidden');
+                    document.getElementById('qrStatus').textContent = '扫码上传可用';
+                    
                     showLoadingOverlay(false);
                     tryProceed();
                 } else if (data.type === 'reconnect_failed') {

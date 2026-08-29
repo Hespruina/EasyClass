@@ -25,3 +25,6 @@ __pycache__/
 
 # ========== 文档（Markdown） ==========
 *.md
+!README.md
+
+EasyCore/

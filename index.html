@@ -3,16 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>EasyClass 课易 · 在线教学工具箱</title>
-    <meta name="description" content="EasyClass课易是一款免费的在线教学工具集，包含易计票、随机点名器、投票计票等实用工具，助力课堂教学和班级管理。">
-    <meta name="keywords" content="在线教学工具,课堂点名,投票计票,随机分组,教学辅助工具,班级管理">
-    <meta name="author" content="zhrhello.top">
-    <meta name="robots" content="index, follow">
-    <meta name="theme-color" content="#45f3ff">
-    <link rel="canonical" href="https://easyclass.zhrhello.top/">
+<!-- 更精确的标题和描述 -->
+<title>EasyClass课易 - 免费在线教学工具箱 | 随机点名、投票计票</title>
+<meta name="description" content="EasyClass课易提供EasyCore易核账户系统、易点名随机点名器、易计票投票工具等免费在线教学工具。无需安装，即开即用，助力高效课堂教学。">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="googlebot" content="index, follow">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": [
+    {
+      "@type": "SoftwareApplication",
+      "position": 1,
+      "name": "EasyCore易核",
+      "url": "https://easyclass.zhrhello.top/easycore/",
+      "applicationCategory": "EducationalApplication",
+      "description": "EasyClass核心账户系统，提供统一用户认证、数据管理和云端同步服务"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "position": 2,
+      "name": "易点名",
+      "url": "https://easyclass.zhrhello.top/randamer/",
+      "applicationCategory": "EducationalApplication",
+      "description": "在线随机点名工具，支持自定义名单、动画效果、历史记录"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "position": 3,
+      "name": "易计票",
+      "url": "https://easyclass.zhrhello.top/easycounter/",
+      "applicationCategory": "EducationalApplication",
+      "description": "在线投票计票工具，支持实时投票统计、自动排名"
+    }
+  ]
+}
+</script>
+<!-- Open Graph标签 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="EasyClass课易 - 免费在线教学工具箱">
+<meta property="og:description" content="随机点名、投票计票等实用教学工具，免费在线使用">
+<meta property="og:url" content="https://easyclass.zhrhello.top/">
+<meta property="og:site_name" content="EasyClass课易">
 
+<meta name="keywords" content="EasyClass,课易,EasyCore,易核,Randamer,易点名,EasyCounter,易计票,在线教学工具,课堂点名,投票计票,随机分组,教学辅助工具,班级管理,随机点名,唱票,评选,投票">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="EasyClass课易 - 在线教学工具箱">
+<meta name="twitter:description" content="免费的教学工具集，助力高效课堂">
+    <meta name="author" content="zhrhello.top">
+    <meta name="theme-color" content="#45f3ff">
+    <link rel="icon" type="image/png" href="/assets/PICTURE/logo.png">
+    <link rel="apple-touch-icon" href="/assets/PICTURE/logo.png">
+    <link rel="canonical" href="https://easyclass.zhrhello.top/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "EasyClass 课易",
+  "url": "https://easyclass.zhrhello.top/",
+  "description": "在线教学工具集，包含投票计票、随机点名等实用工具",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "featureList": [
+    "在线随机点名",
+    "投票计票",
+    "课堂互动",
+    "云端同步"
+  ]
+}
+</script>
+    <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "y9dascui0p");
+    </script>
     <style>
-        @import url('https://fonts-googleapis-com.mirror.zhrhello.top/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
+        @import url('https://google-fonts.mirrors.sjtug.sjtu.edu.cn/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
 
         * {
             margin: 0;
@@ -99,7 +175,17 @@
             font-weight: 900;
             font-size: 18px;
             color: var(--bg-primary);
-            border-radius: 4px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 8px;
         }
 
         .logo-text {
@@ -729,7 +815,7 @@
     <header class="header">
         <div class="header-inner">
             <a href="/" class="logo">
-                <div class="logo-icon">EC</div>
+                <div class="logo-icon"><img src="/assets/PICTURE/logo.png" alt="EasyClass"></div>
                 <div class="logo-text">EasyClass<span class="sub">课易</span></div>
             </a>
             <div class="header-actions">

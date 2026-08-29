@@ -724,6 +724,17 @@
             font-size: 13px;
         }
 
+        .footer-site-link {
+            color: var(--accent-primary);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: opacity 0.2s;
+        }
+
+        .footer-site-link:hover {
+            opacity: 0.8;
+        }
+
         .footer-links {
             display: flex;
             gap: 24px;
@@ -915,7 +926,7 @@
             <div class="footer-brand">
                 <div class="logo-text">EasyClass</div>
             </div>
-            <p class="footer-copyright">Copyright © 2026 zhrhello.top. All rights reserved.</p>
+            <p class="footer-copyright">Copyright © 2026 <a class="footer-site-link" href="https://zhrhello.top/" target="_blank" rel="noopener noreferrer">zhrhello.top</a>. All rights reserved.</p>
             <div class="footer-links">
                 <a href="easycore/" class="footer-link" target="_blank" rel="noopener noreferrer">EasyCore</a>
                 <a href="randamer/" class="footer-link" target="_blank" rel="noopener noreferrer">易点名</a>

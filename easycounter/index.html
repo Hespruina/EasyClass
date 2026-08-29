@@ -52,11 +52,42 @@
 <link rel="stylesheet" href="css/name-tags.css">
 <link rel="stylesheet" href="css/edit-names.css">
 <link rel="stylesheet" href="css/account.css">
+<style>
+/* 返回首页按钮 */
+.home-link {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+color: var(--primary);
+text-decoration: none;
+font-size: 14px;
+font-weight: 600;
+padding: 7px 14px;
+border: 1px solid var(--primary-border-strong);
+border-radius: 20px;
+background: var(--primary-dim);
+transition: all 0.3s;
+white-space: nowrap;
+}
+.home-link:hover {
+background: var(--primary);
+color: #000;
+box-shadow: 0 0 15px var(--primary-glow);
+}
+.home-link-corner {
+position: fixed;
+top: 16px;
+right: 16px;
+z-index: 1001;
+}
+</style>
 
 </head>
 <body>
 <!-- 名单输入界面 -->
 <div class="name-input-screen" id="nameInputScreen">
+<!-- 返回首页（名单输入页） -->
+<a href="/" class="home-link home-link-corner">← 返回首页</a>
 <div class="name-input-container">
 <h1 class="name-input-title">易计票</h1>
 <p class="name-input-subtitle">请输入投票名单，每行一个姓名</p>
@@ -75,6 +106,7 @@
 <header>
 <h1>易计票</h1>
 <div class="header-controls">
+<a href="/" class="home-link">← 返回首页</a>
 <div class="total-score">总票数：<span id="totalScore">0</span></div>
 <button class="finish-btn" id="finishBtn">完成计票</button>
 </div>

@@ -195,6 +195,32 @@ Copyright © 2026 zhrhello.top. All rights reserved.
             transition: background-color 0.3s, color 0.3s;
         }
 
+        .phone-home-link {
+            position: fixed;
+            top: 8px;
+            left: 10px;
+            z-index: 1001;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(28, 28, 28, 0.9);
+            border: 1px solid rgba(69, 243, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #45f3ff;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .phone-home-link svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+        .phone-home-link:active {
+            transform: scale(0.92);
+        }
+
         @keyframes pulse {
             0% {
                 background-color: #23242a;
@@ -360,6 +386,7 @@ Copyright © 2026 zhrhello.top. All rights reserved.
 </head>
 
 <body>
+    <a href="/" class="phone-home-link" title="返回首页"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></a>
     <div class="semicircle"></div>
     <div class="box">
         <form autocomplete="off" id="codeForm">

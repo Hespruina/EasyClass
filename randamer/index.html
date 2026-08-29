@@ -579,6 +579,58 @@ input:checked + .slider:before {
     transform: scale(1.1);
 }
 
+/* 返回首页按钮 */
+.home-button-container {
+    position: absolute;
+    bottom: 20px;
+    left: 120px;
+    z-index: 1000;
+}
+
+.home-button {
+    border: none;
+    outline: none;
+    padding: 10px;
+    background: #45f3ff;
+    cursor: pointer;
+    border-radius: 50%;
+    font-size: 16px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s, transform 0.3s;
+    text-decoration: none;
+    color: #23242a;
+}
+
+.home-button svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+}
+
+.home-button:hover {
+    background: #35eaff;
+    transform: scale(1.1);
+}
+
+.home-button-container .tooltip-bubble {
+    top: -55px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.home-button-container:hover .tooltip-bubble {
+    opacity: 1;
+    visibility: visible;
+}
+
 .input-name-list-button.yincang {
     opacity: 0;
     visibility: hidden;
@@ -2781,6 +2833,12 @@ footer {
 <div class="input-name-list-container">
     <div class="tooltip-bubble">点我也能输入名单</div>
     <button id="inputNameListBtn" class="input-name-list-button"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04Z"/></svg></button>
+</div>
+
+<!-- 返回首页按钮 -->
+<div class="home-button-container">
+    <div class="tooltip-bubble">返回首页</div>
+    <a href="/" class="home-button" title="返回首页"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></a>
 </div>
 
     <!-- 用户头像 -->

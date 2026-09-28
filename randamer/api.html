@@ -195,8 +195,8 @@
     <div id="loadingState" class="hidden">正在初始化...</div>
     
     <div id="inputState" class="hidden">
-        <p style="margin-bottom:10px;">本地无名单，请录入或扫码上传</p>
-        <textarea id="nameInput" placeholder="每行一个姓名"></textarea>
+        <p style="margin-bottom:10px;">本地无名单，请录入或扫码上传<br><span style="font-size:12px;color:#888;">可用「张三 男」「李四，女」附带性别</span></p>
+        <textarea id="nameInput" placeholder="张三 男&#10;李四 女&#10;每行一个姓名"></textarea>
         <div>
             <button id="submitLocalBtn">确认并提交</button>
         </div>
@@ -216,7 +216,38 @@
     let socket;
     let code = '';
     let names = [];
+    let genders = [];   // 与 names 下标一一对应的 'male' / 'female' / null
     let targetUrl = '';
+
+    /* ===== 性别标签解析（与 PC 端保持一致） ===== */
+    const GENDER_LABEL_MAP = {
+        '男': 'male', '男生': 'male', '男同学': 'male', '♂': 'male', 'm': 'male', 'male': 'male',
+        '女': 'female', '女生': 'female', '女同学': 'female', '♀': 'female', 'f': 'female', 'female': 'female'
+    };
+
+    function normalizeGender(value) {
+        return (value === 'male' || value === 'female') ? value : null;
+    }
+
+    function parseNameWithGender(line) {
+        const raw = (line || '').trim();
+        if (!raw) return { name: '', gender: null };
+
+        const m = raw.match(/^(.*?)[\s,，、\t]+([^\s,，、\t]+)$/);
+        if (m) {
+            const label = m[2].trim().toLowerCase();
+            if (Object.prototype.hasOwnProperty.call(GENDER_LABEL_MAP, label)) {
+                return { name: m[1].trim(), gender: GENDER_LABEL_MAP[label] };
+            }
+        }
+
+        const last = raw.slice(-1).toLowerCase();
+        if (last === '♂' || last === '♀') {
+            return { name: raw.slice(0, -1).trim(), gender: GENDER_LABEL_MAP[last] };
+        }
+
+        return { name: raw, gender: null };
+    }
     
     // 获取 API 基础路径（用于连接到 EasyCore）
     function getApiBasePath() {
@@ -288,6 +319,7 @@
                 const parsed = JSON.parse(saved);
                 if (parsed && parsed.length > 0) {
                     names = parsed;
+                    genders = readSavedGenders(names);
                     return true;
                 }
             } catch (e) {
@@ -295,6 +327,30 @@
             }
         }
         return false;
+    }
+
+    // 读取本地保存的性别表，转成与 names 对齐的数组（缺失/非法一律 null）
+    function readSavedGenders(namesList) {
+        try {
+            const raw = localStorage.getItem('xingmingGenders');
+            if (!raw) return namesList.map(() => null);
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== 'object') return namesList.map(() => null);
+            return namesList.map(n => normalizeGender(parsed[n]));
+        } catch (e) {
+            console.error('Parse local genders error', e);
+            return namesList.map(() => null);
+        }
+    }
+
+    // 把平行性别数组转成「姓名 → 性别」表（写入本机缓存时用）
+    function buildGendersMap() {
+        const map = {};
+        names.forEach((n, i) => {
+            const g = normalizeGender(genders[i]);
+            if (g) map[n] = g;
+        });
+        return map;
     }
 
     // 显示/隐藏加载遮罩
@@ -316,6 +372,7 @@
             
             localStorage.setItem('xingming', JSON.stringify(names));
             localStorage.setItem('isNamesLoaded', 'true');
+            localStorage.setItem('xingmingGenders', JSON.stringify(buildGendersMap()));
             
             const allow = confirm(`允许 ${targetUrl} 获取名单列表吗？\n共 ${names.length} 人`);
             if (allow) {
@@ -465,6 +522,8 @@
                     showLoadingOverlay(false);
                 } else if (data.type === 'this_is_list' && data.names) {
                     names = data.names;
+                    const list = Array.isArray(data.genders) ? data.genders : [];
+                    genders = names.map((n, i) => normalizeGender(list[i]));
                     isNamesReady = true;
                     tryProceed();
                 } else if (data.type === 'token_created' && data.token) {
@@ -512,7 +571,7 @@
     }
 
     function submitNames() {
-        wsSend({ type: 'create_token', names: names });
+        wsSend({ type: 'create_token', names: names, genders: genders });
     }
 
     window.onload = () => {
@@ -541,9 +600,20 @@
 
     document.getElementById('submitLocalBtn').addEventListener('click', () => {
         const text = document.getElementById('nameInput').value;
-        const list = text.split('\n').map(n => n.trim()).filter(n => n);
-        if (list.length > 0) {
-            names = list;
+        const entries = text.split('\n').map(parseNameWithGender).filter(e => e.name);
+        if (entries.length > 0) {
+            // 识别到性别标签时先询问是否应用
+            const genderCount = entries.filter(e => e.gender).length;
+            let applyGender = false;
+            if (genderCount > 0) {
+                applyGender = confirm(
+                    '系统识别到了 ' + genderCount + ' 个性别标签（本次共 ' + entries.length + ' 个名字）。\n' +
+                    '是否自动应用？取消则忽略所有性别标签。'
+                );
+            }
+
+            names = entries.map(e => e.name);
+            genders = entries.map(e => (applyGender ? e.gender : null));
             isNamesReady = true;
             // 手动输入后，也需要等待 code _ready 才能提交，或者如果 code 已经有了就直接提交
             tryProceed();

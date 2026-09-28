@@ -406,8 +406,8 @@ Copyright © 2026 zhrhello.top. All rights reserved.
     <div class="name-list-modal" id="nameListModal">
         <div class="name-list-content">
             <h3>输入点名名单</h3>
-            <p>请输入姓名，每行一个</p>
-            <textarea id="nameListInput" placeholder="张三&#10;李四&#10;王五"></textarea>
+            <p>请输入姓名，每行一个；可用「张三 男」「李四，女」附带性别</p>
+            <textarea id="nameListInput" placeholder="张三 男&#10;李四 女&#10;王五"></textarea>
             <div class="name-list-buttons">
                 <button class="btn-cancel" id="cancelNameList">取消</button>
                 <button class="btn-send" id="sendNameList">发送名单</button>
@@ -424,6 +424,44 @@ Copyright © 2026 zhrhello.top. All rights reserved.
         let isConnected = false;
         let currentCode = '';
         let isNameListSent = false;  // 标记是否已发送名单
+
+        /* ===== 性别标签解析（与 PC 端保持一致） ===== */
+        const GENDER_LABEL_MAP = {
+            '男': 'male', '男生': 'male', '男同学': 'male', '♂': 'male', 'm': 'male', 'male': 'male',
+            '女': 'female', '女生': 'female', '女同学': 'female', '♀': 'female', 'f': 'female', 'female': 'female'
+        };
+        const GENDER_TEXTS = { male: '男', female: '女' };
+
+        function normalizeGender(value) {
+            return (value === 'male' || value === 'female') ? value : null;
+        }
+
+        // 解析单行「张三 男」「张三，女」「张三♂」
+        function parseNameWithGender(line) {
+            const raw = (line || '').trim();
+            if (!raw) return { name: '', gender: null };
+
+            const m = raw.match(/^(.*?)[\s,，、\t]+([^\s,，、\t]+)$/);
+            if (m) {
+                const label = m[2].trim().toLowerCase();
+                if (Object.prototype.hasOwnProperty.call(GENDER_LABEL_MAP, label)) {
+                    return { name: m[1].trim(), gender: GENDER_LABEL_MAP[label] };
+                }
+            }
+
+            const last = raw.slice(-1).toLowerCase();
+            if (last === '♂' || last === '♀') {
+                return { name: raw.slice(0, -1).trim(), gender: GENDER_LABEL_MAP[last] };
+            }
+
+            return { name: raw, gender: null };
+        }
+
+        // 把带性别的名字还原成可编辑的文本行
+        function formatNameLine(name, gender) {
+            const g = normalizeGender(gender);
+            return g ? name + ' ' + GENDER_TEXTS[g] : name;
+        }
 
         // 获取 API 基础路径（用于连接到 EasyCore）
         // 假设部署结构为：
@@ -504,7 +542,8 @@ Copyright © 2026 zhrhello.top. All rights reserved.
                         console.log('收到PC端返回的名单:', data.names);
                         const nameInput = document.getElementById('nameListInput');
                         if (data.names && data.names.length > 0) {
-                            nameInput.value = data.names.join('\n');
+                            const genders = Array.isArray(data.genders) ? data.genders : [];
+                            nameInput.value = data.names.map((n, i) => formatNameLine(n, genders[i])).join('\n');
                         } else {
                             nameInput.value = '';
                         }
@@ -573,20 +612,34 @@ Copyright © 2026 zhrhello.top. All rights reserved.
                 return;
             }
             
-            // 解析姓名列表（每行一个）
-            const names = namesText.split('\n').map(name => name.trim()).filter(name => name !== '');
+            // 解析姓名列表（每行一个，支持「张三 男」这类带性别标签的写法）
+            const entries = namesText.split('\n').map(parseNameWithGender).filter(e => e.name);
             
-            if (names.length === 0) {
+            if (entries.length === 0) {
                 showError('请输入至少一个有效的姓名');
                 return;
             }
-            
+
+            // 识别到性别标签时先询问是否应用
+            const genderCount = entries.filter(e => e.gender).length;
+            let applyGender = false;
+            if (genderCount > 0) {
+                applyGender = window.confirm(
+                    '系统识别到了 ' + genderCount + ' 个性别标签（本次共 ' + entries.length + ' 个名字）。\n' +
+                    '是否自动应用？取消则忽略所有性别标签。'
+                );
+            }
+
+            const names = entries.map(e => e.name);
+            const genders = entries.map(e => (applyGender ? e.gender : null));
+
             if (wsSend({
                 type: 'this_is_list',
                 code: currentCode,
-                names: names
+                names: names,
+                genders: genders
             })) {
-                console.log('发送名单:', names);
+                console.log('发送名单:', names, '性别:', genders);
             } else {
                 showError('连接已断开，请重新连接');
             }

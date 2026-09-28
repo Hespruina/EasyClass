@@ -2,6 +2,8 @@ let shifouzaiyunxing = false;
 let dingshiqiID;
 let yuanchengma;
 let xingming = [];
+let nameGenders = Object.create(null); // 姓名 → 'male'（男）/ 'female'（女）；未设置的名字不在此表中
+let drawGenderFilter = 'all';          // 抽选性别筛选：'all'（不限制）/ 'male'（只抽男生）/ 'female'（只抽女生）
 let dangqianshixian = 0;
 let paichuleibiao = [];
 let availableNamesCache = []; // 可用名单缓存（已排除保护池），点名定时器只从此数组取值
@@ -24,6 +26,95 @@ const MAX_NAME_LENGTH = 5;    // 单个名字最多字数
 function isValidNameLength(name) {
     const len = [...name].length;
     return len >= MIN_NAME_LENGTH && len <= MAX_NAME_LENGTH;
+}
+
+/* ==================== 性别相关工具 ==================== */
+// 内部取值统一为 'male' / 'female' / null（未设置）
+const GENDER_SYMBOLS = { male: '♂', female: '♀' };
+const GENDER_TEXTS = { male: '男', female: '女' };
+const GENDER_LABEL_MAP = {
+    '男': 'male', '男生': 'male', '男同学': 'male', '♂': 'male', 'm': 'male', 'male': 'male',
+    '女': 'female', '女生': 'female', '女同学': 'female', '♀': 'female', 'f': 'female', 'female': 'female'
+};
+const GENDER_FILTER_TEXT = { all: '不限制', male: '只抽男生', female: '只抽女生' };
+
+function normalizeGender(value) {
+    return (value === 'male' || value === 'female') ? value : null;
+}
+
+// 未设置 → 男 → 女 → 未设置 的三态循环
+function nextGender(gender) {
+    const g = normalizeGender(gender);
+    if (g === null) return 'male';
+    if (g === 'male') return 'female';
+    return null;
+}
+
+function applyGenderButtonStyle(btn, gender) {
+    const g = normalizeGender(gender);
+    btn.classList.remove('gender-male', 'gender-female');
+    if (g === 'male') btn.classList.add('gender-male');
+    else if (g === 'female') btn.classList.add('gender-female');
+    btn.textContent = g ? GENDER_SYMBOLS[g] : '－';
+    btn.title = '性别：' + (g ? GENDER_TEXTS[g] : '未设置') + '（点击切换）';
+    btn.setAttribute('aria-label', btn.title);
+}
+
+// 性别的人类可读描述，如「♂ 男」「未设置」
+function genderLabel(gender) {
+    const g = normalizeGender(gender);
+    return g ? GENDER_SYMBOLS[g] + ' ' + GENDER_TEXTS[g] : '未设置';
+}
+
+// 解析单行「张三 男」「张三，女」「张三,男」「张三♂」等写法
+// 返回 { name, gender }；gender 为 null 表示该行没识别到性别标签
+function parseNameWithGender(line) {
+    const raw = (line || '').trim();
+    if (!raw) return { name: '', gender: null };
+
+    // 1) 空格 / 逗号 / 顿号 / 制表符 分隔的性别标签
+    const m = raw.match(/^(.*?)[\s,，、\t]+([^\s,，、\t]+)$/);
+    if (m) {
+        const label = m[2].trim().toLowerCase();
+        if (Object.prototype.hasOwnProperty.call(GENDER_LABEL_MAP, label)) {
+            return { name: m[1].trim(), gender: GENDER_LABEL_MAP[label] };
+        }
+    }
+
+    // 2) 性别符号紧贴名字，如「张三♂」
+    const last = raw.slice(-1).toLowerCase();
+    if (last === '♂' || last === '♀') {
+        return { name: raw.slice(0, -1).trim(), gender: GENDER_LABEL_MAP[last] };
+    }
+
+    return { name: raw, gender: null };
+}
+
+// 用平行性别数组重建「姓名 → 性别」表；长度不足/非法值按未设置处理
+function setGendersFromArray(names, genders) {
+    const map = Object.create(null);
+    const list = Array.isArray(genders) ? genders : [];
+    (names || []).forEach((name, i) => {
+        const g = normalizeGender(list[i]);
+        if (g) map[name] = g;
+    });
+    nameGenders = map;
+}
+
+// 清空全部性别记录
+function clearGenders() {
+    nameGenders = Object.create(null);
+}
+
+// 把「姓名 → 性别」表导出成与 names 下标对齐的数组
+function buildGendersArray(names) {
+    return (names || []).map(name => nameGenders[name] || null);
+}
+
+// 按当前抽选性别过滤，判断某个名字是否可被抽中
+function matchesGenderFilter(name) {
+    if (drawGenderFilter === 'all') return true;
+    return nameGenders[name] === drawGenderFilter;
 }
 
 // WebSocket连接相关变量
@@ -146,6 +237,13 @@ function handleCustomConfirmCancel() {
     }
 }
 
+// showCustomConfirm 的 Promise 版本，便于在 async 流程里等待用户选择
+function askConfirm(message, title = '确认') {
+    return new Promise((resolve) => {
+        showCustomConfirm(message, (confirmed) => resolve(!!confirmed), title);
+    });
+}
+
 // 检查本地保存开关状态
 function checkLocalStorageEnabled() {
     const saved = localStorage.getItem('localStorageEnabled');
@@ -166,6 +264,8 @@ function saveToLocalStorage() {
         localStorage.setItem('localStorageEnabled', 'false');
         // 清除其他数据
         localStorage.removeItem('xingming');
+        localStorage.removeItem('xingmingGenders');
+        localStorage.removeItem('drawGenderFilter');
         localStorage.removeItem('protectionPoolSize');
         localStorage.removeItem('isNamesLoaded');
         localStorage.removeItem('customBroadcastEnabled');
@@ -174,6 +274,8 @@ function saveToLocalStorage() {
     // 开启状态下保存所有数据
     localStorage.setItem('localStorageEnabled', 'true');
     localStorage.setItem('xingming', JSON.stringify(xingming));
+    localStorage.setItem('xingmingGenders', JSON.stringify(nameGenders));
+    localStorage.setItem('drawGenderFilter', drawGenderFilter);
     localStorage.setItem('protectionPoolSize', protectionPoolSize.toString());
     localStorage.setItem('isNamesLoaded', isNamesLoaded.toString());
 }
@@ -190,6 +292,8 @@ function loadFromLocalStorage() {
     localStorageEnabled = true;
     
     const savedXingming = localStorage.getItem('xingming');
+    const savedGenders = localStorage.getItem('xingmingGenders');
+    const savedGenderFilter = localStorage.getItem('drawGenderFilter');
     const savedPoolSize = localStorage.getItem('protectionPoolSize');
     const savedIsNamesLoaded = localStorage.getItem('isNamesLoaded');
     
@@ -204,6 +308,26 @@ function loadFromLocalStorage() {
         }
     }
     
+    if (savedGenders) {
+        try {
+            const parsed = JSON.parse(savedGenders);
+            // 用无原型对象兜底，避免姓名恰好叫 constructor 之类的键名踩到 Object 原型
+            nameGenders = Object.assign(Object.create(null), parsed && typeof parsed === 'object' ? parsed : {});
+            // 名单已被替换时，抹掉不属于当前名单的性别记录
+            const currentSet = new Set(xingming || []);
+            Object.keys(nameGenders).forEach(name => {
+                if (!currentSet.has(name) || !normalizeGender(nameGenders[name])) delete nameGenders[name];
+            });
+        } catch (e) {
+            console.error('解析保存的性别数据失败:', e);
+            clearGenders();
+        }
+    }
+    
+    if (savedGenderFilter === 'male' || savedGenderFilter === 'female' || savedGenderFilter === 'all') {
+        drawGenderFilter = savedGenderFilter;
+    }
+    
     if (savedPoolSize) {
         protectionPoolSize = parseInt(savedPoolSize, 10);
         hasData = true;
@@ -214,6 +338,7 @@ function loadFromLocalStorage() {
         hasData = true;
     }
     
+    updateGenderFilterUI();
     return hasData;
 }
 
@@ -398,9 +523,10 @@ async function duquXingming() {
 }
 
 // 从手机端接收名单
-function setNamesFromPhone(names) {
+function setNamesFromPhone(names, genders) {
     if (names && names.length > 0) {
         xingming = names;
+        setGendersFromArray(names, genders);
         isNamesLoaded = true;
         console.log('从手机端接收名单:', xingming);
 
@@ -483,9 +609,10 @@ function hideQrModal() {
 }
 
 // 从本地输入的名单设置
-function setNamesFromLocal(names) {
+function setNamesFromLocal(names, genders) {
     if (names && names.length > 0) {
         xingming = names;
+        setGendersFromArray(names, genders);
         isNamesLoaded = true;
         console.log('从本地输入接收名单:', xingming);
 
@@ -555,12 +682,46 @@ document.getElementById('tingzhianniu').addEventListener('click', () => {
     tingzhiSuijiDianming();
 });
 
-// 重建可用名单缓存：一次性计算未被保护池排除的名单
+// 重建可用名单缓存：一次性计算未被保护池排除、且符合抽选性别要求的名单
 // 点名定时器只从缓存取值，避免每次 tick 都重复过滤
 function rebuildAvailableNamesCache() {
     const excluded = new Set(paichuleibiao);
-    availableNamesCache = xingming.filter(name => !excluded.has(name));
+    availableNamesCache = xingming.filter(name => !excluded.has(name) && matchesGenderFilter(name));
     return availableNamesCache;
+}
+
+// 当前抽选性别下符合条件的人数（用于判断筛选是否把所有人都排除了）
+function countNamesMatchingGenderFilter() {
+    if (drawGenderFilter === 'all') return xingming.length;
+    return xingming.filter(name => matchesGenderFilter(name)).length;
+}
+
+// 刷新「抽选性别」三个按钮的选中态
+function updateGenderFilterUI() {
+    document.querySelectorAll('.gender-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.gender === drawGenderFilter);
+    });
+}
+
+// 切换抽选性别：重建缓存，运行中也能立即生效
+function setDrawGenderFilter(value) {
+    const next = (value === 'male' || value === 'female') ? value : 'all';
+    if (next === drawGenderFilter) return;
+
+    const matched = (next === 'all')
+        ? xingming.length
+        : xingming.filter(name => nameGenders[name] === next).length;
+
+    drawGenderFilter = next;
+    updateGenderFilterUI();
+    rebuildAvailableNamesCache();
+    saveToLocalStorage();
+
+    // 名单尚未就绪时不必打扰用户
+    if (!isNamesLoaded || xingming.length === 0) return;
+    if (matched === 0) {
+        showCustomAlert('当前名单里没有「' + GENDER_FILTER_TEXT[next] + '」的人，点名将无法进行。\n请先在名单里设置性别，或切回「不限制」。', '提示');
+    }
 }
 
 // 开始随机点名的函数
@@ -585,6 +746,11 @@ function kaishiSuijiDianming() {
     // 一次性计算可用名单缓存（排除保护池），后续定时器只从缓存取值
     rebuildAvailableNamesCache();
     if (availableNamesCache.length === 0) {
+        // 性别筛选把所有人都排除了：直接提示，不动保护池（池内名字同样不符合筛选条件）
+        if (countNamesMatchingGenderFilter() === 0) {
+            showCustomAlert('当前名单里没有「' + GENDER_FILTER_TEXT[drawGenderFilter] + '」的人，无法点名。\n请先在名单里设置性别，或切回「不限制」。', '提示');
+            return;
+        }
         // 没有可点名的名字，清空最早的一个保护池名字
         if (paichuleibiao.length > 0) {
             paichuleibiao.shift();
@@ -912,7 +1078,8 @@ function resetSocketMessageHandlers() {
                     wsSend({
                         type: 'return_names',
                         code: yuanchengma,
-                        names: xingming || []
+                        names: xingming || [],
+                        genders: buildGendersArray(xingming || [])
                     });
                 }
             } else if (data.type === 'this_is_list' && data.names) {
@@ -924,11 +1091,11 @@ function resetSocketMessageHandlers() {
                     hideQrModal();
                 }
                 
-                setNamesFromPhone(data.names);
+                setNamesFromPhone(data.names, data.genders);
             } else if (data.type === 'easycore_names' && data.names) {
                 // 接收到从 EasyCore 获取的名单
                 console.log('接收到从 EasyCore 获取的名单');
-                handleNamesFromEasyCore(data.names);
+                handleNamesFromEasyCore(data.names, data.genders);
             } else if (data.type === 'easycore_names_error') {
                 // 从 EasyCore 获取名单失败
                 console.error('从 EasyCore 获取名单失败:', data.message);
@@ -1207,7 +1374,8 @@ function initWebSocket(reconnectCode = null) {
                     wsSend({
                         type: 'return_names',
                         code: yuanchengma,
-                        names: xingming || []
+                        names: xingming || [],
+                        genders: buildGendersArray(xingming || [])
                     });
                 }
             } else if (data.type === 'this_is_list' && data.names) {
@@ -1216,10 +1384,10 @@ function initWebSocket(reconnectCode = null) {
                 if (qrModal && qrModal.classList.contains('show')) {
                     hideQrModal();
                 }
-                setNamesFromPhone(data.names);
+                setNamesFromPhone(data.names, data.genders);
             } else if (data.type === 'easycore_names' && data.names) {
                 console.log('接收到从 EasyCore 获取的名单');
-                handleNamesFromEasyCore(data.names);
+                handleNamesFromEasyCore(data.names, data.genders);
             } else if (data.type === 'easycore_names_error') {
                 console.error('从 EasyCore 获取名单失败:', data.message);
                 showCustomAlert('获取名单失败：' + data.message);
@@ -1300,7 +1468,7 @@ function requestNamesFromEasyCore(token) {
 }
 
 // 处理从 EasyCore 获取的名单
-function handleNamesFromEasyCore(names) {
+function handleNamesFromEasyCore(names, genders) {
     if (!names || !Array.isArray(names) || names.length === 0) {
         showCustomAlert('获取的名单为空或格式错误');
         return false;
@@ -1309,6 +1477,7 @@ function handleNamesFromEasyCore(names) {
     try {
         // 设置名单
         xingming = names;
+        setGendersFromArray(names, genders);
         isNamesLoaded = true;
 
         // 保存到本地存储
@@ -1460,6 +1629,7 @@ function renderCloudLists(lists) {
             <div class="cloud-list-name">${escapeHtml(list.name)}</div>
             <div class="cloud-list-info">
                 <span>${list.item_count || 0}人</span>
+                ${(list.male_count || list.female_count) ? `<span style="color:#4da6ff;">♂ ${list.male_count || 0}</span><span style="color:#ff8fbf;">♀ ${list.female_count || 0}</span>` : ''}
             </div>
             <button class="cloud-list-select-btn" onclick="selectCloudList('${escapeHtml(list.list_id)}', this)">选择此名单</button>
         </div>
@@ -1533,6 +1703,7 @@ async function importCloudListByToken(token) {
         }
         
         xingming = data.names;
+        setGendersFromArray(data.names, data.genders);
         isNamesLoaded = true;
         
         saveToLocalStorage();
@@ -1591,7 +1762,7 @@ async function checkCloudListTokenAndImport() {
         }
         
         // 直接设置云端名单，避免被本地保存的名单覆盖
-        setNamesFromLocal(data.names);
+        setNamesFromLocal(data.names, data.genders);
         
         // 关闭名单选择弹窗（如果打开）
         const nameSelectModal = document.getElementById('nameSelectModal');
@@ -1943,6 +2114,7 @@ async function importCloudListByTokenForUser(token) {
         }
         
         xingming = data.names;
+        setGendersFromArray(data.names, data.genders);
         isNamesLoaded = true;
         
         saveToLocalStorage();
@@ -2442,21 +2614,23 @@ function updateSliderBackground(slider) {
 let fanyebeikaiguan = true; // 标记翻页笔遥控开关的状态
 document.getElementById('fanyebeikaiguan-checkbox').addEventListener('change', () => {
     const fanyebeikaiguanCheckbox = document.getElementById('fanyebeikaiguan-checkbox');
-    const fanyebeikaiguanText = document.getElementById('fanyebeikaiguan-text');
 
     if (fanyebeikaiguanCheckbox.checked) {
         fanyebeikaiguan = true;
-        fanyebeikaiguanText.textContent = '翻页笔遥控已开启';
         // 重新添加键盘事件监听器
         document.addEventListener('keydown', handleKeyDown);
         // 显示提示弹窗
         showCustomAlert('您可以按下翻页笔上的"下一页"按钮来开始/停止随机点名。', '翻页笔遥控');
     } else {
         fanyebeikaiguan = false;
-        fanyebeikaiguanText.textContent = '翻页笔遥控已关闭';
         // 移除键盘事件监听器
         document.removeEventListener('keydown', handleKeyDown);
     }
+});
+
+// 抽选性别筛选：默认「不限制」，点击即切换并立即生效
+document.querySelectorAll('.gender-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => setDrawGenderFilter(btn.dataset.gender));
 });
 
 // 定义键盘事件处理函数
@@ -2518,12 +2692,34 @@ function getCurrentEditNames() {
     return names;
 }
 
+// 获取当前编辑卡片上的性别（与 getCurrentEditNames 下标一一对应）
+function getCurrentEditGenders() {
+    const cards = editNamesCardsContainer.querySelectorAll('.edit-name-card:not([data-is-input])');
+    const genders = [];
+    cards.forEach(card => {
+        const nameDisplay = card.querySelector('.edit-name-display');
+        if (nameDisplay) {
+            genders.push(normalizeGender(card.dataset.gender));
+        }
+    });
+    return genders;
+}
+
+// 把编辑弹窗里卡片上的名单和性别一并写回全局状态
+function applyEditedNamesToState() {
+    const names = getCurrentEditNames();
+    setGendersFromArray(names, getCurrentEditGenders());
+    xingming = names;
+    return names;
+}
+
 // 创建名字卡片
-function createEditNameCard(name, index) {
+function createEditNameCard(name, index, gender) {
     const card = document.createElement('div');
     card.className = 'edit-name-card';
     card.dataset.index = index;
     card.dataset.name = name;
+    card.dataset.gender = normalizeGender(gender) || '';
 
     const nameDisplay = document.createElement('div');
     nameDisplay.className = 'edit-name-display';
@@ -2545,6 +2741,18 @@ function createEditNameCard(name, index) {
         handleEditName(card, nameDisplay);
     });
 
+    // 性别按钮：未设置 → 男 → 女 → 未设置
+    const genderBtn = document.createElement('button');
+    genderBtn.className = 'edit-name-gender-btn';
+    genderBtn.type = 'button';
+    applyGenderButtonStyle(genderBtn, gender);
+    genderBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const next = nextGender(card.dataset.gender);
+        card.dataset.gender = next || '';
+        applyGenderButtonStyle(genderBtn, next);
+    });
+
     // 删除按钮
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'edit-name-delete-btn';
@@ -2558,6 +2766,7 @@ function createEditNameCard(name, index) {
     });
 
     actionsDiv.appendChild(editBtn);
+    actionsDiv.appendChild(genderBtn);
     actionsDiv.appendChild(deleteBtn);
     card.appendChild(nameDisplay);
     card.appendChild(actionsDiv);
@@ -2622,8 +2831,9 @@ function createNameInputCard() {
 }
 
 // 处理添加名字确认
-function handleAddNameConfirm(value) {
-    const name = value.trim();
+async function handleAddNameConfirm(value) {
+    const parsed = parseNameWithGender(value);
+    const name = parsed.name;
     if (!name) {
         showCustomAlert('请输入有效的姓名');
         return;
@@ -2646,6 +2856,16 @@ function handleAddNameConfirm(value) {
         return;
     }
 
+    // 识别到性别标签时先问一次，避免误判
+    let gender = parsed.gender;
+    if (gender) {
+        const ok = await askConfirm(
+            `系统识别到了性别标签：<br><b>${escapeHtml(name)}</b> → ${genderLabel(gender)}<br><br>是否自动应用？`,
+            '识别到性别'
+        );
+        if (!ok) gender = null;
+    }
+
     // 先移除输入卡片
     const inputCard = editNamesCardsContainer.querySelector('.edit-name-card[data-is-input="true"]');
     if (inputCard && inputCard.parentNode) {
@@ -2653,7 +2873,7 @@ function handleAddNameConfirm(value) {
     }
 
     // 创建新的名字卡片
-    const newCard = createEditNameCard(name, currentNames.length);
+    const newCard = createEditNameCard(name, currentNames.length, gender);
     editNamesCardsContainer.appendChild(newCard);
 }
 
@@ -2848,7 +3068,7 @@ function handleAddName() {
 }
 
 // 计算名单更改内容
-function calculateNameChanges(newNames) {
+function calculateNameChanges(newNames, newGenders) {
     const oldNames = [...xingming];
     const oldSet = new Set(oldNames);
     const newSet = new Set(newNames);
@@ -2870,11 +3090,23 @@ function calculateNameChanges(newNames) {
         }
     });
 
-    return { removed, added };
+    // 找出性别被改动的名字（名字本身没增没删）
+    const genders = newGenders || [];
+    const changed = [];
+    newNames.forEach((name, i) => {
+        if (!oldSet.has(name)) return;
+        const before = normalizeGender(nameGenders[name]);
+        const after = normalizeGender(genders[i]);
+        if (before !== after) {
+            changed.push({ name, from: before, to: after });
+        }
+    });
+
+    return { removed, added, changed };
 }
 
 // 生成更改标签的 HTML
-function generateChangeTagsHTML(removed, added) {
+function generateChangeTagsHTML(removed, added, changed) {
     let html = '<div class="name-change-tags">';
 
     // 删除的标签
@@ -2890,6 +3122,14 @@ function generateChangeTagsHTML(removed, added) {
         html += `<div class="name-change-tag add">
 <span class="icon">[+]</span>
 <span class="name">${escapeHtml(name)}</span>
+</div>`;
+    });
+
+    // 性别变动标签
+    (changed || []).forEach(c => {
+        html += `<div class="name-change-tag gender">
+<span class="icon">[~]</span>
+<span class="name">${escapeHtml(c.name)} ${escapeHtml(genderLabel(c.from))} → ${escapeHtml(genderLabel(c.to))}</span>
 </div>`;
     });
 
@@ -2919,20 +3159,25 @@ function saveEditedNames() {
     }
 
     // 计算更改内容
-    const changes = calculateNameChanges(newNames);
+    const newGenders = getCurrentEditGenders();
+    const changes = calculateNameChanges(newNames, newGenders);
 
     // 如果没有更改，提示用户
-    if (changes.removed.length === 0 && changes.added.length === 0) {
+    if (changes.removed.length === 0 && changes.added.length === 0 && changes.changed.length === 0) {
         showCustomAlert('名单没有变化，无需保存');
         return;
     }
 
     // 生成更改标签 HTML
-    const changesHTML = generateChangeTagsHTML(changes.removed, changes.added);
+    const changesHTML = generateChangeTagsHTML(changes.removed, changes.added, changes.changed);
+    const genderNote = changes.changed.length > 0
+        ? `<div style="font-size: 13px; color: #4da6ff; margin: 6px 0;">其中性别调整 ${changes.changed.length} 处</div>`
+        : '';
 
     // 显示确认弹窗，包含更改内容
     const confirmMessage = `修改名单将重置保护池，是否继续？<br/>
-<div style="font-size: 13px; color: #888; margin: 10px 0;">共 ${changes.removed.length + changes.added.length} 处更改：</div>
+<div style="font-size: 13px; color: #888; margin: 10px 0;">共 ${changes.removed.length + changes.added.length + changes.changed.length} 处更改：</div>
+${genderNote}
 ${changesHTML}`;
 
     showCustomConfirm(confirmMessage, (confirmed) => {
@@ -2940,8 +3185,8 @@ ${changesHTML}`;
             return;
         }
 
-        // 更新名单
-        xingming = newNames;
+        // 更新名单与性别
+        applyEditedNamesToState();
         isNamesLoaded = true;
 
         // 清空保护池
@@ -2979,7 +3224,7 @@ function openEditNamesModal() {
     // 初始化时将当前名单加载到卡片容器
     editNamesCardsContainer.innerHTML = '';
     xingming.forEach((name, index) => {
-        const card = createEditNameCard(name, index);
+        const card = createEditNameCard(name, index, nameGenders[name]);
         editNamesCardsContainer.appendChild(card);
     });
 
@@ -3029,15 +3274,16 @@ function closeBatchAddNamesModal() {
 }
 
 // 批量添加名字
-function batchAddNames() {
+async function batchAddNames() {
     const text = batchAddNamesInput.value.trim();
     if (!text) {
         showCustomAlert('请输入至少一个名字');
         return;
     }
 
-    const names = text.split('\n').map(n => n.trim()).filter(n => n);
-    if (names.length === 0) {
+    // 逐行解析，支持「张三 男」「李四，女」这类带性别标签的写法
+    const entries = text.split('\n').map(parseNameWithGender).filter(e => e.name);
+    if (entries.length === 0) {
         showCustomAlert('请输入至少一个有效的名字');
         return;
     }
@@ -3047,26 +3293,26 @@ function batchAddNames() {
     const currentNamesSet = new Set(currentNames);
 
     // 过滤掉重复和长度不合规的名字
-    const newNames = [];
+    const newEntries = [];
     const duplicates = [];
     const invalidLengths = [];
-    names.forEach(name => {
-        if (currentNamesSet.has(name)) {
-            duplicates.push(name);
-        } else if (!isValidNameLength(name)) {
-            invalidLengths.push(name);
+    entries.forEach(entry => {
+        if (currentNamesSet.has(entry.name)) {
+            duplicates.push(entry.name);
+        } else if (!isValidNameLength(entry.name)) {
+            invalidLengths.push(entry.name);
         } else {
-            newNames.push(name);
-            currentNamesSet.add(name);
+            newEntries.push(entry);
+            currentNamesSet.add(entry.name);
         }
     });
 
     // 数量上限：最多补充到 MAX_NAMES_COUNT
     const remainingSlots = MAX_NAMES_COUNT - currentNames.length;
     let overflowCount = 0;
-    if (newNames.length > remainingSlots) {
-        overflowCount = newNames.length - remainingSlots;
-        newNames.length = Math.max(0, remainingSlots);
+    if (newEntries.length > remainingSlots) {
+        overflowCount = newEntries.length - remainingSlots;
+        newEntries.length = Math.max(0, remainingSlots);
     }
 
     // 汇总跳过原因
@@ -3078,20 +3324,35 @@ function batchAddNames() {
         skipMessages.push(`以下名字长度不合规（需 ${MIN_NAME_LENGTH}-${MAX_NAME_LENGTH} 个字），已自动跳过：\n${invalidLengths.slice(0, 10).join('\n')}${invalidLengths.length > 10 ? `\n...等 ${invalidLengths.length} 个` : ''}`);
     }
     if (overflowCount > 0) {
-        skipMessages.push(`名单人数已达上限 (${MAX_NAMES_COUNT} 人)，仅添加前 ${newNames.length} 个，剩余 ${overflowCount} 个被跳过`);
+        skipMessages.push(`名单人数已达上限 (${MAX_NAMES_COUNT} 人)，仅添加前 ${newEntries.length} 个，剩余 ${overflowCount} 个被跳过`);
     }
     if (skipMessages.length > 0) {
         showCustomAlert(skipMessages.join('\n\n'));
     }
 
+    if (newEntries.length === 0) {
+        closeBatchAddNamesModal();
+        return;
+    }
+
+    // 识别到性别标签时，加入名单前先询问用户
+    const genderCount = newEntries.filter(e => e.gender).length;
+    let applyGender = false;
+    if (genderCount > 0) {
+        applyGender = await askConfirm(
+            `系统识别到了 <b>${genderCount}</b> 个性别标签（本次共添加 ${newEntries.length} 个名字）。<br>应用后这些名字会带上性别，未识别到标签的名字保持「未设置」。<br><br>是否自动应用？`,
+            '识别到性别标签'
+        );
+    }
+
     // 添加新名字到列表
-    newNames.forEach(name => {
-        const card = createEditNameCard(name, currentNames.length);
+    newEntries.forEach(entry => {
+        const card = createEditNameCard(entry.name, currentNames.length, applyGender ? entry.gender : null);
         editNamesCardsContainer.appendChild(card);
     });
 
     closeBatchAddNamesModal();
-    showCustomAlert(`成功添加 ${newNames.length} 个名字`);
+    showCustomAlert(`成功添加 ${newEntries.length} 个名字`);
 }
 
 // 初始化编辑名单弹窗事件
@@ -3374,7 +3635,11 @@ async function fetchExistingListsForOverwrite() {
         container.innerHTML = lists.map(list => `
             <div class="save-cloud-list-item" data-list-id="${escapeHtmlForSaveCloud(list.list_id)}" onclick="selectExistingList('${escapeHtmlForSaveCloud(list.list_id)}', this)">
                 <div class="save-cloud-list-name">${escapeHtmlForSaveCloud(list.name)}</div>
-                <div class="save-cloud-list-info">${escapeHtmlForSaveCloud(list.item_count || 0)}人</div>
+                <div class="save-cloud-list-info">${escapeHtmlForSaveCloud(list.item_count || 0)}人${
+                    (list.male_count || list.female_count)
+                        ? ` · <span style="color:#4da6ff;">♂${escapeHtmlForSaveCloud(list.male_count || 0)}</span> <span style="color:#ff8fbf;">♀${escapeHtmlForSaveCloud(list.female_count || 0)}</span>`
+                        : ''
+                }</div>
             </div>
         `).join('');
 
@@ -3413,6 +3678,7 @@ function updateSaveCloudConfirmButton() {
 // 确认保存云名单
 async function handleConfirmSaveCloud() {
     const names = getCurrentEditNames();
+    const genders = getCurrentEditGenders();
 
     if (names.length === 0) {
         showCustomAlert('名单为空，无法保存', '提示');
@@ -3475,7 +3741,7 @@ async function handleConfirmSaveCloud() {
             listId = saveCloudSelectedListId;
         }
 
-        const items = names.map(name => ({ name: name }));
+        const items = names.map((name, i) => ({ name: name, gender: genders[i] || null }));
 
         const saveResponse = await fetch(getEasyCoreApiPath() + `api/lists/${listId}/items`, {
             method: 'POST',

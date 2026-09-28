@@ -17,8 +17,8 @@
 <body>
 <div class="box" id="inputBox">
     <h3>上传名单</h3>
-    <p style="font-size:0.8em; color:#888; margin-bottom:10px;">每行一个姓名</p>
-    <textarea id="nameInput" placeholder="张三&#10;李四"></textarea>
+    <p style="font-size:0.8em; color:#888; margin-bottom:10px;">每行一个姓名<br>可用「张三 男」「李四，女」附带性别</p>
+    <textarea id="nameInput" placeholder="张三 男&#10;李四 女&#10;王五"></textarea>
     <button id="sendBtn">上传</button>
 </div>
 <div class="box hidden" id="successBox">
@@ -70,14 +70,56 @@
         return false;
     }
 
+    /* ===== 性别标签解析（与 PC 端保持一致） ===== */
+    const GENDER_LABEL_MAP = {
+        '男': 'male', '男生': 'male', '男同学': 'male', '♂': 'male', 'm': 'male', 'male': 'male',
+        '女': 'female', '女生': 'female', '女同学': 'female', '♀': 'female', 'f': 'female', 'female': 'female'
+    };
+
+    function parseNameWithGender(line) {
+        const raw = (line || '').trim();
+        if (!raw) return { name: '', gender: null };
+
+        const m = raw.match(/^(.*?)[\s,，、\t]+([^\s,，、\t]+)$/);
+        if (m) {
+            const label = m[2].trim().toLowerCase();
+            if (Object.prototype.hasOwnProperty.call(GENDER_LABEL_MAP, label)) {
+                return { name: m[1].trim(), gender: GENDER_LABEL_MAP[label] };
+            }
+        }
+
+        const last = raw.slice(-1).toLowerCase();
+        if (last === '♂' || last === '♀') {
+            return { name: raw.slice(0, -1).trim(), gender: GENDER_LABEL_MAP[last] };
+        }
+
+        return { name: raw, gender: null };
+    }
+
     document.getElementById('sendBtn').addEventListener('click', () => {
         const text = document.getElementById('nameInput').value;
-        const list = text.split('\n').map(n => n.trim()).filter(n => n);
-        if (list.length === 0) {
+        const entries = text.split('\n').map(parseNameWithGender).filter(e => e.name);
+        if (entries.length === 0) {
             alert('请输入名单');
             return;
         }
-        wsSend({ type: 'this_is_list', code: code, names: list });
+
+        // 识别到性别标签时先询问是否应用
+        const genderCount = entries.filter(e => e.gender).length;
+        let applyGender = false;
+        if (genderCount > 0) {
+            applyGender = confirm(
+                '系统识别到了 ' + genderCount + ' 个性别标签（本次共 ' + entries.length + ' 个名字）。\n' +
+                '是否自动应用？取消则忽略所有性别标签。'
+            );
+        }
+
+        wsSend({
+            type: 'this_is_list',
+            code: code,
+            names: entries.map(e => e.name),
+            genders: entries.map(e => (applyGender ? e.gender : null))
+        });
         document.getElementById('inputBox').classList.add('hidden');
         document.getElementById('successBox').classList.remove('hidden');
     });

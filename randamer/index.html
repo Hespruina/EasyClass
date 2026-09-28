@@ -506,15 +506,90 @@ input:checked + .slider:before {
     border-radius: 50%;
 }
 
-/* 定义开关文本的样式 */
-#fanyebeikaiguan-text {
+/* 翻页笔开关已移入设置面板，沿用 .fanyebeikaiguan + .slider 结构 */
+
+/* ===== 抽选性别筛选控件 ===== */
+#genderFilterContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    /* 覆写 .anniucontaner 的 50px：点名为视觉主体，性别筛选是次级控件 */
+    margin-top: 34px;
+}
+
+#genderFilterText {
     color: #45f3ff;
     font-size: 1.2em;
-    text-align: center;
-    margin-left: 10px;
     font-family: "ZCOOL KuaiLe", sans-serif;
     font-weight: 400;
-    font-style: normal;
+}
+
+.gender-filter-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.gender-filter-btn {
+    width: 52px;
+    height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.04);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    color: #a0a0a0;
+    font-size: 20px;
+    line-height: 1;
+    font-weight: 700;
+    font-family: "Noto Sans SC", "Segoe UI Symbol", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+}
+
+/* 默认：不限制性别，霓虹青 */
+.gender-filter-btn:hover {
+    border-color: #45f3ff;
+    color: #45f3ff;
+    box-shadow: 0 0 12px rgba(69, 243, 255, 0.3);
+}
+
+.gender-filter-btn.active[data-gender="all"] {
+    background: rgba(69, 243, 255, 0.15);
+    border-color: #45f3ff;
+    color: #45f3ff;
+    box-shadow: 0 0 18px rgba(69, 243, 255, 0.6);
+}
+
+/* 只抽男生：蓝 */
+.gender-filter-btn[data-gender="male"]:hover {
+    border-color: #4da6ff;
+    color: #4da6ff;
+    box-shadow: 0 0 12px rgba(77, 166, 255, 0.35);
+}
+
+.gender-filter-btn.active[data-gender="male"] {
+    background: rgba(77, 166, 255, 0.16);
+    border-color: #4da6ff;
+    color: #4da6ff;
+    box-shadow: 0 0 18px rgba(77, 166, 255, 0.65);
+}
+
+/* 只抽女生：粉 */
+.gender-filter-btn[data-gender="female"]:hover {
+    border-color: #ff8fbf;
+    color: #ff8fbf;
+    box-shadow: 0 0 12px rgba(255, 143, 191, 0.35);
+}
+
+.gender-filter-btn.active[data-gender="female"] {
+    background: rgba(255, 143, 191, 0.16);
+    border-color: #ff8fbf;
+    color: #ff8fbf;
+    box-shadow: 0 0 18px rgba(255, 143, 191, 0.65);
 }
 
 
@@ -757,11 +832,14 @@ input:checked + .slider:before {
 
 .settings-content {
     background-color: #1c1c1c;
-    margin: 15% auto;
+    margin: 6vh auto;
     padding: 25px;
     border: 2px solid #666;
     width: 90%;
     max-width: 450px;
+    /* 项数增加后防止矮屏裁切：内容超高时面板内部滚动 */
+    max-height: 88vh;
+    overflow-y: auto;
     border-radius: 16px;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
     animation: slideIn 0.3s;
@@ -1770,6 +1848,7 @@ footer {
 }
 
 .edit-name-card.selected .edit-name-edit-btn,
+.edit-name-card.selected .edit-name-gender-btn,
 .edit-name-card.selected .edit-name-delete-btn {
     opacity: 0.5;
     pointer-events: none;
@@ -1922,6 +2001,54 @@ footer {
     fill: currentColor;
 }
 
+/* 性别按钮：未设置（白）→ 男（♂ 蓝）→ 女（♀ 粉）三态循环 */
+.edit-name-gender-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    font-size: 15px;
+    line-height: 1;
+    font-weight: 700;
+    font-family: "Noto Sans SC", "Segoe UI Symbol", sans-serif;
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: #ffffff;
+}
+
+.edit-name-gender-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.edit-name-gender-btn.gender-male {
+    background: rgba(77, 166, 255, 0.15);
+    border-color: #4da6ff;
+    color: #4da6ff;
+}
+
+.edit-name-gender-btn.gender-male:hover {
+    background: rgba(77, 166, 255, 0.3);
+    box-shadow: 0 0 10px rgba(77, 166, 255, 0.45);
+}
+
+.edit-name-gender-btn.gender-female {
+    background: rgba(255, 143, 191, 0.15);
+    border-color: #ff8fbf;
+    color: #ff8fbf;
+}
+
+.edit-name-gender-btn.gender-female:hover {
+    background: rgba(255, 143, 191, 0.3);
+    box-shadow: 0 0 10px rgba(255, 143, 191, 0.45);
+}
+
 .edit-names-footer {
     display: flex;
     justify-content: space-between;
@@ -1977,6 +2104,13 @@ footer {
     color: #f44336;
 }
 
+/* 性别调整标签 */
+.name-change-tag.gender {
+    background: rgba(77, 166, 255, 0.18);
+    border: 1px solid rgba(77, 166, 255, 0.5);
+    color: #4da6ff;
+}
+
 .name-change-tag .icon {
     font-size: 14px;
     font-weight: bold;
@@ -2017,6 +2151,13 @@ footer {
 }
 
 @media (max-width: 768px) {
+    /* 设置面板：窄屏收紧内边距，项数较多时更省纵向空间 */
+    .settings-content {
+        padding: 20px 16px;
+    }
+    .setting-item {
+        margin-bottom: 16px;
+    }
     .edit-names-cards-container {
         grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
         gap: 5px;
@@ -2039,6 +2180,11 @@ footer {
         width: 24px;
         height: 24px;
         font-size: 12px;
+    }
+    .edit-name-gender-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 13px;
     }
     .edit-name-edit-btn svg,
     .edit-name-delete-btn svg {
@@ -2820,7 +2966,17 @@ footer {
                 <p class="local-storage-desc">点名结束后全屏播报一条前缀消息</p>
             </div>
             <div class="setting-item">
-                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <label class="local-storage-label">
+                    <span>翻页笔遥控</span>
+                    <label class="fanyebeikaiguan" style="margin-top: 0; margin-left: 10px;">
+                        <input type="checkbox" id="fanyebeikaiguan-checkbox" checked aria-label="启用或禁用翻页笔遥控功能" />
+                        <span class="slider round"></span>
+                    </label>
+                </label>
+                <p class="local-storage-desc">开启后可用翻页笔的"下一页"键控制开始 / 停止点名</p>
+            </div>
+            <div class="setting-item">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 10px;">
                     <span class="local-storage-desc" style="margin: 0;">管理可用的点名消息前缀</span>
                     <button id="manage-prefixes-btn" type="button" style="border: none; outline: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; font-weight: 600; background: #45f3ff; color: #0a0a0c; font-family: 'Noto Sans SC', sans-serif; transition: background 0.3s, transform 0.2s;">管理前缀列表</button>
                 </div>
@@ -2872,15 +3028,15 @@ footer {
             <button class="anniu chuxian" id="kaishianniu" type="button" aria-label="开始随机点名">开始</button>
             <button class="anniu yincang" id="tingzhianniu" type="button" aria-label="停止随机点名">停止</button>
         </div>
-        <!-- 翻页笔开关 -->
-        <div class="anniucontaner">
-            <label class="fanyebeikaiguan" id="fanyebeikaiguan" aria-label="翻页笔遥控开关">
-                <input type="checkbox" id="fanyebeikaiguan-checkbox" checked aria-label="启用或禁用翻页笔遥控功能" />
-                <span class="slider round"></span>
-            </label>
-            <span id="fanyebeikaiguan-text">翻页笔遥控（下键控制）</span>
+        <!-- 抽选性别 -->
+        <div class="anniucontaner" id="genderFilterContainer">
+            <span id="genderFilterText">抽选性别</span>
+            <div class="gender-filter-group" role="group" aria-label="抽选性别筛选">
+                <button class="gender-filter-btn active" type="button" data-gender="all" id="genderFilterAll" title="不限制性别（默认）">－</button>
+                <button class="gender-filter-btn" type="button" data-gender="male" id="genderFilterMale" title="只抽男生">♂</button>
+                <button class="gender-filter-btn" type="button" data-gender="female" id="genderFilterFemale" title="只抽女生">♀</button>
+            </div>
         </div>
-        
     </section>
 </main>
     <div class="erweimacontaner">
@@ -3038,9 +3194,9 @@ footer {
         <div class="prompt-panel" style="max-width: 500px;">
             <div class="prompt-title">批量添加名字</div>
             <div class="prompt-text" style="text-align: left; margin-bottom: 15px;">
-                请输入要添加的名字，每行一个：
+                请输入要添加的名字，每行一个（可用「张三 男」「李四，女」附带性别）：
             </div>
-            <textarea class="name-textarea" id="batchAddNamesInput" style="height: 200px; min-height: 200px;" placeholder="张三&#10;李四&#10;王五&#10;..."></textarea>
+            <textarea class="name-textarea" id="batchAddNamesInput" style="height: 200px; min-height: 200px;" placeholder="张三 男&#10;李四 女&#10;王五&#10;..."></textarea>
             <div class="btn-group">
                 <button class="action-btn btn-secondary" id="cancelBatchAddBtn">取消</button>
                 <button class="action-btn btn-confirm" id="confirmBatchAddBtn">添加</button>
@@ -3248,7 +3404,7 @@ window.onload = function() {
 </script>
 
 
-    <script src="./js/script.js?v=202608271056"></script>
+    <script src="./js/script.js?v=202609281950"></script>
 </body>
 
 </html>

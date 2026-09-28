@@ -13,6 +13,7 @@
 *.log
 *.pkl
 EasyCore/config.yml
+Nginx/
 
 # ========== Python 缓存 ==========
 __pycache__/

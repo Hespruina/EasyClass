@@ -275,7 +275,7 @@
   #seatSource:hover { background: rgba(69,243,255,.14); transform: translateY(-2px); }
   #seatSource:active { cursor: grabbing; transform: scale(.96); }
 
-  /* 操作提示（桌面端才显示） */
+  /* 操作提示：鼠标一行 + 触屏一行 */
   #opHint {
     position: absolute; left: 20px; top: 50%;
     transform: translateY(-50%);
@@ -290,7 +290,21 @@
     font-weight: 400;
     font-family: "ZCOOL KuaiLe", sans-serif;
   }
-  @media (max-width: 760px) { #opHint { display: none; } }
+  /* 窄屏（手机 / 竖屏平板）：底栏改竖排 —— 提示在上、座位源块在下，避免文字压到源块 */
+  @media (max-width: 760px) {
+    #bottomBar { flex-direction: column; height: 138px; gap: 10px; }
+    #opHint {
+      position: static; left: auto; top: auto; transform: none;
+      order: -1;
+      width: 100%;          /* 显式占满，避免 flex 项按 max-content 撑出屏幕而不换行 */
+      font-size: 11px;
+      line-height: 1.55;
+      text-align: center;
+      text-wrap: balance;   /* 换行时两行长度尽量均匀，别把"缩放"两个字甩到下一行 */
+      padding: 0 12px;
+    }
+    #opHint .mouse-only { display: none; }
+  }
 
   /* ============ 菜单 ============ */
   .menu {
@@ -342,7 +356,10 @@
 
 <div id="bottomBar">
   <div id="seatSource">座位</div>
-  <div id="opHint">左键框选：框住座位 = 建组 / 批量删除，框住空白 = 批量建座</div>
+  <div id="opHint">
+    <div class="mouse-only">鼠标：左键框选 = 建组 / 批量删除 / 批量建座；右键点空白 = 建座，点座位 = 删除</div>
+    <div>触屏：单指拖座位 = 移动；单指从空白拖 = 框选；双指拖动 = 平移；双指捏合 = 缩放</div>
+  </div>
 </div>
 
 <script>
@@ -469,91 +486,125 @@
     zoomAt(e.clientX, e.clientY, scale * factor);
   }, { passive: false });
 
-  const touches = new Map();
-  let pinchStartDist = 0;
-  let pinchStartScale = 1;
-  let pinchStartMid = { x: 0, y: 0 };
-  let pinchStartOffset = { x: 0, y: 0 };
-  let singleStart = null;
+  /* ================================================================
+   *  触屏手势总控
+   *   单指落在座位  → 移动座位（座位自己的 handler 负责）
+   *   单指落在空白  → 拉出选框（松手后和左键框选同一套逻辑）
+   *   双指          → 平移画布（两指同向移动）+ 捏合缩放（两指间距变化）
+   *   手势粘连      → 双指退化成单指后，剩下的那根手指不接管任何操作，
+   *                    必须全部抬起再重新落下，避免松手瞬间画布 / 座位乱跳。
+   *  实现要点：一律用 e.touches 而不是自维护的触点表 —— 落在座位上的手指会被
+   *  座位 handler stopPropagation 掉，自己数会漏一个，而 e.touches 永远是全屏触点全集。
+   * ================================================================ */
+
+  let pinch = null;           // { dist, scale, midX, midY, ox, oy }
+  let twoFinger = false;      // 本轮触摸里出现过双指（粘连标志）
+  let marquee = null;         // 进行中的框选
+  let cancelSeatDrag = null;  // 进行中的座位拖拽的「撤销」句柄
+
+  function pinchAnchor(list) {
+    const a = list[0], b = list[1];
+    return {
+      dist:  Math.max(1, Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)),
+      scale: scale,
+      midX:  (a.clientX + b.clientX) / 2,
+      midY:  (a.clientY + b.clientY) / 2,
+      ox:    offsetX,
+      oy:    offsetY
+    };
+  }
+
+  // 单指操作给双指手势让位：撤销（不是提交），避免误框选 / 误移动
+  function abortSingleTouch() {
+    if (marquee) { marquee.abort(); marquee = null; }
+    if (cancelSeatDrag) { cancelSeatDrag(); cancelSeatDrag = null; }
+  }
 
   canvas.addEventListener('touchstart', e => {
-    for (const t of e.changedTouches) {
-      touches.set(t.identifier, { x: t.clientX, y: t.clientY });
+    const n = e.touches.length;
+
+    // ---- 双指：接手平移 / 缩放 ----
+    if (n >= 2) {
+      e.preventDefault();
+      abortSingleTouch();
+      twoFinger = true;
+      pinch = pinchAnchor(e.touches);
+      return;
     }
 
-    if (touches.size === 2) {
-      const pts = [...touches.values()];
-      pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      pinchStartScale = scale;
-      pinchStartMid = {
-        x: (pts[0].x + pts[1].x) / 2,
-        y: (pts[0].y + pts[1].y) / 2
-      };
-      pinchStartOffset = { x: offsetX, y: offsetY };
-      singleStart = null;
-    } else if (touches.size === 1) {
-      const t = e.changedTouches[0];
-      singleStart = { x: t.clientX, y: t.clientY, ox: offsetX, oy: offsetY,
-                      target: t.target };
-    }
+    // 双指之后剩下的单指不接管，等全部抬起（否则一松手就变成框选）
+    if (twoFinger) return;
+    if (n !== 1) return;
+
+    const t = e.changedTouches[0];
+    if (!t || t.target !== canvas) return;   // 落在座位 / 底栏上：不在这里处理
+
+    // 吃掉默认行为，浏览器就不会再合成 mouse 事件，一次触摸只走一套逻辑
+    e.preventDefault();
+    closeMenu();
+    marquee = createMarquee(t.clientX, t.clientY);
   }, { passive: false });
 
   canvas.addEventListener('touchmove', e => {
-    if (touches.size === 2) {
+    const n = e.touches.length;
+
+    // ---- 双指：平移 + 缩放 ----
+    if (n >= 2) {
       e.preventDefault();
-      const pts = [...touches.values()];
-      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      if (pinchStartDist < 1) return;
+      if (!pinch) pinch = pinchAnchor(e.touches);
 
-      const mid = {
-        x: (pts[0].x + pts[1].x) / 2,
-        y: (pts[0].y + pts[1].y) / 2
-      };
+      const a = e.touches[0], b = e.touches[1];
+      const dist = Math.max(1, Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY));
+      const midX = (a.clientX + b.clientX) / 2;
+      const midY = (a.clientY + b.clientY) / 2;
 
-      const newScale = clamp(pinchStartScale * (dist / pinchStartDist),
-                             MIN_SCALE, MAX_SCALE);
-      const r = canvas.getBoundingClientRect();
+      const r  = canvas.getBoundingClientRect();
+      const px = midX - r.left;
+      const py = midY - r.top;
+      // 起始中点在「当时的缩放 / 偏移」下对应的世界坐标，捏合全程钉住它
+      const wx = (pinch.midX - r.left - pinch.ox) / pinch.scale;
+      const wy = (pinch.midY - r.top  - pinch.oy) / pinch.scale;
 
-      const px = mid.x - r.left;
-      const py = mid.y - r.top;
-      const wx = (pinchStartMid.x - r.left - pinchStartOffset.x) / pinchStartScale;
-      const wy = (pinchStartMid.y - r.top  - pinchStartOffset.y) / pinchStartScale;
-
-      scale = newScale;
-      offsetX = px - wx * scale + (mid.x - pinchStartMid.x);
-      offsetY = py - wy * scale + (mid.y - pinchStartMid.y);
+      scale   = clamp(pinch.scale * (dist / pinch.dist), MIN_SCALE, MAX_SCALE);
+      offsetX = px - wx * scale;
+      offsetY = py - wy * scale;
 
       applyTransform();
       return;
     }
 
-    if (touches.size === 1 && singleStart) {
-      const t = e.changedTouches[0];
-      const dx = t.clientX - singleStart.x;
-      const dy = t.clientY - singleStart.y;
-      if (singleStart.target === canvas && Math.hypot(dx, dy) > 6) {
-        e.preventDefault();
-        offsetX = singleStart.ox + dx;
-        offsetY = singleStart.oy + dy;
-        applyTransform();
-      }
+    // ---- 单指：框选 ----
+    if (n === 1 && marquee) {
+      const t = e.touches[0];
+      marquee.moveTo(t.clientX, t.clientY);
+      if (marquee.moved) e.preventDefault();
     }
   }, { passive: false });
 
-  function endTouch(e) {
-    for (const t of e.changedTouches) {
-      touches.delete(t.identifier);
+  function onTouchEnd(e) {
+    const n = e.touches.length;
+
+    if (n >= 2) {                 // 还有两指以上：重新锚定，避免跳一下
+      pinch = pinchAnchor(e.touches);
+      return;
     }
-    if (touches.size < 2) pinchStartDist = 0;
-    if (touches.size === 0) {
-      singleStart = null;
-    } else if (touches.size === 1) {
-      const t = [...touches.values()][0];
-      singleStart = { x: t.x, y: t.y, ox: offsetX, oy: offsetY, target: canvas };
+
+    if (n === 1) {                // 双指 → 单指：粘连，剩下的手指不做事
+      if (twoFinger) pinch = null;
+      return;
+    }
+
+    // ---- 全部抬起：本轮触摸收尾 ----
+    twoFinger = false;
+    pinch = null;
+    if (marquee) {
+      const t = e.changedTouches[0];
+      if (t) marquee.finish(t.clientX, t.clientY);
+      marquee = null;
     }
   }
-  canvas.addEventListener('touchend', endTouch);
-  canvas.addEventListener('touchcancel', endTouch);
+  canvas.addEventListener('touchend', onTouchEnd);
+  canvas.addEventListener('touchcancel', onTouchEnd);
 
   /* ================================================================
    *  座位基础操作
@@ -787,6 +838,7 @@
    *  座位拖拽（触屏）
    * ================================================================ */
   function onSeatTouchStart(e, seat) {
+    // 第二根手指落下时这里早退（且不 stopPropagation），交给画布的双指手势接手
     if (e.touches.length !== 1) return;
     e.stopPropagation();
     e.preventDefault();
@@ -795,9 +847,30 @@
     const start = screenToWorld(t0.clientX, t0.clientY);
     const origX = seat.x, origY = seat.y;
     let moved = false;
+    let done = false;
+
+    function detach() {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      document.removeEventListener('touchcancel', onEnd);
+      if (cancelSeatDrag === abort) cancelSeatDrag = null;
+    }
+
+    // 被双指手势抢占：撤销这次拖拽，把座位放回原处（不吸附、不删除）
+    function abort() {
+      if (done) return;
+      done = true;
+      detach();
+      seat.el.classList.remove('dragging');
+      seat.el.style.opacity = '';
+      seat.x = origX;
+      seat.y = origY;
+      moveSeatEl(seat);
+      renderGroups();
+    }
 
     function onMove(ev) {
-      if (ev.touches.length !== 1) return;
+      if (ev.touches.length !== 1) { abort(); return; }
       const t = ev.changedTouches[0];
       const now = screenToWorld(t.clientX, t.clientY);
       const dx = now.x - start.x;
@@ -820,9 +893,9 @@
     }
 
     function onEnd(ev) {
-      document.removeEventListener('touchmove', onMove);
-      document.removeEventListener('touchend', onEnd);
-      document.removeEventListener('touchcancel', onEnd);
+      if (done) return;
+      done = true;
+      detach();
       seat.el.classList.remove('dragging');
       seat.el.style.opacity = '';
 
@@ -865,6 +938,7 @@
       renderGroups();
     }
 
+    cancelSeatDrag = abort;
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('touchend', onEnd);
     document.addEventListener('touchcancel', onEnd);
@@ -1071,6 +1145,98 @@
   }, true);
 
   /* ================================================================
+   *  框选模块（鼠标左键拖动 / 触屏单指拖动 共用一套）
+   * ================================================================ */
+
+  function createMarquee(cx, cy) {
+    const startW = screenToWorld(cx, cy);
+    let box = null;
+    let moved = false;
+    let rect = null;
+
+    return {
+      get moved() { return moved; },
+
+      moveTo(x, y) {
+        if (!moved && Math.hypot(x - cx, y - cy) <= 4) return;
+        if (!moved) {
+          moved = true;
+          box = document.createElement('div');
+          box.className = 'select-box';
+          world.appendChild(box);
+        }
+        const w = screenToWorld(x, y);
+        const x1 = Math.min(startW.x, w.x);
+        const y1 = Math.min(startW.y, w.y);
+        const x2 = Math.max(startW.x, w.x);
+        const y2 = Math.max(startW.y, w.y);
+        rect = { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+        box.style.left   = x1 + 'px';
+        box.style.top    = y1 + 'px';
+        box.style.width  = rect.w + 'px';
+        box.style.height = rect.h + 'px';
+      },
+
+      // 松手：拖出过框 → 按框内容弹菜单；只是点了一下 → 仅取消选中
+      finish(x, y) {
+        if (box) { box.remove(); box = null; }
+        if (moved && rect) { commitMarquee(rect, x, y); return; }
+        if (manualGrouping) {
+          manualSelected.clear();
+          seats.forEach(s => s.el.classList.remove('selected'));
+        }
+      },
+
+      // 被双指手势打断：静默撤掉，不弹菜单
+      abort() {
+        if (box) { box.remove(); box = null; }
+        moved = false;
+        rect = null;
+      }
+    };
+  }
+
+  // 框选结算：框里有座位 → 建组 / 批量删除；框里全空 → 批量建座
+  function commitMarquee(r, menuX, menuY) {
+    const sel = seats.filter(s =>
+      !(s.x + SEAT < r.x || s.x > r.x + r.w ||
+        s.y + SEAT < r.y || s.y > r.y + r.h)
+    );
+
+    if (sel.length) {
+      if (manualGrouping) {
+        sel.forEach(s => {
+          manualSelected.add(s.id);
+          s.el.classList.add('selected');
+        });
+      } else {
+        showMenu(menuX, menuY, [
+          { label: '设为小组', onClick: () => createGroupFromSeats(sel) },
+          { label: '批量删除', danger: true, onClick: () => sel.forEach(removeSeat) }
+        ]);
+      }
+      return;
+    }
+
+    if (manualGrouping) return;
+
+    // 框里一个座位都没有 → 视作「铺座」手势，提供批量创建
+    // 不设最小尺寸门槛：哪怕只框住不到一格空白，也照样给按钮
+    let cells = cellsInRect(r.x, r.y, r.x + r.w, r.y + r.h);
+    if (!cells.length) {
+      // 框正好卡在座位之间的缝隙里（覆盖到的格子全被占）→ 退一步取最近的空格
+      const c = findFreeCell(r.x + r.w / 2, r.y + r.h / 2, null);
+      if (c) cells = [c];
+    }
+    if (cells.length) {
+      showMenu(menuX, menuY, [{
+        label: '批量创建座位（' + cells.length + '）',
+        onClick: () => cells.forEach(c => createSeatAtCell(c.col, c.row))
+      }]);
+    }
+  }
+
+  /* ================================================================
    *  画布鼠标交互
    * ================================================================ */
 
@@ -1114,86 +1280,14 @@
     e.preventDefault();
     closeMenu();
 
-    const startCX = e.clientX, startCY = e.clientY;
-    const startW = screenToWorld(e.clientX, e.clientY);
+    const mq = createMarquee(e.clientX, e.clientY);
 
-    let moved = false;
-    let box = null;
-
-    function onMove(ev) {
-      if (!moved && Math.hypot(ev.clientX - startCX, ev.clientY - startCY) > 4) {
-        moved = true;
-        box = document.createElement('div');
-        box.className = 'select-box';
-        world.appendChild(box);
-      }
-      if (!moved || !box) return;
-
-      const w = screenToWorld(ev.clientX, ev.clientY);
-      const x1 = Math.min(startW.x, w.x);
-      const y1 = Math.min(startW.y, w.y);
-      const x2 = Math.max(startW.x, w.x);
-      const y2 = Math.max(startW.y, w.y);
-
-      box.style.left   = x1 + 'px';
-      box.style.top    = y1 + 'px';
-      box.style.width  = (x2 - x1) + 'px';
-      box.style.height = (y2 - y1) + 'px';
-    }
+    function onMove(ev) { mq.moveTo(ev.clientX, ev.clientY); }
 
     function onUp(ev) {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
-
-      if (moved && box) {
-        const r = {
-          x: parseFloat(box.style.left),
-          y: parseFloat(box.style.top),
-          w: parseFloat(box.style.width),
-          h: parseFloat(box.style.height)
-        };
-        box.remove();
-
-        const sel = seats.filter(s =>
-          !(s.x + SEAT < r.x || s.x > r.x + r.w ||
-            s.y + SEAT < r.y || s.y > r.y + r.h)
-        );
-
-        if (sel.length) {
-          if (manualGrouping) {
-            sel.forEach(s => {
-              manualSelected.add(s.id);
-              s.el.classList.add('selected');
-            });
-          } else {
-            showMenu(ev.clientX, ev.clientY, [
-              { label: '设为小组', onClick: () => createGroupFromSeats(sel) },
-              { label: '批量删除', danger: true, onClick: () => sel.forEach(removeSeat) }
-            ]);
-          }
-        } else if (!manualGrouping && (r.w > 0 || r.h > 0)) {
-          // 框里一个座位都没有 → 视作「铺座」手势，提供批量创建
-          // 不设最小尺寸门槛：哪怕只框住不到一格空白，也照样给按钮
-          let cells = cellsInRect(r.x, r.y, r.x + r.w, r.y + r.h);
-          if (!cells.length) {
-            // 框正好卡在座位之间的缝隙里（覆盖到的格子全被占）→ 退一步取最近的空格
-            const c = findFreeCell(r.x + r.w / 2, r.y + r.h / 2, null);
-            if (c) cells = [c];
-          }
-          if (cells.length) {
-            showMenu(ev.clientX, ev.clientY, [{
-              label: '批量创建座位（' + cells.length + '）',
-              onClick: () => cells.forEach(c => createSeatAtCell(c.col, c.row))
-            }]);
-          }
-        }
-        return;
-      }
-
-      if (manualGrouping) {
-        manualSelected.clear();
-        seats.forEach(s => s.el.classList.remove('selected'));
-      }
+      mq.finish(ev.clientX, ev.clientY);
     }
 
     document.addEventListener('mousemove', onMove);

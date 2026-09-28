@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>教室座位编排</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    display: flex; flex-direction: column;
+    height: 100vh; overflow: hidden; background: #fff;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: none;
+  }
+
+  /* ============ 顶栏 ============ */
+  #topbar {
+    position: relative;
+    flex: 0 0 auto;
+    height: 50px;
+    background: #1b6b8f;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    font-size: 15px;
+    user-select: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    z-index: 10;
+    padding: 0 16px;
+  }
+
+  /* 开关 */
+  .switch-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: background .15s;
+  }
+  .switch-wrap:hover { background: rgba(255,255,255,.12); }
+
+  .switch {
+    position: relative;
+    width: 42px;
+    height: 22px;
+    background: rgba(255,255,255,.28);
+    border-radius: 11px;
+    transition: background .2s;
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    left: 2px; top: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch.on { background: #4db6ac; }
+  .switch.on::after { transform: translateX(20px); }
+
+  /* 手动建组按钮 */
+  #manualGroupBtn {
+    background: #fff;
+    color: #1b6b8f;
+    border: none;
+    font: inherit;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 5px 16px;
+    border-radius: 15px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    transition: background .15s, color .15s;
+    white-space: nowrap;
+  }
+  #manualGroupBtn:hover { background: #e8f4fa; }
+  #manualGroupBtn.active {
+    background: #ff9800;
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.5);
+  }
+
+  #manualActions {
+    position: absolute; right: 16px; top: 50%;
+    transform: translateY(-50%);
+    display: flex; gap: 8px;
+  }
+  #manualActions button {
+    border: none;
+    font: inherit;
+    font-size: 14px;
+    padding: 5px 14px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  #finishBtn { background: #4db6ac; color: #fff; }
+  #finishBtn:hover { background: #45a79d; }
+  #cancelBtn { background: #fff; color: #b04a4a; }
+  #cancelBtn:hover { background: #fdeeee; }
+
+  #zoomHint {
+    position: absolute; left: 16px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: rgba(255,255,255,.85);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ============ 画布 ============ */
+  #canvas {
+    flex: 1 1 auto;
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    user-select: none;
+    cursor: crosshair;
+  }
+  #canvas.grid-bg {
+    background-image:
+      linear-gradient(to right, #eef5f9 1px, transparent 1px),
+      linear-gradient(to bottom, #eef5f9 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  #world {
+    position: absolute;
+    left: 0; top: 0;
+    width: 0; height: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+  #canvas::after {
+    content: '从下方拖拽「座位」到此处开始编排';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #c6dbe6;
+    font-size: 18px;
+    pointer-events: none;
+    display: none;
+    white-space: nowrap;
+  }
+  #canvas.empty::after { display: block; }
+
+  /* ============ 座位 ============ */
+  .seat {
+    position: absolute;
+    width: 46px; height: 46px;
+    background: #1b6b8f;
+    color: #fff;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 4px;
+    cursor: move;
+    user-select: none;
+    z-index: 3;
+    box-shadow: 0 1px 3px rgba(0,0,0,.18);
+    transition: box-shadow .15s;
+  }
+  .seat:hover { outline: 2px solid rgba(27,107,143,.45); outline-offset: 2px; }
+  .seat.selected { outline: 3px solid #ff9800; outline-offset: 2px; }
+  .seat.dragging { opacity: .85; z-index: 999; cursor: grabbing; }
+
+  .ghost {
+    position: fixed;
+    width: 46px; height: 46px;
+    background: #1b6b8f; color: #fff;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 4px;
+    opacity: .75;
+    pointer-events: none;
+    z-index: 99999;
+    box-shadow: 0 4px 14px rgba(0,0,0,.3);
+  }
+
+  .select-box {
+    position: absolute;
+    border: 1px solid #1b6b8f;
+    background: rgba(27,107,143,.14);
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  .group-frame {
+    position: absolute;
+    border: 2px dashed #999;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .group-label {
+    position: absolute;
+    top: -11px; left: 10px;
+    font-size: 12px;
+    line-height: 20px;
+    height: 20px;
+    color: #fff;
+    padding: 0 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+
+  /* ============ 底栏 ============ */
+  #bottomBar {
+    flex: 0 0 auto;
+    height: 118px;
+    border-top: 2px solid #1b6b8f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    position: relative;
+    z-index: 20;
+  }
+  #seatSource {
+    width: 56px; height: 56px;
+    background: #1b6b8f;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    border-radius: 3px;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    transition: transform .12s, background .12s;
+  }
+  #seatSource:hover { background: #2280aa; transform: translateY(-2px); }
+  #seatSource:active { cursor: grabbing; transform: scale(.96); }
+
+  /* ============ 菜单 ============ */
+  .menu {
+    position: fixed;
+    background: #fff;
+    border: 1px solid #d4dde3;
+    border-radius: 6px;
+    box-shadow: 0 6px 22px rgba(0,0,0,.18);
+    padding: 5px 0;
+    z-index: 100000;
+    min-width: 132px;
+    overflow: hidden;
+    animation: menuIn .1s ease-out;
+  }
+  @keyframes menuIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+  .menu-item {
+    padding: 8px 18px;
+    font-size: 14px;
+    color: #2c3e46;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .menu-item:hover { background: #eaf4f9; }
+  .menu-item.danger { color: #d24545; }
+  .menu-item.danger:hover { background: #fdeeee; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span id="zoomHint">缩放 100%</span>
+
+  <div class="switch-wrap" id="gridSwitchWrap">
+    <div class="switch on" id="gridSwitch"></div>
+    <span>网格对齐</span>
+  </div>
+
+  <button id="manualGroupBtn">手动建组</button>
+
+  <div id="manualActions" style="display:none">
+    <button id="finishBtn">✓ 完成</button>
+    <button id="cancelBtn">✕ 取消</button>
+  </div>
+</div>
+
+<div id="canvas">
+  <div id="world"></div>
+</div>
+
+<div id="bottomBar">
+  <div id="seatSource">座位</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==================== 常量 ==================== */
+  const SEAT = 46;
+  const CELL = 56;
+  const PAD  = (CELL - SEAT) / 2;
+  const GROUP_COLORS = ['#e57373','#64b5f6','#81c784','#ffb74d','#ba68c8',
+                        '#4db6ac','#f06292','#9575cd','#aed581','#4fc3f7',
+                        '#ffd54f','#a1887f'];
+  const MIN_SCALE = 0.25;
+  const MAX_SCALE = 4;
+  const WORLD_MARGIN = 4000;
+
+  /* ==================== DOM ==================== */
+  const canvas      = document.getElementById('canvas');
+  const world       = document.getElementById('world');
+  const bottomBar   = document.getElementById('bottomBar');
+  const seatSource  = document.getElementById('seatSource');
+  const zoomHint    = document.getElementById('zoomHint');
+  const gridSwitch  = document.getElementById('gridSwitch');
+  const gridSwitchWrap = document.getElementById('gridSwitchWrap');
+  const manualGroupBtn = document.getElementById('manualGroupBtn');
+  const manualActions  = document.getElementById('manualActions');
+  const finishBtn   = document.getElementById('finishBtn');
+  const cancelBtn   = document.getElementById('cancelBtn');
+
+  /* ==================== 状态 ==================== */
+  let seats = [];
+  let groups = [];
+  let seatSeq = 0;
+  let groupSeq = 0;
+
+  let gridAlign = true;
+  let manualGrouping = false;
+  let manualSelected = new Set();
+
+  let currentMenu = null;
+
+  let scale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  /* ================================================================
+   *  坐标换算
+   * ================================================================ */
+  function screenToWorld(clientX, clientY) {
+    const r = canvas.getBoundingClientRect();
+    return {
+      x: (clientX - r.left - offsetX) / scale,
+      y: (clientY - r.top  - offsetY) / scale
+    };
+  }
+
+  function applyTransform() {
+    world.style.transform =
+      `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    canvas.style.backgroundSize =
+      (CELL * scale) + 'px ' + (CELL * scale) + 'px';
+    canvas.style.backgroundPosition =
+      offsetX + 'px ' + offsetY + 'px';
+    zoomHint.textContent = '缩放 ' + Math.round(scale * 100) + '%';
+  }
+
+  function zoomAt(clientX, clientY, newScale) {
+    newScale = clamp(newScale, MIN_SCALE, MAX_SCALE);
+    if (newScale === scale) return;
+
+    const r = canvas.getBoundingClientRect();
+    const px = clientX - r.left;
+    const py = clientY - r.top;
+
+    const wx = (px - offsetX) / scale;
+    const wy = (py - offsetY) / scale;
+
+    scale = newScale;
+    offsetX = px - wx * scale;
+    offsetY = py - wy * scale;
+
+    applyTransform();
+  }
+
+  /* ================================================================
+   *  屏蔽浏览器默认手势
+   * ================================================================ */
+  ['dragstart', 'selectstart', 'contextmenu'].forEach(ev => {
+    document.addEventListener(ev, e => e.preventDefault());
+  });
+  document.addEventListener('auxclick', e => e.preventDefault());
+
+  /* ================================================================
+   *  缩放交互
+   * ================================================================ */
+
+  canvas.addEventListener('wheel', e => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    const factor = Math.exp(-e.deltaY * 0.0015);
+    zoomAt(e.clientX, e.clientY, scale * factor);
+  }, { passive: false });
+
+  const touches = new Map();
+  let pinchStartDist = 0;
+  let pinchStartScale = 1;
+  let pinchStartMid = { x: 0, y: 0 };
+  let pinchStartOffset = { x: 0, y: 0 };
+  let singleStart = null;
+
+  canvas.addEventListener('touchstart', e => {
+    for (const t of e.changedTouches) {
+      touches.set(t.identifier, { x: t.clientX, y: t.clientY });
+    }
+
+    if (touches.size === 2) {
+      const pts = [...touches.values()];
+      pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      pinchStartScale = scale;
+      pinchStartMid = {
+        x: (pts[0].x + pts[1].x) / 2,
+        y: (pts[0].y + pts[1].y) / 2
+      };
+      pinchStartOffset = { x: offsetX, y: offsetY };
+      singleStart = null;
+    } else if (touches.size === 1) {
+      const t = e.changedTouches[0];
+      singleStart = { x: t.clientX, y: t.clientY, ox: offsetX, oy: offsetY,
+                      target: t.target };
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', e => {
+    if (touches.size === 2) {
+      e.preventDefault();
+      const pts = [...touches.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (pinchStartDist < 1) return;
+
+      const mid = {
+        x: (pts[0].x + pts[1].x) / 2,
+        y: (pts[0].y + pts[1].y) / 2
+      };
+
+      const newScale = clamp(pinchStartScale * (dist / pinchStartDist),
+                             MIN_SCALE, MAX_SCALE);
+      const r = canvas.getBoundingClientRect();
+
+      const px = mid.x - r.left;
+      const py = mid.y - r.top;
+      const wx = (pinchStartMid.x - r.left - pinchStartOffset.x) / pinchStartScale;
+      const wy = (pinchStartMid.y - r.top  - pinchStartOffset.y) / pinchStartScale;
+
+      scale = newScale;
+      offsetX = px - wx * scale + (mid.x - pinchStartMid.x);
+      offsetY = py - wy * scale + (mid.y - pinchStartMid.y);
+
+      applyTransform();
+      return;
+    }
+
+    if (touches.size === 1 && singleStart) {
+      const t = e.changedTouches[0];
+      const dx = t.clientX - singleStart.x;
+      const dy = t.clientY - singleStart.y;
+      if (singleStart.target === canvas && Math.hypot(dx, dy) > 6) {
+        e.preventDefault();
+        offsetX = singleStart.ox + dx;
+        offsetY = singleStart.oy + dy;
+        applyTransform();
+      }
+    }
+  }, { passive: false });
+
+  function endTouch(e) {
+    for (const t of e.changedTouches) {
+      touches.delete(t.identifier);
+    }
+    if (touches.size < 2) pinchStartDist = 0;
+    if (touches.size === 0) {
+      singleStart = null;
+    } else if (touches.size === 1) {
+      const t = [...touches.values()][0];
+      singleStart = { x: t.x, y: t.y, ox: offsetX, oy: offsetY, target: canvas };
+    }
+  }
+  canvas.addEventListener('touchend', endTouch);
+  canvas.addEventListener('touchcancel', endTouch);
+
+  /* ================================================================
+   *  座位基础操作
+   * ================================================================ */
+
+  function clampWorld(v) {
+    return clamp(v, -WORLD_MARGIN, WORLD_MARGIN);
+  }
+
+  function findFreeCell(x, y, exclude) {
+    const maxCells = Math.ceil(WORLD_MARGIN / CELL);
+
+    const occupied = new Set();
+    seats.forEach(s => {
+      if (s !== exclude && s.col !== null && s.row !== null) {
+        occupied.add(s.col + ',' + s.row);
+      }
+    });
+
+    let col = clamp(Math.round((x - PAD) / CELL), -maxCells, maxCells);
+    let row = clamp(Math.round((y - PAD) / CELL), -maxCells, maxCells);
+    if (!occupied.has(col + ',' + row)) return { col, row };
+
+    for (let r = 1; r <= maxCells * 2; r++) {
+      for (let dc = -r; dc <= r; dc++) {
+        for (let dr = -r; dr <= r; dr++) {
+          if (Math.abs(dc) !== r && Math.abs(dr) !== r) continue;
+          const c = col + dc, rr = row + dr;
+          if (c < -maxCells || rr < -maxCells ||
+              c >  maxCells || rr >  maxCells) continue;
+          if (!occupied.has(c + ',' + rr)) return { col: c, row: rr };
+        }
+      }
+    }
+    return null;
+  }
+
+  function addSeat(worldX, worldY) {
+    let col = null, row = null;
+    let x = worldX, y = worldY;
+
+    if (gridAlign) {
+      const cell = findFreeCell(x, y, null);
+      if (!cell) return null;
+      col = cell.col;
+      row = cell.row;
+      x = col * CELL + PAD;
+      y = row * CELL + PAD;
+    }
+
+    x = clampWorld(x);
+    y = clampWorld(y);
+
+    const seat = { id: ++seatSeq, x, y, col, row, groupId: null, el: null };
+
+    const el = document.createElement('div');
+    el.className = 'seat';
+    el.textContent = '座位';
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+    el.addEventListener('mousedown', ev => onSeatMouseDown(ev, seat));
+    el.addEventListener('touchstart', ev => onSeatTouchStart(ev, seat), { passive: false });
+
+    world.appendChild(el);
+    seat.el = el;
+    seats.push(seat);
+    updateEmpty();
+    renderGroups();
+    return seat;
+  }
+
+  function removeSeat(seat) {
+    if (!seat) return;
+    seat.el.remove();
+    seats = seats.filter(s => s !== seat);
+    manualSelected.delete(seat.id);
+    updateEmpty();
+    renderGroups();
+  }
+
+  function moveSeatEl(seat) {
+    seat.el.style.left = seat.x + 'px';
+    seat.el.style.top  = seat.y + 'px';
+  }
+
+  function updateEmpty() {
+    canvas.classList.toggle('empty', seats.length === 0);
+  }
+
+  /* ================================================================
+   *  座位拖拽（鼠标）
+   * ================================================================ */
+
+  function onSeatMouseDown(e, seat) {
+    // ---- 右键：一键删除座位 ----
+    if (e.button === 2) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu();
+      removeSeat(seat);
+      return;
+    }
+
+    if (e.button !== 0) return;
+    if (e.ctrlKey) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const start = screenToWorld(e.clientX, e.clientY);
+    const origX = seat.x, origY = seat.y;
+    let moved = false;
+
+    function onMove(ev) {
+      const now = screenToWorld(ev.clientX, ev.clientY);
+      const dx = now.x - start.x;
+      const dy = now.y - start.y;
+
+      if (!moved && Math.hypot(dx * scale, dy * scale) > 4) {
+        moved = true;
+        seat.el.classList.add('dragging');
+      }
+      if (!moved) return;
+
+      seat.x = clampWorld(origX + dx);
+      seat.y = clampWorld(origY + dy);
+      moveSeatEl(seat);
+
+      const bb = bottomBar.getBoundingClientRect();
+      seat.el.style.opacity = ev.clientY > bb.top ? '0.25' : '';
+
+      renderGroups();
+    }
+
+    function onUp(ev) {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      seat.el.classList.remove('dragging');
+      seat.el.style.opacity = '';
+
+      if (!moved) {
+        if (manualGrouping) {
+          toggleManualSelect(seat);
+        } else if (seat.groupId) {
+          const g = groups.find(x => x.id === seat.groupId);
+          if (g) {
+            showMenu(ev.clientX, ev.clientY, [
+              { label: '更改组名', onClick: () => renameGroup(g) },
+              { label: '解散小组', danger: true, onClick: () => dissolveGroup(g) }
+            ]);
+          }
+        }
+        return;
+      }
+
+      const bb = bottomBar.getBoundingClientRect();
+      if (ev.clientY > bb.top) {
+        removeSeat(seat);
+        return;
+      }
+
+      if (gridAlign) {
+        const cell = findFreeCell(seat.x, seat.y, seat);
+        if (cell) {
+          seat.col = cell.col;
+          seat.row = cell.row;
+          seat.x = seat.col * CELL + PAD;
+          seat.y = seat.row * CELL + PAD;
+        }
+      } else {
+        seat.x = clampWorld(seat.x);
+        seat.y = clampWorld(seat.y);
+      }
+      moveSeatEl(seat);
+      renderGroups();
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  /* ================================================================
+   *  座位拖拽（触屏）
+   * ================================================================ */
+  function onSeatTouchStart(e, seat) {
+    if (e.touches.length !== 1) return;
+    e.stopPropagation();
+    e.preventDefault();
+
+    const t0 = e.changedTouches[0];
+    const start = screenToWorld(t0.clientX, t0.clientY);
+    const origX = seat.x, origY = seat.y;
+    let moved = false;
+
+    function onMove(ev) {
+      if (ev.touches.length !== 1) return;
+      const t = ev.changedTouches[0];
+      const now = screenToWorld(t.clientX, t.clientY);
+      const dx = now.x - start.x;
+      const dy = now.y - start.y;
+
+      if (!moved && Math.hypot(dx * scale, dy * scale) > 8) {
+        moved = true;
+        seat.el.classList.add('dragging');
+      }
+      if (!moved) return;
+
+      ev.preventDefault();
+      seat.x = clampWorld(origX + dx);
+      seat.y = clampWorld(origY + dy);
+      moveSeatEl(seat);
+
+      const bb = bottomBar.getBoundingClientRect();
+      seat.el.style.opacity = t.clientY > bb.top ? '0.25' : '';
+      renderGroups();
+    }
+
+    function onEnd(ev) {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      document.removeEventListener('touchcancel', onEnd);
+      seat.el.classList.remove('dragging');
+      seat.el.style.opacity = '';
+
+      if (!moved) {
+        if (manualGrouping) {
+          toggleManualSelect(seat);
+        } else if (seat.groupId) {
+          const g = groups.find(x => x.id === seat.groupId);
+          if (g) {
+            const t = ev.changedTouches[0];
+            showMenu(t.clientX, t.clientY, [
+              { label: '更改组名', onClick: () => renameGroup(g) },
+              { label: '解散小组', danger: true, onClick: () => dissolveGroup(g) }
+            ]);
+          }
+        }
+        return;
+      }
+
+      const t = ev.changedTouches[0];
+      const bb = bottomBar.getBoundingClientRect();
+      if (t && t.clientY > bb.top) {
+        removeSeat(seat);
+        return;
+      }
+
+      if (gridAlign) {
+        const cell = findFreeCell(seat.x, seat.y, seat);
+        if (cell) {
+          seat.col = cell.col;
+          seat.row = cell.row;
+          seat.x = seat.col * CELL + PAD;
+          seat.y = seat.row * CELL + PAD;
+        }
+      } else {
+        seat.x = clampWorld(seat.x);
+        seat.y = clampWorld(seat.y);
+      }
+      moveSeatEl(seat);
+      renderGroups();
+    }
+
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
+  }
+
+  /* ================================================================
+   *  从底栏拖出新座位
+   * ================================================================ */
+
+  seatSource.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+
+    const ghost = document.createElement('div');
+    ghost.className = 'ghost';
+    ghost.textContent = '座位';
+    document.body.appendChild(ghost);
+
+    function place(ev) {
+      ghost.style.left = (ev.clientX - SEAT / 2) + 'px';
+      ghost.style.top  = (ev.clientY - SEAT / 2) + 'px';
+    }
+    place(e);
+
+    function onMove(ev) { place(ev); }
+
+    function onUp(ev) {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      ghost.remove();
+
+      const r = canvas.getBoundingClientRect();
+      if (ev.clientX >= r.left && ev.clientX <= r.right &&
+          ev.clientY >= r.top  && ev.clientY <= r.bottom) {
+        const w = screenToWorld(ev.clientX, ev.clientY);
+        addSeat(w.x - SEAT / 2, w.y - SEAT / 2);
+      }
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  seatSource.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+
+    const ghost = document.createElement('div');
+    ghost.className = 'ghost';
+    ghost.textContent = '座位';
+    document.body.appendChild(ghost);
+
+    function place(t) {
+      ghost.style.left = (t.clientX - SEAT / 2) + 'px';
+      ghost.style.top  = (t.clientY - SEAT / 2) + 'px';
+    }
+    place(e.changedTouches[0]);
+
+    function onMove(ev) {
+      if (ev.touches.length !== 1) return;
+      ev.preventDefault();
+      place(ev.changedTouches[0]);
+    }
+
+    function onEnd(ev) {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      document.removeEventListener('touchcancel', onEnd);
+      ghost.remove();
+
+      const t = ev.changedTouches[0];
+      if (!t) return;
+      const r = canvas.getBoundingClientRect();
+      if (t.clientX >= r.left && t.clientX <= r.right &&
+          t.clientY >= r.top  && t.clientY <= r.bottom) {
+        const w = screenToWorld(t.clientX, t.clientY);
+        addSeat(w.x - SEAT / 2, w.y - SEAT / 2);
+      }
+    }
+
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
+  }, { passive: false });
+
+  /* ================================================================
+   *  小组渲染
+   * ================================================================ */
+
+  function renderGroups() {
+    world.querySelectorAll('.group-frame').forEach(el => el.remove());
+
+    groups.forEach(g => {
+      const members = seats.filter(s => s.groupId === g.id);
+      if (!members.length) return;
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      members.forEach(s => {
+        minX = Math.min(minX, s.x);
+        minY = Math.min(minY, s.y);
+        maxX = Math.max(maxX, s.x + SEAT);
+        maxY = Math.max(maxY, s.y + SEAT);
+      });
+
+      const pad = 10;
+      const frame = document.createElement('div');
+      frame.className = 'group-frame';
+      frame.style.left   = (minX - pad) + 'px';
+      frame.style.top    = (minY - pad) + 'px';
+      frame.style.width  = (maxX - minX + pad * 2) + 'px';
+      frame.style.height = (maxY - minY + pad * 2) + 'px';
+      frame.style.borderColor = g.color;
+
+      const label = document.createElement('span');
+      label.className = 'group-label';
+      label.style.background = g.color;
+      label.textContent = g.name;
+      frame.appendChild(label);
+
+      world.appendChild(frame);
+    });
+
+    seats.forEach(s => {
+      const g = groups.find(g => g.id === s.groupId);
+      s.el.style.boxShadow = g
+        ? `0 0 0 3px ${g.color}, 0 1px 3px rgba(0,0,0,.18)`
+        : '0 1px 3px rgba(0,0,0,.18)';
+    });
+  }
+
+  /* ================================================================
+   *  小组增删改
+   * ================================================================ */
+
+  function createGroupFromSeats(list, name) {
+    groupSeq++;
+    const g = {
+      id: groupSeq,
+      name: name || ('小组 ' + groupSeq),
+      color: GROUP_COLORS[(groupSeq - 1) % GROUP_COLORS.length]
+    };
+    groups.push(g);
+    list.forEach(s => { s.groupId = g.id; });
+    renderGroups();
+    return g;
+  }
+
+  function renameGroup(g) {
+    const n = prompt('请输入新的组名：', g.name);
+    if (n !== null && n.trim() !== '') {
+      g.name = n.trim();
+      renderGroups();
+    }
+  }
+
+  function dissolveGroup(g) {
+    seats.forEach(s => { if (s.groupId === g.id) s.groupId = null; });
+    groups = groups.filter(x => x !== g);
+    renderGroups();
+  }
+
+  /* ================================================================
+   *  菜单
+   * ================================================================ */
+
+  function closeMenu() {
+    if (currentMenu) {
+      currentMenu.remove();
+      currentMenu = null;
+    }
+  }
+
+  function showMenu(x, y, items) {
+    closeMenu();
+
+    const menu = document.createElement('div');
+    menu.className = 'menu';
+
+    items.forEach(it => {
+      const d = document.createElement('div');
+      d.className = 'menu-item' + (it.danger ? ' danger' : '');
+      d.textContent = it.label;
+      d.addEventListener('click', ev => {
+        ev.stopPropagation();
+        closeMenu();
+        it.onClick();
+      });
+      menu.appendChild(d);
+    });
+
+    document.body.appendChild(menu);
+
+    const r = menu.getBoundingClientRect();
+    if (x + r.width  > window.innerWidth)  x = window.innerWidth  - r.width  - 8;
+    if (y + r.height > window.innerHeight) y = window.innerHeight - r.height - 8;
+    menu.style.left = Math.max(4, x) + 'px';
+    menu.style.top  = Math.max(4, y) + 'px';
+
+    currentMenu = menu;
+  }
+
+  document.addEventListener('mousedown', e => {
+    if (currentMenu && !currentMenu.contains(e.target)) closeMenu();
+  }, true);
+
+  /* ================================================================
+   *  画布鼠标交互
+   * ================================================================ */
+
+  canvas.addEventListener('mousedown', e => {
+    if (e.target !== canvas) return;
+
+    // ---- 右键：快速新建座位 ----
+    if (e.button === 2) {
+      e.preventDefault();
+      closeMenu();
+      const w = screenToWorld(e.clientX, e.clientY);
+      addSeat(w.x - SEAT / 2, w.y - SEAT / 2);
+      return;
+    }
+
+    if (e.button !== 0) return;
+
+    // ---- Ctrl + 左键：平移画布 ----
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const startX = e.clientX, startY = e.clientY;
+      const ox = offsetX, oy = offsetY;
+
+      function onMove(ev) {
+        offsetX = ox + (ev.clientX - startX);
+        offsetY = oy + (ev.clientY - startY);
+        applyTransform();
+      }
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        canvas.style.cursor = 'crosshair';
+      }
+      canvas.style.cursor = 'grabbing';
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      return;
+    }
+
+    // ---- 普通左键：框选 ----
+    e.preventDefault();
+    closeMenu();
+
+    const startCX = e.clientX, startCY = e.clientY;
+    const startW = screenToWorld(e.clientX, e.clientY);
+
+    let moved = false;
+    let box = null;
+
+    function onMove(ev) {
+      if (!moved && Math.hypot(ev.clientX - startCX, ev.clientY - startCY) > 4) {
+        moved = true;
+        box = document.createElement('div');
+        box.className = 'select-box';
+        world.appendChild(box);
+      }
+      if (!moved || !box) return;
+
+      const w = screenToWorld(ev.clientX, ev.clientY);
+      const x1 = Math.min(startW.x, w.x);
+      const y1 = Math.min(startW.y, w.y);
+      const x2 = Math.max(startW.x, w.x);
+      const y2 = Math.max(startW.y, w.y);
+
+      box.style.left   = x1 + 'px';
+      box.style.top    = y1 + 'px';
+      box.style.width  = (x2 - x1) + 'px';
+      box.style.height = (y2 - y1) + 'px';
+    }
+
+    function onUp(ev) {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+
+      if (moved && box) {
+        const r = {
+          x: parseFloat(box.style.left),
+          y: parseFloat(box.style.top),
+          w: parseFloat(box.style.width),
+          h: parseFloat(box.style.height)
+        };
+        box.remove();
+
+        const sel = seats.filter(s =>
+          !(s.x + SEAT < r.x || s.x > r.x + r.w ||
+            s.y + SEAT < r.y || s.y > r.y + r.h)
+        );
+
+        if (sel.length) {
+          if (manualGrouping) {
+            sel.forEach(s => {
+              manualSelected.add(s.id);
+              s.el.classList.add('selected');
+            });
+          } else {
+            showMenu(ev.clientX, ev.clientY, [
+              { label: '设为小组', onClick: () => createGroupFromSeats(sel) },
+              { label: '批量删除', danger: true, onClick: () => sel.forEach(removeSeat) }
+            ]);
+          }
+        }
+        return;
+      }
+
+      if (manualGrouping) {
+        manualSelected.clear();
+        seats.forEach(s => s.el.classList.remove('selected'));
+      }
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  /* ================================================================
+   *  手动建组模式
+   * ================================================================ */
+
+  function toggleManualSelect(seat) {
+    if (manualSelected.has(seat.id)) {
+      manualSelected.delete(seat.id);
+      seat.el.classList.remove('selected');
+    } else {
+      manualSelected.add(seat.id);
+      seat.el.classList.add('selected');
+    }
+  }
+
+  function startManualGrouping() {
+    manualGrouping = true;
+    manualSelected.clear();
+    seats.forEach(s => s.el.classList.remove('selected'));
+    manualGroupBtn.classList.add('active');
+    manualGroupBtn.textContent = '选择中…';
+    manualActions.style.display = 'flex';
+  }
+
+  function endManualGrouping() {
+    manualGrouping = false;
+    manualSelected.clear();
+    seats.forEach(s => s.el.classList.remove('selected'));
+    manualGroupBtn.classList.remove('active');
+    manualGroupBtn.textContent = '手动建组';
+    manualActions.style.display = 'none';
+  }
+
+  manualGroupBtn.addEventListener('click', () => {
+    if (manualGrouping) {
+      endManualGrouping();
+    } else {
+      startManualGrouping();
+    }
+  });
+
+  finishBtn.addEventListener('click', () => {
+    const sel = seats.filter(s => manualSelected.has(s.id));
+    if (sel.length) createGroupFromSeats(sel);
+    endManualGrouping();
+  });
+
+  cancelBtn.addEventListener('click', endManualGrouping);
+
+  /* ================================================================
+   *  网格对齐开关
+   * ================================================================ */
+
+  function setGridAlign(on) {
+    gridAlign = on;
+    gridSwitch.classList.toggle('on', on);
+    canvas.classList.toggle('grid-bg', on);
+
+    if (on) {
+      seats.forEach(s => { s.col = null; s.row = null; });
+      seats.forEach(s => {
+        const cell = findFreeCell(s.x, s.y, s);
+        if (cell) {
+          s.col = cell.col;
+          s.row = cell.row;
+          s.x = s.col * CELL + PAD;
+          s.y = s.row * CELL + PAD;
+          moveSeatEl(s);
+        }
+      });
+      renderGroups();
+    } else {
+      seats.forEach(s => { s.col = null; s.row = null; });
+    }
+  }
+
+  gridSwitchWrap.addEventListener('click', () => {
+    setGridAlign(!gridAlign);
+  });
+
+  /* ================================================================
+   *  窗口尺寸变化
+   * ================================================================ */
+
+  window.addEventListener('resize', () => {
+    applyTransform();
+  });
+
+  /* ================================================================
+   *  初始化
+   * ================================================================ */
+
+  setGridAlign(true);
+  applyTransform();
+  updateEmpty();
+
+})();
+</script>
+</body>
+</html>

@@ -5,17 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>教室座位编排</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
+  /* randamer 同款字体 */
+  @import url('https://google-fonts.mirrors.sjtug.sjtu.edu.cn/css2?family=Noto+Sans+SC:wght@100..900&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&display=swap');
+
+  /* ============ 设计变量（对齐 randamer，不含发光） ============ */
+  :root {
+    --bg:        #23242a;   /* 页面底色 */
+    --panel:     #1c1c1c;   /* 面板 / 容器 */
+    --panel-2:   #28292d;   /* 次级面板 */
+    --line:      #33343b;   /* 分隔线 */
+    --accent:    #45f3ff;   /* 主色 */
+    --accent-hi: #35eaff;   /* 主色 hover */
+    --accent-lo: #25daff;   /* 主色 active */
+    --muted:     #8f8f8f;   /* 次要文字 */
+    --gray:      #666;      /* 中性按钮 / 未选中轨道 */
+    --danger:    #ff6b6b;
+    --warn:      #ffd700;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0;
+      font-family: "Noto Sans SC", sans-serif; font-optical-sizing: auto; }
+  html, body { height: 100%; overscroll-behavior: none; }
   body {
-    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
     display: flex; flex-direction: column;
-    height: 100vh; overflow: hidden; background: #fff;
+    height: 100vh; overflow: hidden;
+    background: var(--bg);
+    color: var(--accent);
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
     touch-action: none;
   }
 
@@ -23,21 +44,21 @@
   #topbar {
     position: relative;
     flex: 0 0 auto;
-    height: 50px;
-    background: #1b6b8f;
-    color: #fff;
+    height: 52px;
+    background: var(--panel);
+    color: var(--accent);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 16px;
     font-size: 15px;
     user-select: none;
-    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    border-bottom: 2px solid var(--accent);
     z-index: 10;
     padding: 0 16px;
   }
 
-  /* 开关 */
+  /* 开关（对齐 randamer 的 slider 配色） */
   .switch-wrap {
     display: flex;
     align-items: center;
@@ -45,17 +66,17 @@
     cursor: pointer;
     padding: 4px 10px;
     border-radius: 6px;
-    transition: background .15s;
+    transition: background .3s;
   }
-  .switch-wrap:hover { background: rgba(255,255,255,.12); }
+  .switch-wrap:hover { background: rgba(69,243,255,.10); }
 
   .switch {
     position: relative;
     width: 42px;
     height: 22px;
-    background: rgba(255,255,255,.28);
+    background: var(--gray);
     border-radius: 11px;
-    transition: background .2s;
+    transition: background .3s;
     flex-shrink: 0;
   }
   .switch::after {
@@ -65,33 +86,35 @@
     left: 2px; top: 2px;
     background: #fff;
     border-radius: 50%;
-    transition: transform .2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    transition: transform .3s;
   }
-  .switch.on { background: #4db6ac; }
+  .switch.on { background: var(--accent); }
   .switch.on::after { transform: translateX(20px); }
 
-  /* 手动建组按钮 */
+  /* 手动建组按钮（randamer 的 .anniu：青底深字 + 4px 圆角） */
   #manualGroupBtn {
-    background: #fff;
-    color: #1b6b8f;
+    background: var(--accent);
+    color: var(--panel);
     border: none;
+    outline: none;
     font: inherit;
-    font-weight: 700;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-style: normal;
     font-size: 14px;
-    padding: 5px 16px;
-    border-radius: 15px;
+    padding: 6px 18px;
+    border-radius: 4px;
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,.2);
-    transition: background .15s, color .15s;
+    transition: background .3s, transform .3s;
     white-space: nowrap;
   }
-  #manualGroupBtn:hover { background: #e8f4fa; }
+  #manualGroupBtn:hover { background: var(--accent-hi); }
+  #manualGroupBtn:active { background: var(--accent-lo); transform: scale(.95); }
   #manualGroupBtn.active {
-    background: #ff9800;
-    color: #fff;
-    box-shadow: 0 0 0 2px rgba(255,255,255,.5);
+    background: var(--warn);
+    color: var(--panel);
+    transform: none;
   }
+  #manualGroupBtn.active:hover { background: var(--warn); }
 
   #manualActions {
     position: absolute; right: 16px; top: 50%;
@@ -100,24 +123,26 @@
   }
   #manualActions button {
     border: none;
+    outline: none;
     font: inherit;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-style: normal;
     font-size: 14px;
-    padding: 5px 14px;
-    border-radius: 14px;
+    padding: 6px 16px;
+    border-radius: 4px;
     cursor: pointer;
-    font-weight: 700;
-    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    transition: background .3s;
   }
-  #finishBtn { background: #4db6ac; color: #fff; }
-  #finishBtn:hover { background: #45a79d; }
-  #cancelBtn { background: #fff; color: #b04a4a; }
-  #cancelBtn:hover { background: #fdeeee; }
+  #finishBtn { background: var(--accent); color: var(--panel); }
+  #finishBtn:hover { background: var(--accent-hi); }
+  #cancelBtn { background: var(--gray); color: #fff; }
+  #cancelBtn:hover { background: #757575; }
 
   #zoomHint {
     position: absolute; left: 16px; top: 50%;
     transform: translateY(-50%);
     font-size: 13px;
-    color: rgba(255,255,255,.85);
+    color: var(--muted);
     pointer-events: none;
     user-select: none;
   }
@@ -127,14 +152,15 @@
     flex: 1 1 auto;
     position: relative;
     overflow: hidden;
-    background: #fff;
+    background: var(--bg);
     user-select: none;
+    touch-action: none;      /* 画布内不留任何浏览器原生平移 / 缩放 */
     cursor: crosshair;
   }
   #canvas.grid-bg {
     background-image:
-      linear-gradient(to right, #eef5f9 1px, transparent 1px),
-      linear-gradient(to bottom, #eef5f9 1px, transparent 1px);
+      linear-gradient(to right, #2c2d34 1px, transparent 1px),
+      linear-gradient(to bottom, #2c2d34 1px, transparent 1px);
     background-size: 56px 56px;
   }
   #world {
@@ -143,13 +169,15 @@
     width: 0; height: 0;
     transform-origin: 0 0;
     will-change: transform;
+    touch-action: none;
   }
   #canvas::after {
     content: '从下方拖拽「座位」到此处开始编排';
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    color: #c6dbe6;
+    color: #55565e;
+    font-family: "ZCOOL KuaiLe", sans-serif;
     font-size: 18px;
     pointer-events: none;
     display: none;
@@ -158,49 +186,51 @@
   #canvas.empty::after { display: block; }
 
   /* ============ 座位 ============ */
+  /* 座位：深底 + 青色描边（randamer 的输入框语言） */
   .seat {
     position: absolute;
     width: 46px; height: 46px;
-    background: #1b6b8f;
-    color: #fff;
+    background: var(--panel-2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
     font-size: 13px;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: move;
     user-select: none;
     z-index: 3;
-    box-shadow: 0 1px 3px rgba(0,0,0,.18);
-    transition: box-shadow .15s;
+    transition: background .2s, border-color .2s;
   }
-  .seat:hover { outline: 2px solid rgba(27,107,143,.45); outline-offset: 2px; }
-  .seat.selected { outline: 3px solid #ff9800; outline-offset: 2px; }
+  .seat:hover { background: rgba(69,243,255,.14); }
+  .seat.selected { background: rgba(69,243,255,.22); outline: 2px solid var(--warn); outline-offset: 2px; }
   .seat.dragging { opacity: .85; z-index: 999; cursor: grabbing; }
 
   .ghost {
     position: fixed;
     width: 46px; height: 46px;
-    background: #1b6b8f; color: #fff;
+    background: var(--panel-2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
     font-size: 13px;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 4px;
-    opacity: .75;
+    border-radius: 6px;
+    opacity: .8;
     pointer-events: none;
     z-index: 99999;
-    box-shadow: 0 4px 14px rgba(0,0,0,.3);
   }
 
   .select-box {
     position: absolute;
-    border: 1px solid #1b6b8f;
-    background: rgba(27,107,143,.14);
+    border: 1px solid var(--accent-lo);
+    background: rgba(69,243,255,.10);
     pointer-events: none;
     z-index: 50;
   }
 
   .group-frame {
     position: absolute;
-    border: 2px dashed #999;
-    border-radius: 8px;
+    border: 2px dashed var(--gray);
+    border-radius: 10px;
     pointer-events: none;
     z-index: 1;
   }
@@ -210,65 +240,82 @@
     font-size: 12px;
     line-height: 20px;
     height: 20px;
-    color: #fff;
+    color: var(--panel);
     padding: 0 8px;
     border-radius: 10px;
     white-space: nowrap;
-    font-weight: 700;
-    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-weight: 400;
   }
 
   /* ============ 底栏 ============ */
   #bottomBar {
     flex: 0 0 auto;
     height: 118px;
-    border-top: 2px solid #1b6b8f;
+    border-top: 2px solid var(--accent);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fff;
+    background: var(--panel);
     position: relative;
     z-index: 20;
   }
   #seatSource {
     width: 56px; height: 56px;
-    background: #1b6b8f;
-    color: #fff;
+    background: var(--panel-2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
     display: flex; align-items: center; justify-content: center;
     font-size: 15px;
-    border-radius: 3px;
+    border-radius: 6px;
     cursor: grab;
     user-select: none;
-    box-shadow: 0 2px 6px rgba(0,0,0,.2);
-    transition: transform .12s, background .12s;
+    transition: transform .2s, background .2s;
   }
-  #seatSource:hover { background: #2280aa; transform: translateY(-2px); }
+  #seatSource:hover { background: rgba(69,243,255,.14); transform: translateY(-2px); }
   #seatSource:active { cursor: grabbing; transform: scale(.96); }
+
+  /* 操作提示（桌面端才显示） */
+  #opHint {
+    position: absolute; left: 20px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+    pointer-events: none;
+    user-select: none;
+  }
+  #opHint b {
+    color: var(--accent);
+    font-weight: 400;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+  }
+  @media (max-width: 760px) { #opHint { display: none; } }
 
   /* ============ 菜单 ============ */
   .menu {
     position: fixed;
-    background: #fff;
-    border: 1px solid #d4dde3;
-    border-radius: 6px;
-    box-shadow: 0 6px 22px rgba(0,0,0,.18);
-    padding: 5px 0;
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 6px 0;
     z-index: 100000;
     min-width: 132px;
     overflow: hidden;
-    animation: menuIn .1s ease-out;
+    animation: menuIn .15s ease-out;
   }
   @keyframes menuIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
   .menu-item {
-    padding: 8px 18px;
+    padding: 9px 18px;
     font-size: 14px;
-    color: #2c3e46;
+    color: var(--accent);
     cursor: pointer;
     white-space: nowrap;
+    transition: background .2s;
   }
-  .menu-item:hover { background: #eaf4f9; }
-  .menu-item.danger { color: #d24545; }
-  .menu-item.danger:hover { background: #fdeeee; }
+  .menu-item:hover { background: rgba(69,243,255,.12); }
+  .menu-item.danger { color: var(--danger); }
+  .menu-item.danger:hover { background: rgba(255,107,107,.14); }
 </style>
 </head>
 <body>
@@ -295,6 +342,7 @@
 
 <div id="bottomBar">
   <div id="seatSource">座位</div>
+  <div id="opHint">左键框选：框住座位 = 建组 / 批量删除，框住空白 = 批量建座</div>
 </div>
 
 <script>
@@ -383,12 +431,32 @@
   }
 
   /* ================================================================
-   *  屏蔽浏览器默认手势
+   *  屏蔽浏览器手势（左键 / 右键 / 中键一视同仁）
    * ================================================================ */
-  ['dragstart', 'selectstart', 'contextmenu'].forEach(ev => {
-    document.addEventListener(ev, e => e.preventDefault());
+
+  // 1) 拖拽、文本选择、右键菜单、中键粘贴、Safari 捏合手势 —— 全部吃掉
+  ['dragstart', 'drag', 'selectstart', 'contextmenu', 'auxclick',
+   'gesturestart', 'gesturechange', 'gestureend'].forEach(ev => {
+    document.addEventListener(ev, e => e.preventDefault(), { passive: false });
   });
-  document.addEventListener('auxclick', e => e.preventDefault());
+
+  // 2) 鼠标按下即接管：左键不选中 / 不拖图，右键不弹菜单，中键不进入自动滚动
+  //    表单控件放行，保留原生输入行为
+  document.addEventListener('mousedown', e => {
+    const t = e.target;
+    if (t instanceof Element && t.closest('input, textarea, select, [contenteditable]')) return;
+    e.preventDefault();
+  }, { passive: false });
+
+  // 3) 触控板 / Ctrl+滚轮不缩放整页（缩放一律交给画布自己处理）
+  window.addEventListener('wheel', e => {
+    if (e.ctrlKey) e.preventDefault();
+  }, { passive: false });
+
+  // 4) 顺带屏蔽 Ctrl +/-/0 的整页缩放，避免页面缩放后坐标换算错位
+  window.addEventListener('keydown', e => {
+    if (e.ctrlKey && ['+', '-', '=', '_', '0'].indexOf(e.key) >= 0) e.preventDefault();
+  }, { passive: false });
 
   /* ================================================================
    *  缩放交互
@@ -495,6 +563,20 @@
     return clamp(v, -WORLD_MARGIN, WORLD_MARGIN);
   }
 
+  // 坐标 → 网格号（供吸附与刷座共用，保证取整规则一致）
+  function cellAt(x, y) {
+    const maxCells = Math.ceil(WORLD_MARGIN / CELL);
+    return {
+      col: clamp(Math.round((x - PAD) / CELL), -maxCells, maxCells),
+      row: clamp(Math.round((y - PAD) / CELL), -maxCells, maxCells)
+    };
+  }
+
+  // 指定格子是否已被占用
+  function isCellTaken(col, row) {
+    return seats.some(s => s.col === col && s.row === row);
+  }
+
   function findFreeCell(x, y, exclude) {
     const maxCells = Math.ceil(WORLD_MARGIN / CELL);
 
@@ -505,8 +587,8 @@
       }
     });
 
-    let col = clamp(Math.round((x - PAD) / CELL), -maxCells, maxCells);
-    let row = clamp(Math.round((y - PAD) / CELL), -maxCells, maxCells);
+    const start = cellAt(x, y);
+    const col = start.col, row = start.row;
     if (!occupied.has(col + ',' + row)) return { col, row };
 
     for (let r = 1; r <= maxCells * 2; r++) {
@@ -523,22 +605,8 @@
     return null;
   }
 
-  function addSeat(worldX, worldY) {
-    let col = null, row = null;
-    let x = worldX, y = worldY;
-
-    if (gridAlign) {
-      const cell = findFreeCell(x, y, null);
-      if (!cell) return null;
-      col = cell.col;
-      row = cell.row;
-      x = col * CELL + PAD;
-      y = row * CELL + PAD;
-    }
-
-    x = clampWorld(x);
-    y = clampWorld(y);
-
+  // 按最终世界坐标落一个座位（col / row 为网格号，非吸附时为 null）
+  function createSeatEl(x, y, col, row) {
     const seat = { id: ++seatSeq, x, y, col, row, groupId: null, el: null };
 
     const el = document.createElement('div');
@@ -555,6 +623,54 @@
     updateEmpty();
     renderGroups();
     return seat;
+  }
+
+  function addSeat(worldX, worldY) {
+    let col = null, row = null;
+    let x = clampWorld(worldX), y = clampWorld(worldY);
+
+    if (gridAlign) {
+      const cell = findFreeCell(x, y, null);
+      if (!cell) return null;
+      col = cell.col;
+      row = cell.row;
+      x = col * CELL + PAD;
+      y = row * CELL + PAD;
+    }
+
+    return createSeatEl(x, y, col, row);
+  }
+
+  // 按网格号落一个座位
+  function createSeatAtCell(col, row) {
+    return createSeatEl(col * CELL + PAD, row * CELL + PAD, col, row);
+  }
+
+  // 求一块世界坐标矩形覆盖到、且当前为空的格子。
+  // 判定用「格子槽位」（每格占 CELL×CELL，座位居中、四周留 (CELL-SEAT)/2 间隙），
+  // 而不是「座位矩形」——否则框落在两格之间的空隙里会一格都算不到。
+  // 槽位边界正好是 CELL 的整数倍，因此任意小的一块（哪怕 1px）都至少落进一格。
+  function cellsInRect(x1, y1, x2, y2) {
+    const maxCells = Math.ceil(WORLD_MARGIN / CELL);
+    const cells = [];
+
+    let colFrom = Math.floor(x1 / CELL);
+    let colTo   = (x2 > x1) ? Math.ceil(x2 / CELL) - 1 : colFrom;
+    let rowFrom = Math.floor(y1 / CELL);
+    let rowTo   = (y2 > y1) ? Math.ceil(y2 / CELL) - 1 : rowFrom;
+
+    colFrom = Math.max(colFrom, -maxCells);
+    colTo   = Math.min(colTo,   maxCells);
+    rowFrom = Math.max(rowFrom, -maxCells);
+    rowTo   = Math.min(rowTo,   maxCells);
+
+    for (let col = colFrom; col <= colTo; col++) {
+      for (let row = rowFrom; row <= rowTo; row++) {
+        if (isCellTaken(col, row)) continue;        // 已有座位则跳过
+        cells.push({ col, row });
+      }
+    }
+    return cells;
   }
 
   function removeSeat(seat) {
@@ -872,10 +988,10 @@
     });
 
     seats.forEach(s => {
-      const g = groups.find(g => g.id === s.groupId);
-      s.el.style.boxShadow = g
-        ? `0 0 0 3px ${g.color}, 0 1px 3px rgba(0,0,0,.18)`
-        : '0 1px 3px rgba(0,0,0,.18)';
+      const g = groups.find(x => x.id === s.groupId);
+      // 分组标识改为描边换色 + 加粗（新风格为扁平描边，不用外发光圈）
+      s.el.style.borderColor = g ? g.color : '';
+      s.el.style.borderWidth = g ? '2px' : '';
     });
   }
 
@@ -1054,6 +1170,21 @@
               { label: '设为小组', onClick: () => createGroupFromSeats(sel) },
               { label: '批量删除', danger: true, onClick: () => sel.forEach(removeSeat) }
             ]);
+          }
+        } else if (!manualGrouping && (r.w > 0 || r.h > 0)) {
+          // 框里一个座位都没有 → 视作「铺座」手势，提供批量创建
+          // 不设最小尺寸门槛：哪怕只框住不到一格空白，也照样给按钮
+          let cells = cellsInRect(r.x, r.y, r.x + r.w, r.y + r.h);
+          if (!cells.length) {
+            // 框正好卡在座位之间的缝隙里（覆盖到的格子全被占）→ 退一步取最近的空格
+            const c = findFreeCell(r.x + r.w / 2, r.y + r.h / 2, null);
+            if (c) cells = [c];
+          }
+          if (cells.length) {
+            showMenu(ev.clientX, ev.clientY, [{
+              label: '批量创建座位（' + cells.length + '）',
+              onClick: () => cells.forEach(c => createSeatAtCell(c.col, c.row))
+            }]);
           }
         }
         return;

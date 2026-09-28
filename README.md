@@ -9,8 +9,9 @@
 | 应用 | 说明 | 入口 |
 |------|------|------|
 | EasyCore 易核 | 核心账户系统，提供统一用户认证、云端名单管理与数据同步 | https://easyclass.zhrhello.top/easycore/ |
-| 易点名 Randamer | 在线随机点名工具，支持电脑端与手机端远程遥控 | https://easyclass.zhrhello.top/randamer/ |
-| 易计票 EasyCounter | 在线投票计票工具，支持实时统计与自动排名 | https://easyclass.zhrhello.top/easycounter/ |
+| 易点名 Randamer | 随机点名工具，支持电脑端与手机端远程遥控 | https://easyclass.zhrhello.top/randamer/ |
+| 易计票 EasyCounter | 投票计票工具，支持实时统计与自动排名 | https://easyclass.zhrhello.top/easycounter/ |
+| 易排座 EasySeats | 教室座位编排工具，支持格局编辑、小组划分与随机排座 | https://easyclass.zhrhello.top/easyseats/ |
 
 ## 功能特性
 
@@ -36,6 +37,14 @@
 - 多候选人管理：批量添加、搜索、名称标签
 - 海报生成与导出、多主题切换
 - 账号登录后云端同步数据
+
+### 易排座 EasySeats
+
+- 单文件画布编辑器，鼠标与触屏双端操作（框选批量建座、拖拽移动座位、双指平移缩放）
+- 座位格局与排座结果分离存储，支持自定义分组、组内改名、未分组总览
+- 一键铺座、全班随机、组内随机排座（组内随机不跨组，空位按组轮转补齐）
+- 手动排座：点座位选人、与同学换座、移出座位
+- 座位表云端保存（游客可用），格局改动后自动裁剪失效排座结果，座位数与名单人数一致性校验
 
 ## 游客数据合并
 

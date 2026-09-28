@@ -32,4 +32,12 @@
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- 易排座 (EasySeats) -->
+  <url>
+    <loc>https://easyclass.zhrhello.top/easyseats/</loc>
+    <lastmod>2026-09-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

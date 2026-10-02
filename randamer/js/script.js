@@ -4,6 +4,20 @@ let yuanchengma;
 let xingming = [];
 let nameGenders = Object.create(null); // 姓名 → 'male'（男）/ 'female'（女）；未设置的名字不在此表中
 let drawGenderFilter = 'all';          // 抽选性别筛选：'all'（不限制）/ 'male'（只抽男生）/ 'female'（只抽女生）
+
+// ===== 名单来源状态（本地 / 云名单） =====
+// 'local'：名单来自手机上传、手机扫码、一次性 token 导入或本地编辑；
+// 'cloud'：名单来自云名单，且会在每次启动时按上次选中的云名单重新拉取。
+let listSourceMode = 'local';
+let currentCloudList = null;   // 当前云名单 { list_id, name }
+// 当前分组依据 { chart_id, name, groups: [{ id, name, color, members: [姓名] }] }
+let currentSeatChart = null;
+let pendingSeatChartId = null; // 从本地存储恢复、待联网补全详情的座位表 id
+// 按组抽选：enabled=false 或 groupIds 为空 = 不挑小组（等同不过滤）
+let drawGroupFilter = { enabled: false, groupIds: [] };
+let groupMemberCache = null;   // 已选小组成员集合的缓存，选组/换名单时置空
+let cloudListsCache = [];      // 云名单面板最近一次拉到的名单（含 seat_chart_count）
+let cloudSeatChartsCache = []; // 第二步拉到的座位表（含解析后的小组成员）
 let dangqianshixian = 0;
 let paichuleibiao = [];
 let availableNamesCache = []; // 可用名单缓存（已排除保护池），点名定时器只从此数组取值
@@ -269,6 +283,11 @@ function saveToLocalStorage() {
         localStorage.removeItem('protectionPoolSize');
         localStorage.removeItem('isNamesLoaded');
         localStorage.removeItem('customBroadcastEnabled');
+        // 云名单状态同样不保留：关掉本地保存就没法记住"上次用的是哪份云名单"
+        localStorage.removeItem('listSourceMode');
+        localStorage.removeItem('currentCloudList');
+        localStorage.removeItem('currentSeatChart');
+        localStorage.removeItem('drawGroupFilter');
         return;
     }
     // 开启状态下保存所有数据
@@ -278,6 +297,17 @@ function saveToLocalStorage() {
     localStorage.setItem('drawGenderFilter', drawGenderFilter);
     localStorage.setItem('protectionPoolSize', protectionPoolSize.toString());
     localStorage.setItem('isNamesLoaded', isNamesLoaded.toString());
+    // 云名单状态：模式 + 上次选中的云名单 + 分组依据 + 按组抽选
+    localStorage.setItem('listSourceMode', listSourceMode);
+    localStorage.setItem('currentCloudList', currentCloudList ? JSON.stringify(currentCloudList) : '');
+    localStorage.setItem('currentSeatChart', currentSeatChart ? JSON.stringify({
+        chart_id: currentSeatChart.chart_id,
+        name: currentSeatChart.name || '',
+    }) : '');
+    localStorage.setItem('drawGroupFilter', JSON.stringify({
+        enabled: !!drawGroupFilter.enabled,
+        groupIds: (drawGroupFilter.groupIds || []).slice(),
+    }));
 }
 
 // 从本地存储加载数据
@@ -337,9 +367,72 @@ function loadFromLocalStorage() {
         isNamesLoaded = true;
         hasData = true;
     }
-    
+
+    // 名单来源（本地 / 云名单）相关状态
+    restoreListSourceStateFromLocal();
+
     updateGenderFilterUI();
+    updateGroupFilterUI();
     return hasData;
+}
+
+// 从本地存储恢复「名单来源」状态：模式 + 上次选中的云名单 + 分组依据 + 按组抽选
+// 只恢复标识信息，分组明细要等联网后由 syncCurrentSeatChart() 补全
+function restoreListSourceStateFromLocal() {
+    listSourceMode = (localStorage.getItem('listSourceMode') === 'cloud') ? 'cloud' : 'local';
+
+    currentCloudList = null;
+    const savedCloudList = localStorage.getItem('currentCloudList');
+    if (savedCloudList) {
+        try {
+            const parsed = JSON.parse(savedCloudList);
+            if (parsed && parsed.list_id !== undefined && parsed.list_id !== null && parsed.list_id !== '') {
+                currentCloudList = { list_id: parsed.list_id, name: String(parsed.name || '') };
+            }
+        } catch (e) {
+            console.warn('解析保存的云名单信息失败:', e);
+        }
+    }
+    // 只有模式没有名单：退回本地，免得启动时无目标可拉
+    if (listSourceMode === 'cloud' && !currentCloudList) {
+        listSourceMode = 'local';
+    }
+
+    currentSeatChart = null;
+    pendingSeatChartId = null;
+    if (listSourceMode === 'cloud') {
+        const savedChart = localStorage.getItem('currentSeatChart');
+        if (savedChart) {
+            try {
+                const parsed = JSON.parse(savedChart);
+                if (parsed && parsed.chart_id) {
+                    pendingSeatChartId = parsed.chart_id;
+                    currentSeatChart = {
+                        chart_id: parsed.chart_id,
+                        name: String(parsed.name || ''),
+                        groups: [],
+                    };
+                }
+            } catch (e) {
+                console.warn('解析保存的分组依据失败:', e);
+            }
+        }
+    }
+
+    drawGroupFilter = { enabled: false, groupIds: [] };
+    const savedGroupFilter = localStorage.getItem('drawGroupFilter');
+    if (savedGroupFilter) {
+        try {
+            const parsed = JSON.parse(savedGroupFilter);
+            if (parsed && Array.isArray(parsed.groupIds)) {
+                const ids = parsed.groupIds.map(Number).filter(n => Number.isFinite(n));
+                drawGroupFilter = { enabled: !!parsed.enabled && ids.length > 0, groupIds: ids };
+            }
+        } catch (e) {
+            console.warn('解析保存的按组抽选状态失败:', e);
+        }
+    }
+    groupMemberCache = null;
 }
 
 // 更新防重复保护池显示
@@ -530,6 +623,9 @@ function setNamesFromPhone(names, genders) {
         isNamesLoaded = true;
         console.log('从手机端接收名单:', xingming);
 
+        // 手机上传属于"本地来源"，清掉云名单状态
+        applyLocalListMode();
+
         // 保存到本地存储
         saveToLocalStorage();
 
@@ -682,11 +778,13 @@ document.getElementById('tingzhianniu').addEventListener('click', () => {
     tingzhiSuijiDianming();
 });
 
-// 重建可用名单缓存：一次性计算未被保护池排除、且符合抽选性别要求的名单
+// 重建可用名单缓存：一次性计算未被保护池排除、且同时符合「抽选性别 + 按组抽选」的名单
 // 点名定时器只从缓存取值，避免每次 tick 都重复过滤
 function rebuildAvailableNamesCache() {
     const excluded = new Set(paichuleibiao);
-    availableNamesCache = xingming.filter(name => !excluded.has(name) && matchesGenderFilter(name));
+    availableNamesCache = xingming.filter(
+        name => !excluded.has(name) && matchesGenderFilter(name) && matchesGroupFilter(name)
+    );
     return availableNamesCache;
 }
 
@@ -694,6 +792,46 @@ function rebuildAvailableNamesCache() {
 function countNamesMatchingGenderFilter() {
     if (drawGenderFilter === 'all') return xingming.length;
     return xingming.filter(name => matchesGenderFilter(name)).length;
+}
+
+// ===== 按组抽选（依赖云名单 + 座位表分组，两个筛选是「与」关系） =====
+
+// 按组抽选是否真的在生效（未选组 / 空选 = 不挑小组）
+// 注意：分组明细还没拉回来（groups 为空）时一律视为未生效，
+// 否则启动瞬间"选了组但组内成员未知"会把可用名单清空，点名直接报错。
+function isGroupFilterActive() {
+    return !!drawGroupFilter.enabled
+        && drawGroupFilter.groupIds.length > 0
+        && !!(currentSeatChart && (currentSeatChart.groups || []).length > 0);
+}
+
+// 已选小组的成员集合（结果缓存，选组/换名单/重新拉取时置空）
+function getSelectedGroupMembers() {
+    if (groupMemberCache) return groupMemberCache;
+    const set = new Set();
+    if (isGroupFilterActive()) {
+        const groups = (currentSeatChart && currentSeatChart.groups) || [];
+        groups.forEach(g => {
+            if (drawGroupFilter.groupIds.indexOf(g.id) !== -1) {
+                (g.members || []).forEach(n => set.add(n));
+            }
+        });
+    }
+    groupMemberCache = set;
+    return set;
+}
+
+// 姓名是否符合按组抽选（只认「当前云名单 ∩ 所选小组」里的人）
+function matchesGroupFilter(name) {
+    if (!isGroupFilterActive()) return true;
+    return getSelectedGroupMembers().has(name);
+}
+
+// 所选小组里有多少人落在当前名单上（用于判断筛选是否把所有人都排除了）
+function countNamesMatchingGroupFilter() {
+    if (!isGroupFilterActive()) return xingming.length;
+    const members = getSelectedGroupMembers();
+    return xingming.filter(name => members.has(name)).length;
 }
 
 // 刷新「抽选性别」三个按钮的选中态
@@ -746,12 +884,21 @@ function kaishiSuijiDianming() {
     // 一次性计算可用名单缓存（排除保护池），后续定时器只从缓存取值
     rebuildAvailableNamesCache();
     if (availableNamesCache.length === 0) {
-        // 性别筛选把所有人都排除了：直接提示，不动保护池（池内名字同样不符合筛选条件）
-        if (countNamesMatchingGenderFilter() === 0) {
-            showCustomAlert('当前名单里没有「' + GENDER_FILTER_TEXT[drawGenderFilter] + '」的人，无法点名。\n请先在名单里设置性别，或切回「不限制」。', '提示');
+        // 先看是不是「筛选条件本身」就把所有人都排除了（这种提示比"没有可点名的名字"有用）
+        const filterPool = xingming.filter(
+            name => matchesGenderFilter(name) && matchesGroupFilter(name)
+        );
+        if (filterPool.length === 0) {
+            if (isGroupFilterActive() && countNamesMatchingGroupFilter() === 0) {
+                showCustomAlert('所选的小组里没有当前名单上的学生，无法点名。\n请重新「挑选小组」，或清空小组选择。', '提示');
+            } else if (countNamesMatchingGenderFilter() === 0) {
+                showCustomAlert('当前名单里没有「' + GENDER_FILTER_TEXT[drawGenderFilter] + '」的人，无法点名。\n请先在名单里设置性别，或切回「不限制」。', '提示');
+            } else {
+                showCustomAlert('「抽选性别 + 按组抽选」组合起来没有任何可点名的人，请放宽其中一个条件。', '提示');
+            }
             return;
         }
-        // 没有可点名的名字，清空最早的一个保护池名字
+        // 筛选本身有人可选，是保护池把人都占了：清空最早的一个保护池名字
         if (paichuleibiao.length > 0) {
             paichuleibiao.shift();
             rebuildAvailableNamesCache(); // 保护池更新，重新缓存
@@ -1480,6 +1627,9 @@ function handleNamesFromEasyCore(names, genders) {
         setGendersFromArray(names, genders);
         isNamesLoaded = true;
 
+        // 一次性 token 导入属于"本地来源"，清掉云名单状态
+        applyLocalListMode();
+
         // 保存到本地存储
         saveToLocalStorage();
 
@@ -1514,6 +1664,175 @@ function handleNamesFromEasyCore(names, genders) {
     }
 }
 
+// ==================== 名单来源状态（本地 / 云名单） ====================
+
+// 切回「本地来源」：手机上传、一次性 token 导入、本地编辑都等于不再是云名单，
+// 顺手清掉云名单与分组依据 —— 否则下次启动云端名单会把刚改的内容盖回去。
+function applyLocalListMode() {
+    const changed = listSourceMode !== 'local' || !!currentCloudList || !!currentSeatChart;
+    listSourceMode = 'local';
+    currentCloudList = null;
+    currentSeatChart = null;
+    pendingSeatChartId = null;
+    drawGroupFilter = { enabled: false, groupIds: [] };
+    groupMemberCache = null;
+    updateCloudButtonState();
+    updateGroupFilterUI();
+    return changed;
+}
+
+// 切换云名单模式（记录选中的云名单，必要时清空分组依据）
+function applyCloudListMode(listId, listName) {
+    listSourceMode = 'cloud';
+    currentCloudList = { list_id: listId, name: listName || '' };
+    currentSeatChart = null;
+    pendingSeatChartId = null;
+    drawGroupFilter = { enabled: false, groupIds: [] };
+    groupMemberCache = null;
+}
+
+// 名单来源状态快照 / 回滚：导入失败时别把来源改成一半的样子
+function snapshotListSourceState() {
+    return {
+        mode: listSourceMode,
+        list: currentCloudList,
+        chart: currentSeatChart,
+        pendingChartId: pendingSeatChartId,
+        groupFilter: drawGroupFilter,
+    };
+}
+
+function restoreListSourceSnapshot(snap) {
+    if (!snap) return;
+    listSourceMode = snap.mode;
+    currentCloudList = snap.list;
+    currentSeatChart = snap.chart;
+    pendingSeatChartId = snap.pendingChartId;
+    drawGroupFilter = snap.groupFilter;
+    groupMemberCache = null;
+    updateCloudButtonState();
+    updateGroupFilterUI();
+    rebuildAvailableNamesCache();
+}
+
+// 云按钮状态：云名单模式下高亮，悬停提示当前用的是哪份名单 / 哪个分组依据
+function updateCloudButtonState() {
+    const btn = document.getElementById('cloudListBtn');
+    const tip = document.getElementById('cloudListTooltip');
+    if (!btn) return;
+
+    const active = listSourceMode === 'cloud' && !!currentCloudList;
+    btn.classList.toggle('active', active);
+    if (!tip) return;
+    if (active) {
+        tip.textContent = currentSeatChart
+            ? '云名单：' + currentCloudList.name + '（分组依据：' + (currentSeatChart.name || '未知') + '）'
+            : '云名单：' + currentCloudList.name;
+    } else {
+        tip.textContent = '选择云名单';
+    }
+}
+
+// 「按组抽选」这一行是否该出现：云名单模式 + 已选座位表 + 该座位表有分组
+function isGroupFilterVisible() {
+    return listSourceMode === 'cloud'
+        && !!currentSeatChart
+        && !!(currentSeatChart.groups || []).length;
+}
+
+// 刷新抽选条件面板里的「按组抽选」区块
+function updateGroupFilterUI() {
+    const container = document.getElementById('groupFilterContainer');
+    const visible = isGroupFilterVisible();
+
+    // 这块住在右侧筛选面板里，出现/消失只影响面板自身高度，点名框不受影响
+    if (!container) return;
+
+    container.classList.toggle('hidden', !visible);
+    if (!visible) return;
+
+    const chipList = document.getElementById('groupChipList');
+    const cancelBtn = document.getElementById('groupCancelBtn');
+    const groups = (currentSeatChart && currentSeatChart.groups) || [];
+    const picked = groups.filter(g => drawGroupFilter.groupIds.indexOf(g.id) !== -1);
+
+    // picked 为空说明选择里都是已失效的组 id，同样按「不挑小组」显示
+    const active = isGroupFilterActive() && picked.length > 0;
+
+    // 没有选中的小组就没有可取消的对象：置灰但保留位置（按钮忽隐忽现会让面板高度跳动）
+    if (cancelBtn) {
+        cancelBtn.disabled = !active;
+    }
+
+    // 「按组抽选」是面板里的固定小标题（#groupFilterText），选中情况只由下面的小组标签体现
+    if (!chipList) return;
+
+    if (!active) {
+        chipList.innerHTML = '<span class="group-chip muted">不挑小组</span>';
+        chipList.removeAttribute('title');
+        return;
+    }
+
+    chipList.innerHTML = picked
+        .map(g => '<span class="group-chip">' + escapeHtml(g.name) + '</span>')
+        .join('');
+    chipList.title = picked.map(g => g.name).join('、');
+}
+
+// 「取消小组」：清空已选小组，回到「不挑小组」（与性别筛选互不影响）
+function cancelGroupSelection() {
+    if (!isGroupFilterActive()) return;
+
+    drawGroupFilter = { enabled: false, groupIds: [] };
+    groupMemberCache = null;
+
+    saveToLocalStorage();
+    rebuildAvailableNamesCache();
+    updateGroupFilterUI();
+}
+
+// 把座位表详情折成「小组 + 成员」：成员 = 排座结果里落在该组座位上的姓名（按座位 id 升序）
+function resolveChartGroups(chart) {
+    const layout = (chart && chart.layout) || {};
+    const groups = Array.isArray(layout.groups) ? layout.groups : [];
+    if (!groups.length) return [];
+
+    // 座位 -> 所属小组
+    const seatGroup = new Map();
+    (Array.isArray(layout.seats) ? layout.seats : []).forEach(s => {
+        if (s && s.group !== null && s.group !== undefined) {
+            seatGroup.set(String(s.id), Number(s.group));
+        }
+    });
+
+    const arrangement = (chart && chart.arrangement) || {};
+    const assigned = (arrangement.seats && typeof arrangement.seats === 'object') ? arrangement.seats : {};
+
+    const byGroup = new Map();
+    groups.forEach(g => byGroup.set(Number(g.id), []));
+
+    Object.keys(assigned)
+        .map(k => Number(k))
+        .filter(k => Number.isFinite(k))
+        .sort((a, b) => a - b)
+        .forEach(sid => {
+            const gid = seatGroup.get(String(sid));
+            if (gid === undefined || !byGroup.has(gid)) return;
+            const name = String(assigned[String(sid)] || '').trim();
+            if (!name) return;
+            const list = byGroup.get(gid);
+            // 同一个人只算一次（同名重复出现时避免把小组人数虚增）
+            if (list.indexOf(name) === -1) list.push(name);
+        });
+
+    return groups.map(g => ({
+        id: Number(g.id),
+        name: g.name,
+        color: g.color,
+        members: byGroup.get(Number(g.id)) || [],
+    }));
+}
+
 // 从云名单导入名单
 function importFromCloudList() {
     if (isLoggedIn) {
@@ -1523,16 +1842,43 @@ function importFromCloudList() {
     }
 }
 
-// 显示云名单选择面板
+// 显示云名单选择面板（总是从「第一步：选云名单」进入）
 function showCloudListModal() {
     const modal = document.getElementById('cloudListModal');
     if (!modal) return;
-    
+
+    showCloudListStep1();
+
     modal.style.display = 'block';
     modal.offsetHeight;
     modal.classList.add('show');
-    
+
     fetchAndRenderCloudLists();
+}
+
+// 面板切到「第一步：选云名单」
+function showCloudListStep1() {
+    cloudSeatChartsCache = [];
+    const title = document.getElementById('cloudListModalTitle');
+    const body = document.getElementById('cloudListBody');
+    const seatBody = document.getElementById('seatChartBody');
+    const footer = document.getElementById('seatChartFooter');
+    if (title) title.textContent = '选择云名单';
+    if (body) body.classList.remove('hidden');
+    if (seatBody) seatBody.classList.add('hidden');
+    if (footer) footer.classList.add('hidden');
+}
+
+// 面板切到「第二步：选分组依据（座位表）」
+function showSeatChartStep() {
+    const title = document.getElementById('cloudListModalTitle');
+    const body = document.getElementById('cloudListBody');
+    const seatBody = document.getElementById('seatChartBody');
+    const footer = document.getElementById('seatChartFooter');
+    if (title) title.textContent = '选择分组依据';
+    if (body) body.classList.add('hidden');
+    if (seatBody) seatBody.classList.remove('hidden');
+    if (footer) footer.classList.remove('hidden');
 }
 
 // 隐藏云名单选择面板
@@ -1606,7 +1952,8 @@ async function fetchAndRenderCloudLists() {
         return;
     }
     
-    renderCloudLists(result.lists);
+    cloudListsCache = result.lists || [];
+    renderCloudLists(cloudListsCache);
 }
 
 // 渲染云名单列表
@@ -1624,53 +1971,87 @@ function renderCloudLists(lists) {
     
     emptyState.classList.add('hidden');
     
-    container.innerHTML = lists.map(list => `
-        <div class="cloud-list-item" data-list-id="${escapeHtml(list.list_id)}">
-            <div class="cloud-list-name">${escapeHtml(list.name)}</div>
+    container.innerHTML = lists.map(list => {
+        const isCurrent = listSourceMode === 'cloud' && currentCloudList
+            && String(currentCloudList.list_id) === String(list.list_id);
+        const chartCount = list.seat_chart_count || 0;
+        return `
+        <div class="cloud-list-item${isCurrent ? ' current' : ''}" data-list-id="${escapeHtml(list.list_id)}">
+            <div class="cloud-list-name">${escapeHtml(list.name)}${isCurrent ? '（当前使用）' : ''}</div>
             <div class="cloud-list-info">
                 <span>${list.item_count || 0}人</span>
                 ${(list.male_count || list.female_count) ? `<span style="color:#4da6ff;">♂ ${list.male_count || 0}</span><span style="color:#ff8fbf;">♀ ${list.female_count || 0}</span>` : ''}
+                ${chartCount > 0 ? `<span style="color:#ffd700;">${chartCount} 个座位表</span>` : ''}
             </div>
             <button class="cloud-list-select-btn" onclick="selectCloudList('${escapeHtml(list.list_id)}', this)">选择此名单</button>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
-// 选择云名单并导入
+// 选择云名单并导入（该名单下有座位表时，继续进入「选分组依据」这一步）
 async function selectCloudList(listId, button) {
     if (!listId || !button) return;
-    
+
     const originalText = button.textContent;
     button.disabled = true;
     button.textContent = '导入中...';
-    
+
     const listItem = button.closest('.cloud-list-item');
     if (listItem) {
         listItem.classList.add('loading');
     }
-    
+
+    let imported = false;
+    const snapshot = snapshotListSourceState();
+
     try {
+        const meta = cloudListsCache.find(l => String(l.list_id) === String(listId));
+
         const pickUrl = `${getApiBasePath()}api/cloud-lists/pick?list_id=${encodeURIComponent(listId)}`;
         const response = await fetch(pickUrl, {
             method: 'GET',
             credentials: 'include'
         });
-        
+
         if (!response.ok) {
             throw new Error('选择名单失败');
         }
-        
+
         const data = await response.json();
-        
+
         if (!data.token) {
             throw new Error('未获取到token');
         }
-        
+
+        // 先记录来源，再导入名单：importCloudListByToken 内部会写本地存储，
+        // 正好把"云名单模式 + 选中的名单"一起落盘
+        applyCloudListMode(listId, meta ? meta.name : '');
         await importCloudListByToken(data.token);
-        
-        hideCloudListModal();
+        imported = true;
+        updateCloudButtonState();
+
+        // 该名单下没有座位表 -> 直接收工
+        const chartCount = meta ? (meta.seat_chart_count || 0) : 0;
+        if (chartCount <= 0) {
+            hideCloudListModal();
+            return;
+        }
+
+        // 有座位表 -> 让用户挑一个作为分组依据（也可以选择不分组）
+        button.disabled = false;
+        button.textContent = originalText;
+        if (listItem) {
+            listItem.classList.remove('loading');
+        }
+        showSeatChartStep();
+        await loadSeatChartsForList(listId);
     } catch (error) {
         console.error('选择名单失败:', error);
+        if (!imported) {
+            // 名单根本没导进来：把来源状态回滚成操作前的样子
+            restoreListSourceSnapshot(snapshot);
+        }
         showCustomAlert('导入失败：' + error.message);
         button.disabled = false;
         button.textContent = originalText;
@@ -1678,6 +2059,359 @@ async function selectCloudList(listId, button) {
             listItem.classList.remove('loading');
         }
     }
+}
+
+// 拉取某云名单下的座位表，并把每张表的「小组 + 成员」一并解析出来
+async function loadSeatChartsForList(listId) {
+    const container = document.getElementById('seatChartContainer');
+    const emptyState = document.getElementById('seatChartEmpty');
+
+    if (!container || !emptyState) return;
+
+    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #8f8f8f;">加载中...</div>';
+    emptyState.classList.add('hidden');
+
+    try {
+        const res = await fetch(`${getApiBasePath()}api/seat-charts`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!res.ok) {
+            throw new Error('获取座位表失败');
+        }
+
+        const data = await res.json();
+        const mine = (data.seat_charts || []).filter(c => String(c.list_id) === String(listId));
+        if (!mine.length) {
+            cloudSeatChartsCache = [];
+            renderSeatCharts(cloudSeatChartsCache);
+            return;
+        }
+
+        // 分组信息只在座位表详情里，逐张补齐（同一名单下的座位表通常只有一两张）
+        const details = await Promise.all(mine.map(async c => {
+            try {
+                const r = await fetch(`${getApiBasePath()}api/seat-charts/${c.chart_id}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                if (!r.ok) return null;
+                const d = await r.json();
+                return d.seat_chart || null;
+            } catch (e) {
+                return null;
+            }
+        }));
+
+        cloudSeatChartsCache = details.filter(Boolean).map(chart => Object.assign({}, chart, {
+            resolvedGroups: resolveChartGroups(chart),
+        }));
+        renderSeatCharts(cloudSeatChartsCache);
+    } catch (error) {
+        console.error('获取座位表失败:', error);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #ff6b6b;">加载失败：' + escapeHtml(error.message) + '</div>';
+    }
+}
+
+// 渲染分组依据（座位表）列表
+function renderSeatCharts(charts) {
+    const container = document.getElementById('seatChartContainer');
+    const emptyState = document.getElementById('seatChartEmpty');
+
+    if (!container || !emptyState) return;
+
+    if (!charts || !charts.length) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+    container.innerHTML = charts.map(chart => {
+        const groups = chart.resolvedGroups || [];
+        const arranged = !!chart.arrangement;
+        const usable = groups.length > 0 && arranged;
+        const info = [
+            `${chart.seat_count || 0} 个座位`,
+            groups.length ? `${groups.length} 个小组` : '没有小组',
+            arranged ? '已排座' : '未排座',
+        ];
+        const hint = usable ? '' :
+            `<div class="cloud-list-info" style="color:#ffa726;">${groups.length === 0 ? '该座位表还没有分组' : '该座位表还没有排座'}，无法按组抽选</div>`;
+        return `
+        <div class="cloud-list-item" data-chart-id="${escapeHtml(chart.chart_id)}">
+            <div class="cloud-list-name">${escapeHtml(chart.name)}</div>
+            <div class="cloud-list-info">${info.map(t => `<span>${escapeHtml(t)}</span>`).join('')}</div>
+            ${hint}
+            <button class="cloud-list-select-btn"${usable ? '' : ' disabled'} onclick="selectSeatChart('${escapeHtml(chart.chart_id)}', this)">设为分组依据</button>
+        </div>
+    `;
+    }).join('');
+}
+
+// 选定某张座位表作为分组依据
+function selectSeatChart(chartId, button) {
+    const chart = cloudSeatChartsCache.find(c => String(c.chart_id) === String(chartId));
+    if (!chart) {
+        showCustomAlert('座位表信息已失效，请重新选择', '提示');
+        return;
+    }
+
+    const groups = chart.resolvedGroups || [];
+    if (!groups.length || !chart.arrangement) {
+        showCustomAlert('该座位表还没有分组或尚未排座，无法作为分组依据', '提示');
+        return;
+    }
+
+    currentSeatChart = { chart_id: chart.chart_id, name: chart.name, groups: groups };
+    pendingSeatChartId = chart.chart_id;
+    // 换了分组依据，之前挑过的小组一并作废
+    drawGroupFilter = { enabled: false, groupIds: [] };
+    groupMemberCache = null;
+
+    saveToLocalStorage();
+    updateCloudButtonState();
+    updateGroupFilterUI();
+    rebuildAvailableNamesCache();
+
+    hideCloudListModal();
+}
+
+// 放弃"分组依据"（只保留云名单，不做按组抽选）
+function clearSeatChartSelection() {
+    currentSeatChart = null;
+    pendingSeatChartId = null;
+    drawGroupFilter = { enabled: false, groupIds: [] };
+    groupMemberCache = null;
+
+    saveToLocalStorage();
+    updateCloudButtonState();
+    updateGroupFilterUI();
+    rebuildAvailableNamesCache();
+}
+
+// ==================== 启动时恢复云名单 / 分组依据 ====================
+
+// 启动时按上次选中的云名单重新拉一次名单（云名单模式的核心行为）
+async function restoreCloudListOnStartup() {
+    if (listSourceMode !== 'cloud' || !currentCloudList) {
+        updateCloudButtonState();
+        updateGroupFilterUI();
+        return;
+    }
+
+    try {
+        const res = await fetch(`${getApiBasePath()}api/cloud-lists/pick?list_id=${encodeURIComponent(currentCloudList.list_id)}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (res.status === 404 || res.status === 403) {
+            // 名单被删 / 不再可用：退回本地模式，免得每次启动都白提示一次
+            console.warn('上次使用的云名单已不可用，退回本地模式');
+            applyLocalListMode();
+            saveToLocalStorage();
+        } else if (!res.ok) {
+            throw new Error(res.status === 401 ? '未登录' : '获取云名单失败');
+        } else {
+            const data = await res.json();
+            if (!data.token) throw new Error('未获取到token');
+            await importCloudListByToken(data.token);
+            console.log('已重新加载云名单:', currentCloudList.name);
+        }
+    } catch (error) {
+        console.warn('启动时加载云名单失败，本次沿用本地缓存名单:', error);
+        showCustomAlert(
+            '云名单「' + (currentCloudList ? currentCloudList.name : '') + '」加载失败：' + error.message
+            + '\n本次先使用本地缓存的名单，可点左下角云按钮重新选择。',
+            '提示'
+        );
+    }
+
+    await syncCurrentSeatChart();
+    updateCloudButtonState();
+    updateGroupFilterUI();
+    rebuildAvailableNamesCache();
+}
+
+// 启动时刷新分组依据：座位表被删 / 改绑到别的名单 / 分组被删都会自动降级
+async function syncCurrentSeatChart() {
+    const chartId = pendingSeatChartId;
+
+    if (listSourceMode !== 'cloud' || !chartId || !currentCloudList) {
+        currentSeatChart = null;
+        pendingSeatChartId = null;
+        drawGroupFilter = { enabled: false, groupIds: [] };
+        groupMemberCache = null;
+        return;
+    }
+
+    let groups;
+    try {
+        const res = await fetch(`${getApiBasePath()}api/seat-charts/${chartId}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!res.ok) throw new Error('座位表不存在或无权访问');
+        const data = await res.json();
+        const chart = data.seat_chart;
+        if (!chart) throw new Error('座位表不存在');
+        // 座位表必须仍绑在这份云名单上，否则这个分组依据已经过时
+        if (String(chart.list_id) !== String(currentCloudList.list_id)) {
+            throw new Error('座位表已不再属于该云名单');
+        }
+        groups = resolveChartGroups(chart);
+        currentSeatChart = { chart_id: chart.chart_id, name: chart.name, groups: groups };
+    } catch (error) {
+        console.warn('恢复分组依据失败，已放弃按组抽选:', error);
+        currentSeatChart = null;
+        pendingSeatChartId = null;
+        drawGroupFilter = { enabled: false, groupIds: [] };
+        groupMemberCache = null;
+        saveToLocalStorage();
+        return;
+    }
+
+    // 组可能被删过：把已不存在的小组从选择里剔除
+    const validIds = new Set(groups.map(g => g.id));
+    const kept = (drawGroupFilter.groupIds || []).filter(id => validIds.has(id));
+    if (kept.length !== drawGroupFilter.groupIds.length) {
+        drawGroupFilter = {
+            enabled: !!drawGroupFilter.enabled && kept.length > 0,
+            groupIds: kept,
+        };
+        saveToLocalStorage();
+    }
+    groupMemberCache = null;
+}
+
+// ==================== 按组抽选：挑选小组 ====================
+
+let groupPickMode = 'multi';   // 'single'（单选）/ 'multi'（多选）
+let groupPickDraft = new Set();
+
+// 点击「挑选小组」：先问单选还是多选
+function openGroupPickFlow() {
+    if (!isGroupFilterVisible()) {
+        showCustomAlert('当前没有可用的分组依据。\n需要先选择云名单，并在该名单下选好一个已有分组的座位表。', '提示');
+        return;
+    }
+    const modal = document.getElementById('groupModeModal');
+    if (!modal) return;
+    modal.classList.add('show');
+}
+
+function hideGroupModeModal() {
+    const modal = document.getElementById('groupModeModal');
+    if (!modal) return;
+    const panel = modal.querySelector('.prompt-panel');
+    if (panel) panel.style.animation = 'slideOut 0.3s ease-out forwards';
+    modal.classList.add('hiding');
+    setTimeout(() => {
+        modal.classList.remove('show');
+        modal.classList.remove('hiding');
+        if (panel) panel.style.animation = '';
+    }, 300);
+}
+
+function chooseGroupPickMode(mode) {
+    hideGroupModeModal();
+    setTimeout(() => openGroupListModal(mode), 320);
+}
+
+// 打开小组列表（带出当前已选的小组）
+function openGroupListModal(mode) {
+    groupPickMode = (mode === 'single') ? 'single' : 'multi';
+    groupPickDraft = new Set(drawGroupFilter.groupIds || []);
+
+    const title = document.getElementById('groupListTitle');
+    if (title) {
+        title.textContent = (groupPickMode === 'single') ? '选择一个小组' : '勾选多个小组';
+    }
+
+    renderGroupList();
+    showGroupListModal();
+}
+
+function renderGroupList() {
+    const container = document.getElementById('groupListContainer');
+    const emptyState = document.getElementById('groupListEmpty');
+    if (!container || !emptyState) return;
+
+    const groups = (currentSeatChart && currentSeatChart.groups) || [];
+    const hasMembers = groups.some(g => (g.members || []).length > 0);
+    if (!groups.length || !hasMembers) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+    emptyState.classList.add('hidden');
+
+    container.innerHTML = groups.map(g => {
+        const members = g.members || [];
+        // 只展示前 3 名，多的用省略号（完整名单到控制台的座位表里看）
+        const preview = members.slice(0, 3).join('，');
+        const memberText = members.length
+            ? '成员：' + escapeHtml(preview) + (members.length > 3 ? '......' : '')
+            : '成员：（该小组暂时没有人）';
+        const selected = groupPickDraft.has(g.id);
+        // 颜色直接进 style 属性，先按 #RGB / #RRGGBB 校一遍（后端也已校验，这里是双保险）
+        const color = /^#[0-9a-fA-F]{3}$|^#[0-9a-fA-F]{6}$/.test(g.color || '') ? g.color : '#45f3ff';
+        return `
+        <div class="group-item${selected ? ' selected' : ''}" data-group-id="${g.id}" onclick="toggleGroupPick(${g.id})">
+            <div class="group-item-mark${groupPickMode === 'multi' ? ' square' : ''}">${selected ? '✓' : ''}</div>
+            <div class="group-item-body">
+                <div class="group-item-name" style="color:${color}">${escapeHtml(g.name)}</div>
+                <div class="group-item-members">${memberText}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function toggleGroupPick(groupId) {
+    const id = Number(groupId);
+    if (groupPickMode === 'single') {
+        groupPickDraft = new Set([id]);
+    } else if (groupPickDraft.has(id)) {
+        groupPickDraft.delete(id);
+    } else {
+        groupPickDraft.add(id);
+    }
+    renderGroupList();
+}
+
+// 确定：一个都不选 = 不挑小组（等同不过滤）
+function confirmGroupPick() {
+    const ids = Array.from(groupPickDraft);
+    drawGroupFilter = { enabled: ids.length > 0, groupIds: ids };
+    groupMemberCache = null;
+
+    saveToLocalStorage();
+    rebuildAvailableNamesCache();
+    updateGroupFilterUI();
+    hideGroupListModal();
+}
+
+function showGroupListModal() {
+    const modal = document.getElementById('groupListModal');
+    if (!modal) return;
+    modal.style.display = 'block';
+    modal.offsetHeight;
+    modal.classList.add('show');
+}
+
+function hideGroupListModal() {
+    const modal = document.getElementById('groupListModal');
+    if (!modal) return;
+    const content = modal.querySelector('.cloud-list-content');
+    if (content) content.style.animation = 'slideOut 0.3s ease-out forwards';
+    modal.classList.add('hiding');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('hiding');
+        if (content) content.style.animation = '';
+    }, 300);
 }
 
 // 通过token导入云名单
@@ -1853,6 +2587,12 @@ window.addEventListener('load', async () => {
     // 初始化云名单面板事件
     initCloudListModal();
 
+    // 初始化云名单按钮（账号按钮右侧的云图标）
+    initCloudButton();
+
+    // 初始化按组抽选弹窗事件
+    initGroupPickModals();
+
     // 初始化二维码弹窗事件
     initQrModal();
 
@@ -1867,6 +2607,15 @@ window.addEventListener('load', async () => {
     
     // 初始化遥控码点击刷新事件
     initRemoteCodeClickHandler();
+
+    // 云名单模式：每次启动都额外按上次选中的云名单重新加载一次（含分组依据刷新）。
+    // 一次性 token 导入会把模式改回本地，因此那种情况下不会走到这里。
+    if (listSourceMode === 'cloud' && currentCloudList && !cloudListToken) {
+        await restoreCloudListOnStartup();
+    } else {
+        updateCloudButtonState();
+        updateGroupFilterUI();
+    }
 });
 
 // 初始化名单输入弹窗事件
@@ -1903,18 +2652,36 @@ function initNameSelectModal() {
 function initCloudListModal() {
     const closeCloudListBtn = document.getElementById('closeCloudListBtn');
     const cloudListModal = document.getElementById('cloudListModal');
-    
+    const seatChartBackBtn = document.getElementById('seatChartBackBtn');
+    const seatChartSkipBtn = document.getElementById('seatChartSkipBtn');
+
     if (closeCloudListBtn) {
         closeCloudListBtn.addEventListener('click', () => {
             hideCloudListModal();
         });
     }
-    
+
     if (cloudListModal) {
         cloudListModal.addEventListener('click', (e) => {
             if (e.target === cloudListModal) {
                 hideCloudListModal();
             }
+        });
+    }
+
+    // 第二步 -> 回第一步重新选名单（名单已经导入过了，选新的会覆盖）
+    if (seatChartBackBtn) {
+        seatChartBackBtn.addEventListener('click', () => {
+            showCloudListStep1();
+            fetchAndRenderCloudLists();
+        });
+    }
+
+    // 不按座位表分组：只保留云名单，不做按组抽选
+    if (seatChartSkipBtn) {
+        seatChartSkipBtn.addEventListener('click', () => {
+            clearSeatChartSelection();
+            hideCloudListModal();
         });
     }
 }
@@ -2004,145 +2771,6 @@ async function fetchUserInfo() {
     }
 }
 
-// 获取并渲染云名单列表（用于用户信息弹窗）
-async function fetchAndRenderCloudListsForUser() {
-    const container = document.getElementById('cloudListContainerUser');
-    const emptyState = document.getElementById('cloudListEmptyUser');
-    
-    if (!container || !emptyState) return;
-    
-    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #8f8f8f;">加载中...</div>';
-    emptyState.classList.add('hidden');
-    
-    try {
-        const response = await fetch(`${getApiBasePath()}api/cloud-lists/list`, {
-            method: 'GET',
-            credentials: 'include'
-        });
-        
-        if (!response.ok) {
-            throw new Error('获取云名单失败');
-        }
-        
-        const data = await response.json();
-        const lists = data.lists || [];
-        
-        if (!lists || lists.length === 0) {
-            container.innerHTML = '';
-            emptyState.classList.remove('hidden');
-            return;
-        }
-        
-        container.innerHTML = lists.map(list => `
-            <div class="cloud-list-item-user" data-list-id="${escapeHtml(list.list_id)}">
-                <div class="cloud-list-name-user">${escapeHtml(list.name)}</div>
-                <div class="cloud-list-info-user">${list.item_count || 0}人</div>
-                <button class="cloud-list-select-btn-user" onclick="selectCloudListForUser('${escapeHtml(list.list_id)}', this)">导入</button>
-            </div>
-        `).join('');
-        
-    } catch (error) {
-        console.error('获取云名单失败:', error);
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">加载失败：' + escapeHtml(error.message) + '</div>';
-    }
-}
-
-// 选择云名单并导入（用于用户信息弹窗）
-async function selectCloudListForUser(listId, button) {
-    if (!listId || !button) return;
-    
-    const originalText = button.textContent;
-    button.disabled = true;
-    button.textContent = '导入中...';
-    
-    const listItem = button.closest('.cloud-list-item-user');
-    if (listItem) {
-        listItem.classList.add('loading');
-    }
-    
-    try {
-        const pickUrl = `${getApiBasePath()}api/cloud-lists/pick?list_id=${encodeURIComponent(listId)}`;
-        const response = await fetch(pickUrl, {
-            method: 'GET',
-            credentials: 'include'
-        });
-        
-        if (!response.ok) {
-            throw new Error('选择名单失败');
-        }
-        
-        const data = await response.json();
-        
-        if (!data.token) {
-            throw new Error('未获取到token');
-        }
-        
-        await importCloudListByTokenForUser(data.token);
-        
-        hideUserInfoModal();
-    } catch (error) {
-        console.error('导入失败:', error);
-        showCustomAlert('导入失败：' + error.message);
-        button.disabled = false;
-        button.textContent = originalText;
-        if (listItem) {
-            listItem.classList.remove('loading');
-        }
-    }
-}
-
-// 通过token导入云名单（用于用户信息弹窗）
-async function importCloudListByTokenForUser(token) {
-    try {
-        const response = await fetch(`${getApiBasePath()}api/cloud-lists/get_names?token=${token}`, {
-            method: 'GET',
-            credentials: 'include'
-        });
-        
-        if (!response.ok) {
-            throw new Error('获取名单失败');
-        }
-        
-        const data = await response.json();
-        
-        if (!data.names || !Array.isArray(data.names)) {
-            throw new Error('数据格式错误');
-        }
-        
-        if (data.names.length === 0) {
-            throw new Error('名单为空');
-        }
-        
-        xingming = data.names;
-        setGendersFromArray(data.names, data.genders);
-        isNamesLoaded = true;
-        
-        saveToLocalStorage();
-        updateSliderMax();
-        // 名单已更新，重新缓存可用名单
-        rebuildAvailableNamesCache();
-        
-        const xingmingxianshi = document.getElementById('xingmingxianshi');
-        if (xingmingxianshi) {
-            xingmingxianshi.textContent = '名单已就绪';
-        }
-        
-        updateButtonState();
-        updateProtectionPoolDisplay();
-        
-        const newUrl = window.location.origin + window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-        
-        console.log('成功导入云名单，数量:', data.names.length);
-        showCustomAlert('成功导入 ' + data.names.length + ' 人', '提示');
-        
-        return true;
-    } catch (error) {
-        console.error('导入名单失败:', error);
-        throw error;
-    }
-}
-
 // 更新头像显示
 function updateUserAvatar() {
     const userAvatar = document.getElementById('userAvatar');
@@ -2160,14 +2788,13 @@ function updateUserAvatar() {
     }
 }
 
-// 显示用户信息弹窗
+// 显示用户信息弹窗（只放身份信息 + 退出登录 / 打开控制台两个入口）
 function showUserInfoModal() {
     const modal = document.getElementById('userInfoModal');
     const userInfoUsername = document.getElementById('userInfoUsername');
     const userInfoEmail = document.getElementById('userInfoEmail');
     const userInfoAvatar = document.getElementById('userInfoAvatar');
     const userLogoutBtn = document.getElementById('userLogoutBtn');
-    const cloudListSectionUser = document.getElementById('cloudListSectionUser');
 
     if (!modal) return;
 
@@ -2178,14 +2805,10 @@ function showUserInfoModal() {
         userInfoEmail.textContent = '游客模式 · 登录可同步保存数据';
         userInfoAvatar.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>';
         if (userLogoutBtn) {
+            // 游客点这里 = 升级为正式账号（登录后可合并游客数据）
             userLogoutBtn.textContent = '登录 / 注册';
             userLogoutBtn.classList.remove('user-logout-btn');
             userLogoutBtn.classList.add('login-btn');
-        }
-        // 游客同样可使用云名单
-        if (cloudListSectionUser) {
-            cloudListSectionUser.classList.remove('hidden');
-            fetchAndRenderCloudListsForUser();
         }
     } else if (isLoggedIn && currentUser) {
         userInfoUsername.textContent = currentUser.name || '未设置用户名';
@@ -2198,32 +2821,20 @@ function showUserInfoModal() {
             userInfoAvatar.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>';
         }
 
-        // 已登录：显示登出按钮和云名单导入区域
         if (userLogoutBtn) {
-            userLogoutBtn.textContent = '登出';
+            userLogoutBtn.textContent = '退出登录';
             userLogoutBtn.classList.remove('login-btn');
             userLogoutBtn.classList.add('user-logout-btn');
-        }
-        
-        // 显示云名单导入区域
-        if (cloudListSectionUser) {
-            cloudListSectionUser.classList.remove('hidden');
-            fetchAndRenderCloudListsForUser();
         }
     } else {
         userInfoUsername.textContent = '未登录';
         userInfoEmail.textContent = '-';
         userInfoAvatar.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>';
 
-        // 未登录：显示去登录按钮，隐藏云名单区域
         if (userLogoutBtn) {
             userLogoutBtn.textContent = '去登录';
             userLogoutBtn.classList.remove('user-logout-btn');
             userLogoutBtn.classList.add('login-btn');
-        }
-        
-        if (cloudListSectionUser) {
-            cloudListSectionUser.classList.add('hidden');
         }
     }
 
@@ -2317,6 +2928,80 @@ function initUserAvatar() {
             } else {
                 window.location.href = 'https://easyclass.zhrhello.top/easycore/';
             }
+        });
+    }
+
+    // 打开控制台（名单 / 座位表 / 前缀都在那边管，云名单按钮只负责"用哪一份"）
+    const openConsoleBtn = document.getElementById('openConsoleBtn');
+    if (openConsoleBtn) {
+        openConsoleBtn.addEventListener('click', () => {
+            window.location.href = getApiBasePath();
+        });
+    }
+}
+
+// 初始化云名单按钮（账号按钮右侧的云图标）
+function initCloudButton() {
+    const cloudListBtn = document.getElementById('cloudListBtn');
+    if (!cloudListBtn) return;
+
+    cloudListBtn.addEventListener('click', () => {
+        if (!isLoggedIn) {
+            // 未登录（含游客都没有的纯匿名态）先去 EasyCore
+            window.location.href = getApiBasePath();
+            return;
+        }
+        showCloudListModal();
+    });
+
+    updateCloudButtonState();
+}
+
+// 初始化「按组抽选」相关弹窗与按钮
+function initGroupPickModals() {
+    const groupPickBtn = document.getElementById('groupPickBtn');
+    const groupCancelBtn = document.getElementById('groupCancelBtn');
+    const groupModeCancelBtn = document.getElementById('groupModeCancelBtn');
+    const groupModeSingleOption = document.getElementById('groupModeSingleOption');
+    const groupModeMultiOption = document.getElementById('groupModeMultiOption');
+    const groupModeModal = document.getElementById('groupModeModal');
+    const groupListModal = document.getElementById('groupListModal');
+    const groupListCancelBtn = document.getElementById('groupListCancelBtn');
+    const groupListConfirmBtn = document.getElementById('groupListConfirmBtn');
+    const closeGroupListBtn = document.getElementById('closeGroupListBtn');
+
+    if (groupPickBtn) {
+        groupPickBtn.addEventListener('click', openGroupPickFlow);
+    }
+    if (groupCancelBtn) {
+        groupCancelBtn.addEventListener('click', cancelGroupSelection);
+    }
+    if (groupModeSingleOption) {
+        groupModeSingleOption.addEventListener('click', () => chooseGroupPickMode('single'));
+    }
+    if (groupModeMultiOption) {
+        groupModeMultiOption.addEventListener('click', () => chooseGroupPickMode('multi'));
+    }
+    if (groupModeCancelBtn) {
+        groupModeCancelBtn.addEventListener('click', hideGroupModeModal);
+    }
+    if (groupModeModal) {
+        groupModeModal.addEventListener('click', (e) => {
+            if (e.target === groupModeModal) hideGroupModeModal();
+        });
+    }
+    if (groupListConfirmBtn) {
+        groupListConfirmBtn.addEventListener('click', confirmGroupPick);
+    }
+    if (groupListCancelBtn) {
+        groupListCancelBtn.addEventListener('click', hideGroupListModal);
+    }
+    if (closeGroupListBtn) {
+        closeGroupListBtn.addEventListener('click', hideGroupListModal);
+    }
+    if (groupListModal) {
+        groupListModal.addEventListener('click', (e) => {
+            if (e.target === groupListModal) hideGroupListModal();
         });
     }
 }
@@ -3185,38 +3870,149 @@ ${changesHTML}`;
             return;
         }
 
-        // 更新名单与性别
-        applyEditedNamesToState();
-        isNamesLoaded = true;
-
-        // 清空保护池
-        paichuleibiao = [];
-        rebuildAvailableNamesCache(); // 保护池更新，重新缓存可用名单
-        updateProtectionPoolDisplay();
-
-        // 保存到本地存储
-        saveToLocalStorage();
-
-        // 更新滑块的最大值为总人数
-        updateSliderMax();
-
-        // 更新显示
-        const xingmingxianshi = document.getElementById('xingmingxianshi');
-        if (xingmingxianshi && xingming.length > 0) {
-            xingmingxianshi.textContent = '名单已更新';
+        // 云名单模式下：先问清楚这次改动要落到哪里（本地 / 同步回云端）
+        if (listSourceMode === 'cloud' && currentCloudList) {
+            // 等确认弹窗的退场动画走完再弹，避免两层叠在一起
+            setTimeout(openSaveModeModal, 320);
+            return;
         }
 
-        // 更新按钮状态（启用按钮）
-        updateButtonState();
-
-        // 通知服务端名单已获取
-        if (socket && socket.readyState === WebSocket.OPEN && yuanchengma) {
-            wsSend({ type: 'is_names_geted', code: yuanchengma, is_geted: true });
-        }
-
-        // 关闭弹窗
-        closeEditNamesModal();
+        commitEditedNames();
     });
+}
+
+// 把编辑结果写回运行状态 + 本地存储（不关心来源是本地名单还是云名单）
+function commitEditedNames() {
+    // 更新名单与性别
+    applyEditedNamesToState();
+    isNamesLoaded = true;
+
+    // 清空保护池
+    paichuleibiao = [];
+    rebuildAvailableNamesCache(); // 保护池更新，重新缓存可用名单
+    updateProtectionPoolDisplay();
+
+    // 保存到本地存储
+    saveToLocalStorage();
+
+    // 更新滑块的最大值为总人数
+    updateSliderMax();
+
+    // 更新显示
+    const xingmingxianshi = document.getElementById('xingmingxianshi');
+    if (xingmingxianshi && xingming.length > 0) {
+        xingmingxianshi.textContent = '名单已更新';
+    }
+
+    // 更新按钮状态（启用按钮）
+    updateButtonState();
+
+    // 通知服务端名单已获取
+    if (socket && socket.readyState === WebSocket.OPEN && yuanchengma) {
+        wsSend({ type: 'is_names_geted', code: yuanchengma, is_geted: true });
+    }
+
+    // 关闭弹窗
+    closeEditNamesModal();
+}
+
+// ==================== 云名单模式下的「保存方式」询问 ====================
+// 编辑的名单本来是从云名单导入的，改动要落到哪里由用户决定：
+//   local -> 保存为本地名单（切回本地模式，之后启动不再被云端覆盖）
+//   cloud -> 同步更改到云名单（覆盖当前使用的云名单）
+
+function openSaveModeModal() {
+    const modal = document.getElementById('saveModeModal');
+    if (!modal) {
+        // 弹窗缺失时按"保存为本地"兜底，至少不让改动留在云名单里被下次启动覆盖
+        applyLocalListMode();
+        commitEditedNames();
+        return;
+    }
+
+    const desc = document.getElementById('syncToCloudDesc');
+    if (desc) {
+        const name = (currentCloudList && currentCloudList.name) ? currentCloudList.name : '未命名';
+        desc.textContent = '覆盖云名单「' + name + '」';
+    }
+
+    modal.style.display = 'flex';
+    modal.offsetHeight;
+    modal.classList.add('show');
+}
+
+function closeSaveModeModal() {
+    const modal = document.getElementById('saveModeModal');
+    if (!modal) return;
+    const panel = modal.querySelector('.prompt-panel');
+    if (panel) panel.style.animation = 'slideOut 0.3s ease-out forwards';
+    modal.classList.add('hiding');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+        modal.classList.remove('hiding');
+        if (panel) panel.style.animation = '';
+    }, 300);
+}
+
+function chooseSaveMode(mode) {
+    // 取消则由保存方式弹窗的取消按钮处理（什么都不落，编辑弹窗保持打开）
+    closeSaveModeModal();
+
+    if (mode === 'local') {
+        // 切回本地模式：清掉云名单与分组依据，改动以后不会再被云端覆盖
+        applyLocalListMode();
+        commitEditedNames();
+        return;
+    }
+
+    // 先落本地状态（含本地缓存），再推云端
+    commitEditedNames();
+    syncEditedNamesToCloud();
+}
+
+// 把编辑后的名单同步到当前云名单
+async function syncEditedNamesToCloud() {
+    const listId = currentCloudList && currentCloudList.list_id;
+
+    if (!listId) {
+        applyLocalListMode();
+        saveToLocalStorage();
+        showCustomAlert('没找到对应的云名单，改动已保存在本地并切回本地模式。', '提示');
+        return;
+    }
+
+    const names = xingming.slice();
+    const items = names.map(name => ({
+        name: name,
+        gender: (nameGenders[name] !== undefined ? nameGenders[name] : null)
+    }));
+
+    try {
+        const res = await fetch(`${getApiBasePath()}api/lists/${encodeURIComponent(listId)}/items`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ items: items })
+        });
+
+        if (!res.ok) {
+            let msg = '同步失败（HTTP ' + res.status + '）';
+            try {
+                const data = await res.json();
+                if (data && data.error) msg = data.error;
+            } catch (e) { /* 响应体不是 JSON，用默认文案 */ }
+            throw new Error(msg);
+        }
+
+        showCustomAlert('已同步到云名单「' + (currentCloudList.name || '未命名') + '」，共 ' + names.length + ' 人', '提示');
+    } catch (error) {
+        console.error('同步云名单失败:', error);
+        // 推不上就退回本地模式，否则下次启动会拿云端旧内容把刚改的覆盖掉
+        applyLocalListMode();
+        saveToLocalStorage();
+        showCustomAlert('同步失败：' + error.message + '\n改动已保留在本地，并已切换回本地模式。', '错误');
+    }
 }
 
 // 打开编辑名单弹窗
@@ -3451,7 +4247,11 @@ function initEditNamesModal() {
     // ESC 键关闭弹窗
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (batchAddNamesModal && batchAddNamesModal.classList.contains('show')) {
+            // 保存方式弹窗在最上层，优先关它（关掉=放弃这次保存，编辑弹窗保持打开）
+            const saveModeEl = document.getElementById('saveModeModal');
+            if (saveModeEl && saveModeEl.classList.contains('show')) {
+                closeSaveModeModal();
+            } else if (batchAddNamesModal && batchAddNamesModal.classList.contains('show')) {
                 closeBatchAddNamesModal();
             } else if (editNamesModal && editNamesModal.classList.contains('show')) {
                 closeEditNamesModal();
@@ -3464,6 +4264,7 @@ function initEditNamesModal() {
 document.addEventListener('DOMContentLoaded', () => {
     initEditNamesModal();
     initSaveCloudNamesModal();
+    initSaveModeModal();
 });
 
 // 保存到云名单相关变量
@@ -3539,6 +4340,35 @@ function initSaveCloudNamesModal() {
         };
         // 初始化时调用一次
         updateUserAvatar();
+    }
+}
+
+// 初始化「保存方式」弹窗（本地 / 同步回云名单）
+function initSaveModeModal() {
+    const modal = document.getElementById('saveModeModal');
+    const saveAsLocalOption = document.getElementById('saveAsLocalOption');
+    const syncToCloudOption = document.getElementById('syncToCloudOption');
+    const saveModeCancelBtn = document.getElementById('saveModeCancelBtn');
+
+    if (saveAsLocalOption) {
+        saveAsLocalOption.addEventListener('click', () => chooseSaveMode('local'));
+    }
+
+    if (syncToCloudOption) {
+        syncToCloudOption.addEventListener('click', () => chooseSaveMode('cloud'));
+    }
+
+    // 取消 = 放弃这次保存：不动任何状态，编辑弹窗仍然开着
+    if (saveModeCancelBtn) {
+        saveModeCancelBtn.addEventListener('click', closeSaveModeModal);
+    }
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeSaveModeModal();
+            }
+        });
     }
 }
 

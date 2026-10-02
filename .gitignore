@@ -12,7 +12,9 @@
 *.jsonl
 *.log
 *.pkl
-EasyCore/config.yml
+# 真实配置（含 client_secret）一律不入库 —— 用 **/ 覆盖任意层级，
+# 只忽略 EasyCore/config.yml 会漏掉 EasyCoreNew/config.yml 与部署后的 easycore/config.yml
+**/config.yml
 Nginx/
 
 # ========== Python 缓存 ==========
@@ -29,3 +31,8 @@ __pycache__/
 !README.md
 
 EasyCore/
+
+# 新版后端构建目录（与上面 EasyCore/ 同等处理：只在本地存在，不入库）
+# 交付时整目录改名 easycore/ 放到服务器
+EasyCoreNew/
+easycore/

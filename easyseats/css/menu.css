@@ -1,0 +1,30 @@
+/* 右键 / 长按菜单
+ * 由 index.html 内联样式拆出，保持原始声明顺序。
+ */
+/* ============ 菜单 ============ */
+.menu {
+  position: fixed;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 6px 0;
+  z-index: 100000;
+  min-width: 132px;
+  overflow: hidden;
+  animation: menuIn .15s ease-out;
+}
+@keyframes menuIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+.menu-item {
+  padding: 9px 18px;
+  font-size: 14px;
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s;
+}
+.menu-item:hover { background: rgba(69,243,255,.12); }
+.menu-item.danger { color: var(--danger); }
+.menu-item.danger:hover { background: rgba(255,107,107,.14); }
+.menu-item.note { color: var(--muted); font-size: 12px; cursor: default; }
+.menu-item.note:hover { background: transparent; }
+

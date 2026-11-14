@@ -1,0 +1,9 @@
+/* 窄屏适配
+ * 由 index.html 内联样式拆出，保持原始声明顺序。
+ */
+@media (max-width: 760px) {
+  #namePicker {
+    left: 10px; right: 10px; top: auto;
+    bottom: 42px; width: auto; max-height: 46vh;
+  }
+}

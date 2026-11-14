@@ -1,0 +1,80 @@
+/* 座位元素
+ * 由 index.html 内联样式拆出，保持原始声明顺序。
+ */
+/* ============ 座位 ============ */
+/* 座位：深底 + 青色描边（randamer 的输入框语言） */
+.seat {
+  position: absolute;
+  width: 46px; height: 46px;
+  background: var(--panel-2);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  cursor: move;
+  user-select: none;
+  z-index: 3;
+  transition: background .2s, border-color .2s;
+}
+.seat:hover { background: rgba(69,243,255,.14); }
+.seat.selected { background: rgba(69,243,255,.22); outline: 2px solid var(--warn); outline-offset: 2px; }
+.seat.dragging { opacity: .85; z-index: 999; cursor: grabbing; }
+/* 排座模式：座位显示姓名，字号自适应 46px 方块（最多 5 个字） */
+#canvas.view-mode .seat { cursor: default; font-size: 11px; line-height: 1.08; padding: 2px; text-align: center; word-break: break-all; }
+#canvas.view-mode .seat:hover { background: var(--panel-2); }
+/* 空座（允许空座时多出来的座位 / 还没排人的座位）：虚线 + 更暗，和"有人"的实线座位区分 */
+#canvas.view-mode .seat:not(.has-name) {
+  color: #5c5d66;
+  font-size: 11px;
+  border-style: dashed;
+  border-color: #43444c;
+  background: #202127;
+}
+#canvas.view-mode .seat:not(.has-name):hover { background: #26272e; }
+.seat.hl { background: rgba(69,243,255,.3) !important; border-color: var(--warn) !important; }
+
+.ghost {
+  position: fixed;
+  width: 46px; height: 46px;
+  background: var(--panel-2);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  opacity: .8;
+  pointer-events: none;
+  z-index: 99999;
+}
+
+.select-box {
+  position: absolute;
+  border: 1px solid var(--accent-lo);
+  background: rgba(69,243,255,.10);
+  pointer-events: none;
+  z-index: 50;
+}
+
+.group-frame {
+  position: absolute;
+  border: 2px dashed var(--gray);
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 1;
+}
+.group-frame.hl { border-style: solid; }
+.group-label {
+  position: absolute;
+  top: -11px; left: 10px;
+  font-size: 12px;
+  line-height: 20px;
+  height: 20px;
+  color: var(--panel);
+  padding: 0 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  font-family: "ZCOOL KuaiLe", sans-serif;
+  font-weight: 400;
+}
+

@@ -205,6 +205,48 @@
 --poster-color-swatch-border: rgba(69, 243, 255, 0.3);
 --poster-close-hover-bg-raw: rgba(69, 243, 255, 0.1);
 --mode-ball-large-hover-border: rgba(69, 243, 255, 0.5);
+/* 设置面板 · 我的 / 云名单 / 编辑名单 / 快速查找：浅色模式令牌（2026-11-14 补齐） */
+--settings-tab-hover-bg: rgba(255, 255, 255, 0.02);
+--account-header-bg: rgba(69, 243, 255, 0.05);
+--account-header-border: rgba(69, 243, 255, 0.15);
+--account-avatar-bg: rgba(28, 28, 28, 0.9);
+--account-btn-bg: rgba(69, 243, 255, 0.1);
+--account-btn-border: rgba(69, 243, 255, 0.4);
+--account-btn-hover-bg: rgba(69, 243, 255, 0.2);
+--account-btn-hover-border: rgba(69, 243, 255, 0.6);
+--btn-reset-hover-bg: rgba(255, 107, 107, 0.2);
+--btn-reset-hover-border: rgba(255, 107, 107, 0.6);
+--cloud-list-item-bg: rgba(69, 243, 255, 0.05);
+--cloud-list-item-border: rgba(69, 243, 255, 0.15);
+--cloud-list-item-hover-bg: rgba(69, 243, 255, 0.1);
+--cloud-list-item-hover-border: rgba(69, 243, 255, 0.3);
+--cloud-btn-bg: rgba(69, 243, 255, 0.1);
+--cloud-btn-border: rgba(69, 243, 255, 0.3);
+--cloud-btn-hover-bg: rgba(69, 243, 255, 0.2);
+--cloud-btn-hover-border: rgba(69, 243, 255, 0.5);
+--edit-names-header-border: rgba(69, 243, 255, 0.2);
+--edit-names-footer-border: rgba(69, 243, 255, 0.2);
+--edit-names-close-hover-bg: rgba(69, 243, 255, 0.1);
+--edit-name-confirm-bg: linear-gradient(135deg, rgba(69, 243, 255, 0.2), rgba(69, 243, 255, 0.1));
+--edit-name-confirm-border: rgba(69, 243, 255, 0.4);
+--edit-name-confirm-hover-bg: linear-gradient(135deg, rgba(69, 243, 255, 0.3), rgba(69, 243, 255, 0.2));
+--quick-search-btn-has-names-hover-bg: rgba(69, 243, 255, 0.2);
+--quick-search-btn-has-names-hover-border: rgba(69, 243, 255, 0.4);
+--btn-secondary-hover-bg: rgba(255, 255, 255, 0.1);
+--edit-name-edit-btn-bg: rgba(255, 215, 0, 0.15);
+--edit-name-edit-btn-border: rgba(255, 215, 0, 0.5);
+--edit-name-edit-btn-hover-bg: rgba(255, 215, 0, 0.3);
+--edit-name-delete-btn-bg: rgba(255, 107, 107, 0.15);
+--edit-name-delete-btn-border: rgba(255, 107, 107, 0.5);
+--edit-name-delete-btn-hover-bg: rgba(255, 107, 107, 0.3);
+/* 补齐：CSS 中引用但从未定义过的变量（2026-11-14）
+   暗色下这些声明原本整体失效（等价于无），故 dark 取 transparent 保持渲染结果不变，
+   只在浅色下补出可见的边界与层次。 */
+--letter-btn-has-names-hover-bg: transparent;
+--vote-card-border: transparent;
+--vote-card-shadow: transparent;
+--vote-card-pressed-border: transparent;
+--divider-bg: rgba(255, 255, 255, 0.05);
 }
 [data-theme="light"] {
 --bg-color: #f5f5f0;
@@ -411,6 +453,46 @@
 --poster-color-swatch-border: rgba(45, 95, 138, 0.15);
 --poster-close-hover-bg-raw: rgba(45, 95, 138, 0.06);
 --mode-ball-large-hover-border: rgba(45, 95, 138, 0.3);
+/* 设置面板 · 我的 / 云名单 / 编辑名单 / 快速查找：浅色模式令牌（2026-11-14 补齐） */
+--settings-tab-hover-bg: rgba(0, 0, 0, 0.02);
+--account-header-bg: rgba(45, 95, 138, 0.04);
+--account-header-border: rgba(45, 95, 138, 0.15);
+--account-avatar-bg: #f3f4f6;
+--account-btn-bg: rgba(45, 95, 138, 0.08);
+--account-btn-border: rgba(45, 95, 138, 0.3);
+--account-btn-hover-bg: rgba(45, 95, 138, 0.14);
+--account-btn-hover-border: rgba(45, 95, 138, 0.45);
+--btn-reset-hover-bg: rgba(220, 53, 69, 0.15);
+--btn-reset-hover-border: rgba(220, 53, 69, 0.45);
+--cloud-list-item-bg: rgba(45, 95, 138, 0.04);
+--cloud-list-item-border: rgba(45, 95, 138, 0.15);
+--cloud-list-item-hover-bg: rgba(45, 95, 138, 0.08);
+--cloud-list-item-hover-border: rgba(45, 95, 138, 0.25);
+--cloud-btn-bg: rgba(45, 95, 138, 0.08);
+--cloud-btn-border: rgba(45, 95, 138, 0.25);
+--cloud-btn-hover-bg: rgba(45, 95, 138, 0.14);
+--cloud-btn-hover-border: rgba(45, 95, 138, 0.4);
+--edit-names-header-border: rgba(45, 95, 138, 0.12);
+--edit-names-footer-border: rgba(45, 95, 138, 0.12);
+--edit-names-close-hover-bg: rgba(45, 95, 138, 0.08);
+--edit-name-confirm-bg: linear-gradient(135deg, rgba(45, 95, 138, 0.1), rgba(45, 95, 138, 0.05));
+--edit-name-confirm-border: rgba(45, 95, 138, 0.3);
+--edit-name-confirm-hover-bg: linear-gradient(135deg, rgba(45, 95, 138, 0.15), rgba(45, 95, 138, 0.08));
+--quick-search-btn-has-names-hover-bg: rgba(45, 95, 138, 0.14);
+--quick-search-btn-has-names-hover-border: rgba(45, 95, 138, 0.3);
+--btn-secondary-hover-bg: rgba(0, 0, 0, 0.08);
+--edit-name-edit-btn-bg: rgba(184, 134, 11, 0.12);
+--edit-name-edit-btn-border: rgba(184, 134, 11, 0.45);
+--edit-name-edit-btn-hover-bg: rgba(184, 134, 11, 0.2);
+--edit-name-delete-btn-bg: rgba(220, 53, 69, 0.12);
+--edit-name-delete-btn-border: rgba(220, 53, 69, 0.45);
+--edit-name-delete-btn-hover-bg: rgba(220, 53, 69, 0.2);
+/* 补齐：CSS 中引用但从未定义过的变量（2026-11-14） */
+--letter-btn-has-names-hover-bg: rgba(45, 95, 138, 0.12);
+--vote-card-border: rgba(45, 95, 138, 0.15);
+--vote-card-shadow: rgba(0, 0, 0, 0.08);
+--vote-card-pressed-border: rgba(45, 95, 138, 0.5);
+--divider-bg: rgba(0, 0, 0, 0.06);
 }
 /* 已注释：系统主题跟随逻辑已移至 JavaScript ThemeManager 处理，避免媒体查询覆盖手动设置的主题 */
 /*

@@ -1,0 +1,61 @@
+/* 提示浮层与 Toast
+ * 由 index.html 内联样式拆出，保持原始声明顺序。
+ */
+/* ============ 提示浮层（未设定格局等） ============ */
+#notice {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(35,36,42,.86);
+  z-index: 400;
+  padding: 20px;
+}
+#notice.show { display: flex; }
+.notice-card {
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 26px 28px;
+  max-width: 460px;
+  text-align: center;
+}
+.notice-card h3 { font-family: "ZCOOL KuaiLe", sans-serif; color: var(--warn); font-size: 19px; margin-bottom: 12px; }
+.notice-card p { color: var(--muted); font-size: 14px; line-height: 1.8; margin-bottom: 20px; }
+.notice-card p b { color: #e6e6e6; }
+.notice-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* ============ Toast ============ */
+#toast {
+  position: fixed;
+  left: 50%; bottom: 58px;
+  transform: translate(-50%, 20px);
+  background: rgba(28,28,28,.96);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 13.5px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s, transform .25s;
+  z-index: 200000;
+  max-width: 80vw;
+  text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+}
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+#toast.error { border-color: var(--danger); color: var(--danger); }
+/* 转圈：仅在「保存中」这种长任务状态显示（#toast.busy 不会被定时器收回） */
+#toast .toast-spin {
+  display: none;
+  flex: 0 0 auto;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid rgba(69,243,255,.25);
+  border-top-color: var(--accent);
+  animation: spin .8s linear infinite;
+}
+#toast.busy .toast-spin { display: block; }
+#toast.busy { border-color: var(--accent); }
+

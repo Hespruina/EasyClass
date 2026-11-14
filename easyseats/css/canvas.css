@@ -1,0 +1,44 @@
+/* 画布与世界层
+ * 由 index.html 内联样式拆出，保持原始声明顺序。
+ */
+/* ============ 画布 ============ */
+#canvas {
+  flex: 1 1 auto;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  user-select: none;
+  touch-action: none;      /* 画布内不留任何浏览器原生平移 / 缩放 */
+  cursor: crosshair;
+}
+#canvas.grid-bg {
+  background-image:
+    linear-gradient(to right, #2c2d34 1px, transparent 1px),
+    linear-gradient(to bottom, #2c2d34 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+#world {
+  position: absolute;
+  left: 0; top: 0;
+  width: 0; height: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+  touch-action: none;
+}
+#canvas::after {
+  content: attr(data-empty);
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: #55565e;
+  font-family: "ZCOOL KuaiLe", sans-serif;
+  font-size: 18px;
+  pointer-events: none;
+  display: none;
+  white-space: nowrap;
+}
+#canvas.empty::after { display: block; }
+/* 排座模式画布可平移：光标改成抓手 */
+#canvas.pannable { cursor: grab; }
+#canvas.pannable.panning { cursor: grabbing; }
+

@@ -20,13 +20,13 @@ animation: fadeIn 0.3s ease forwards;
 animation: fadeOut 0.3s ease forwards;
 }
 .export-panel {
-background: var(--card-bg);
-border: 1px solid rgba(69, 243, 255, 0.3);
+background: var(--export-panel-bg);
+border: 1px solid var(--export-panel-border);
 border-radius: 16px;
 padding: 30px;
 width: 90%;
 max-width: 500px;
-box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+box-shadow: 0 0 50px var(--export-panel-shadow);
 animation: slideIn 0.3s ease;
 }
 .export-modal.hiding .export-panel {
@@ -50,27 +50,27 @@ display: flex;
 align-items: center;
 gap: 15px;
 padding: 15px 20px;
-background: rgba(255, 255, 255, 0.03);
-border: 2px solid rgba(69, 243, 255, 0.2);
+background: var(--export-option-bg);
+border: 2px solid var(--export-option-border);
 border-radius: 12px;
 cursor: pointer;
 transition: all 0.3s;
 }
 .export-option:hover {
-background: rgba(69, 243, 255, 0.1);
-border-color: rgba(69, 243, 255, 0.5);
+background: var(--export-option-hover-bg);
+border-color: var(--export-option-hover-border);
 box-shadow: var(--export-btn-hover-shadow);
 transform: translateX(5px);
 }
 .export-icon {
 width: 48px;
 height: 48px;
-background: linear-gradient(135deg, rgba(69, 243, 255, 0.2), rgba(69, 243, 255, 0.05));
+background: var(--export-icon-bg);
 border-radius: 12px;
 display: flex;
 align-items: center;
 justify-content: center;
-color: var(--primary);
+color: var(--export-icon-color);
 flex-shrink: 0;
 }
 .export-icon svg {
@@ -102,13 +102,13 @@ font-family: 'Noto Sans SC', sans-serif;
 border: none;
 }
 .export-btn-cancel {
-background: rgba(255, 255, 255, 0.05);
-color: var(--text-dim);
-border: 1px solid rgba(255, 255, 255, 0.1);
+background: var(--export-btn-cancel-bg);
+color: var(--export-btn-cancel-color);
+border: 1px solid var(--export-btn-cancel-border);
 }
 .export-btn-cancel:hover {
-background: rgba(255, 255, 255, 0.1);
-color: var(--text-main);
+background: var(--export-btn-cancel-hover-bg);
+color: var(--export-btn-cancel-hover-color);
 }
 
 /* 名单更改标签样式 */

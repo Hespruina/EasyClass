@@ -1,0 +1,121 @@
+/* 手动排座 / 选人面板 / 拖动换座
+ * 由 index.html 内联样式拆出，保持原始声明顺序。
+ */
+/* ============ 手动排座 ============ */
+/* 手动排座模式下座位可点，光标换成手（覆盖 view-mode 的 default） */
+#canvas.manual-seating .seat { cursor: pointer; }
+#canvas.manual-seating .seat:hover { background: rgba(69,243,255,.18); }
+/* 已点中（等待操作 / 换座源） */
+.seat.picked {
+  background: rgba(69,243,255,.28) !important;
+  border-color: var(--warn) !important;
+  outline: 2px solid var(--warn); outline-offset: 2px;
+}
+/* 换座模式下，所有「有人的座位」都描一圈呼吸边框，告诉老师可以点哪里 */
+.seat.swap-target {
+  border-color: var(--warn) !important;
+  animation: swapBreath 1.1s ease-in-out infinite;
+}
+@keyframes swapBreath {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,196,0,.55); }
+  50%      { box-shadow: 0 0 0 5px rgba(255,196,0,0); }
+}
+/* 换座完成后的落定提示 */
+.seat.just-moved { animation: seatPop .45s ease-out; }
+@keyframes seatPop {
+  0%   { transform: scale(1);    background: rgba(69,243,255,.45); }
+  55%  { transform: scale(1.12); background: rgba(69,243,255,.32); }
+  100% { transform: scale(1);    background: var(--panel-2); }
+}
+
+/* 换座飞行副本：克隆一个座位，按屏幕坐标走弧线。
+   字号/内边距跟 #canvas.view-mode .seat 对齐（副本挂在 body 上，吃不到那条选择器） */
+.seat-flight {
+  position: fixed !important;
+  margin: 0 !important;
+  transform-origin: top left;
+  pointer-events: none;
+  z-index: 300000;
+  box-shadow: 0 10px 26px rgba(0,0,0,.55);
+  font-size: 11px; line-height: 1.08; padding: 2px;
+  text-align: center; word-break: break-all;
+}
+
+/* ============ 拖动学生换座（排座模式） ============ */
+/* 有人的座位可以拖着换位：光标提示「可抓」 */
+#canvas.manual-seating .seat.has-name { cursor: grab; }
+/* 拖动中：源座位变成虚线空洞，跟 animateSeatFlight 一样「飞的是名字，不是座位」 */
+#canvas.manual-seating .seat.drag-source {
+  background: rgba(69,243,255,.05) !important;
+  border-style: dashed !important;
+  color: transparent !important;
+}
+/* 光标下的落点：空座 / 有人的座位都算，统一高亮 */
+#canvas.manual-seating .seat.drop-target {
+  background: rgba(255,215,0,.2) !important;
+  border-color: var(--warn) !important;
+  outline: 2px solid var(--warn); outline-offset: 2px;
+  z-index: 9;
+}
+/* 跟着光标的「学生」影子 */
+.seat-drag-ghost {
+  position: fixed; left: 0; top: 0;
+  transform: translate(-50%, -50%);
+  min-width: 46px; min-height: 46px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 2px 4px;
+  background: rgba(40,41,45,.97);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 11px; line-height: 1.08;
+  text-align: center; word-break: break-all;
+  box-shadow: 0 10px 24px rgba(0,0,0,.62);
+  pointer-events: none;
+  z-index: 300001;
+}
+body.dragging-seat, body.dragging-seat * { cursor: grabbing !important; }
+
+/* 手动选人面板 */
+#namePicker {
+  position: fixed;
+  right: 22px; top: 127px; bottom: 46px;
+  width: 232px;
+  background: var(--panel);
+  border: 1px solid var(--accent-lo);
+  border-radius: 10px;
+  display: none;
+  flex-direction: column;
+  z-index: 150000;
+  box-shadow: 0 12px 34px rgba(0,0,0,.5);
+  animation: panelIn .18s ease-out;
+  overflow: hidden;
+}
+#namePicker.show { display: flex; }
+.np-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-bottom: 1px solid var(--accent-lo);
+}
+.np-title { font-size: 13.5px; color: var(--accent); }
+.np-close {
+  border: none; background: transparent; color: var(--muted);
+  font-size: 18px; line-height: 1; cursor: pointer; padding: 0 4px;
+}
+.np-close:hover { color: var(--danger); }
+.np-sub { padding: 8px 12px 4px; font-size: 12px; color: var(--muted); }
+.np-search {
+  margin: 6px 12px 8px; padding: 6px 9px;
+  background: var(--panel-2); border: 1px solid var(--accent-lo);
+  color: var(--text); border-radius: 6px; font-size: 13px; font-family: inherit;
+  outline: none;
+}
+.np-search:focus { border-color: var(--accent); }
+.np-body { flex: 1; overflow-y: auto; padding: 4px 8px 10px; }
+.np-item {
+  padding: 7px 9px; margin: 3px 4px;
+  border-radius: 6px; font-size: 13px; color: var(--text);
+  cursor: pointer; border: 1px solid transparent;
+}
+.np-item:hover { background: rgba(69,243,255,.14); border-color: var(--accent-lo); color: var(--accent); }
+.np-empty { padding: 18px 12px; font-size: 12.5px; color: var(--muted); text-align: center; line-height: 1.7; }
+

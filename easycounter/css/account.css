@@ -13,7 +13,7 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
+    background-color: var(--modal-bg);
     justify-content: center;
     align-items: center;
 }
@@ -28,13 +28,13 @@
 }
 
 @keyframes fadeInSettings {
-    from { background-color: rgba(0, 0, 0, 0); }
-    to { background-color: rgba(0, 0, 0, 0.85); }
+    from { background-color: transparent; }
+    to { background-color: var(--modal-bg); }
 }
 
 @keyframes fadeOutSettings {
-    from { background-color: rgba(0, 0, 0, 0.85); }
-    to { background-color: rgba(0, 0, 0, 0); }
+    from { background-color: var(--modal-bg); }
+    to { background-color: transparent; }
 }
 
 .settings-fullscreen-container {
@@ -84,8 +84,8 @@
     height: 36px;
     border-radius: 50%;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #999;
+    border: 1px solid var(--btn-secondary-border);
+    color: var(--text-dim);
     font-size: 24px;
     cursor: pointer;
     display: flex;
@@ -95,8 +95,8 @@
 }
 
 .settings-fullscreen-close:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
+    background: var(--btn-secondary-bg);
+    color: var(--text-main);
 }
 
 /* 标签页导航 */
@@ -118,8 +118,8 @@
 }
 
 .settings-tab:hover {
-    color: var(--text-color);
-    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-main);
+    background: var(--settings-tab-hover-bg);
 }
 
 .settings-tab.active {
@@ -161,7 +161,7 @@
 .loading-spinner {
     width: 30px;
     height: 30px;
-    border: 3px solid rgba(69, 243, 255, 0.1);
+    border: 3px solid var(--primary-dim);
     border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -186,8 +186,8 @@
     align-items: center;
     gap: 15px;
     padding: 20px;
-    background: rgba(69, 243, 255, 0.05);
-    border: 1px solid rgba(69, 243, 255, 0.15);
+    background: var(--account-header-bg);
+    border: 1px solid var(--account-header-border);
     border-radius: 12px;
     margin-bottom: 15px;
 }
@@ -200,7 +200,7 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: rgba(28, 28, 28, 0.9);
+    background: var(--account-avatar-bg);
     border: 2px solid var(--primary);
     display: flex;
     align-items: center;
@@ -222,7 +222,7 @@
 .account-name {
     font-size: 18px;
     font-weight: bold;
-    color: var(--text-color);
+    color: var(--text-main);
     margin-bottom: 4px;
 }
 
@@ -239,9 +239,9 @@
 
 .account-logout-btn {
     padding: 10px 30px;
-    border: 1px solid rgba(255, 107, 107, 0.4);
-    background: rgba(255, 107, 107, 0.1);
-    color: #ff6b6b;
+    border: 1px solid var(--btn-reset-border);
+    background: var(--btn-reset-bg);
+    color: var(--btn-reset-color);
     border-radius: 8px;
     font-size: 14px;
     cursor: pointer;
@@ -249,8 +249,8 @@
 }
 
 .account-logout-btn:hover {
-    background: rgba(255, 107, 107, 0.2);
-    border-color: rgba(255, 107, 107, 0.6);
+    background: var(--btn-reset-hover-bg);
+    border-color: var(--btn-reset-hover-border);
 }
 
 .account-logged-out {
@@ -269,7 +269,7 @@
 
 .account-logged-out-text p {
     font-size: 18px;
-    color: var(--text-color);
+    color: var(--text-main);
     margin-bottom: 8px;
 }
 
@@ -279,8 +279,8 @@
 
 .account-login-btn {
     padding: 12px 40px;
-    border: 1px solid rgba(69, 243, 255, 0.4);
-    background: rgba(69, 243, 255, 0.1);
+    border: 1px solid var(--account-btn-border);
+    background: var(--account-btn-bg);
     color: var(--primary);
     border-radius: 8px;
     font-size: 15px;
@@ -290,8 +290,8 @@
 }
 
 .account-login-btn:hover {
-    background: rgba(69, 243, 255, 0.2);
-    border-color: rgba(69, 243, 255, 0.6);
+    background: var(--account-btn-hover-bg);
+    border-color: var(--account-btn-hover-border);
 }
 
 /* 云名单区域 */
@@ -318,8 +318,8 @@
 }
 
 .cloud-list-item {
-    background: rgba(69, 243, 255, 0.05);
-    border: 1px solid rgba(69, 243, 255, 0.15);
+    background: var(--cloud-list-item-bg);
+    border: 1px solid var(--cloud-list-item-border);
     border-radius: 10px;
     padding: 15px;
     cursor: pointer;
@@ -330,8 +330,8 @@
 }
 
 .cloud-list-item:hover {
-    background: rgba(69, 243, 255, 0.1);
-    border-color: rgba(69, 243, 255, 0.3);
+    background: var(--cloud-list-item-hover-bg);
+    border-color: var(--cloud-list-item-hover-border);
     transform: translateY(-2px);
 }
 
@@ -343,7 +343,7 @@
 .cloud-list-name {
     font-size: 15px;
     font-weight: bold;
-    color: var(--text-color);
+    color: var(--text-main);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -356,8 +356,8 @@
 
 .cloud-list-select-btn {
     padding: 8px 12px;
-    border: 1px solid rgba(69, 243, 255, 0.3);
-    background: rgba(69, 243, 255, 0.1);
+    border: 1px solid var(--cloud-btn-border);
+    background: var(--cloud-btn-bg);
     color: var(--primary);
     border-radius: 6px;
     font-size: 13px;
@@ -367,8 +367,8 @@
 }
 
 .cloud-list-select-btn:hover {
-    background: rgba(69, 243, 255, 0.2);
-    border-color: rgba(69, 243, 255, 0.5);
+    background: var(--cloud-btn-hover-bg);
+    border-color: var(--cloud-btn-hover-border);
 }
 
 .cloud-list-empty {
@@ -385,7 +385,7 @@
 .cloud-list-empty p {
     font-size: 16px;
     margin-bottom: 5px;
-    color: var(--text-color);
+    color: var(--text-main);
 }
 
 .cloud-list-empty span {

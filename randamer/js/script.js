@@ -1088,6 +1088,8 @@ function initRemoteCodeClickHandler() {
         socket.onmessage = function(event) {
             try {
                 const data = JSON.parse(event.data);
+                // 服务端 5s 一次的心跳，立即回 pong（旧版协议消息一个字节没改）
+                if (data.type === 'ping') { wsSend({ type: 'pong', ts: data.ts }); return; }
                 if (data.type === 'set_code' && data.code) {
                     // 获取到新code，播放动画
                     clearCodeTimeout();
@@ -1138,6 +1140,8 @@ function resetSocketMessageHandlers() {
     socket.onmessage = function(event) {
         try {
             const data = JSON.parse(event.data);
+            // 服务端 5s 一次的心跳，立即回 pong
+            if (data.type === 'ping') { wsSend({ type: 'pong', ts: data.ts }); return; }
             if (data.type === 'set_code' && data.code) {
                 // 首次获取code
                 clearCodeTimeout();
@@ -1439,6 +1443,8 @@ function initWebSocket(reconnectCode = null) {
     socket.onmessage = function(event) {
         try {
             const data = JSON.parse(event.data);
+            // 服务端 5s 一次的心跳，立即回 pong
+            if (data.type === 'ping') { wsSend({ type: 'pong', ts: data.ts }); return; }
             if (data.type === 'set_code' && data.code) {
                 // 接收到遥控码，清除超时定时器
                 clearCodeTimeout();

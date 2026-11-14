@@ -1,272 +1,179 @@
-// 获取基础路径（支持反向代理子目录）
+/*
+ * 名单导入 / 新建计票的名单准备
+ *
+ * 原来是「名单输入页 → /api/pinyin 排序 → 本地保存进度」。改成多任务纯云端后，
+ * 这里的职责只剩：把手动输入 / 云名单 / 易点名 token 折成一个姓名数组，
+ * 处理重名，然后交给 tasks.js::createTaskFromNames() 去云端建任务。
+ * 拼音排序由后端 counter_state.build_state() 统一完成，前端不再重复实现。
+ */
+
 function getApiBasePath() {
-const pathname = window.location.pathname;
-const lastSlash = pathname.lastIndexOf('/');
-return pathname.substring(0, lastSlash + 1);
+    const pathname = window.location.pathname;
+    return pathname.substring(0, pathname.lastIndexOf('/') + 1);
 }
-// 获取当前页面的完整 URL（用于回调）
+
 function getCurrentUrl() {
-return window.location.origin + window.location.pathname;
+    return window.location.origin + window.location.pathname;
 }
-// 从易点名导入名单
+
+// 从易点名导入：跳到 randamer 的分享页，回来时 URL 带 names_get_token
 function importFromRandamer() {
-const currentUrl = getCurrentUrl();
-const randamerApiUrl = 'https://easyclass.zhrhello.top/randamer/api.html';
-const callbackUrl = encodeURIComponent(currentUrl);
-window.location.href = `${randamerApiUrl}?url=${callbackUrl}`;
+    const randamerApiUrl = 'https://easyclass.zhrhello.top/randamer/api.html';
+    window.location.href = randamerApiUrl + '?url=' + encodeURIComponent(getCurrentUrl());
 }
 
-// 从云名单导入名单
+// 从云名单导入（设置面板里的旧入口）：直接打开新建弹窗并切到云名单来源
 function importFromCloudList() {
-    const currentUrl = getCurrentUrl();
-    const pickerUrl = `https://easyclass.zhrhello.top/easycore/api/list_picker?callback_url=${encodeURIComponent(currentUrl)}`;
-    window.location.href = pickerUrl;
+    if (typeof openCreateTaskModal === 'function') openCreateTaskModal();
+    if (typeof switchCreateSource === 'function') switchCreateSource('cloud');
 }
 
-// 检查URL中的cloud_list_token参数并获取名单
-async function checkCloudListTokenAndImport() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('cloud_list_token');
-    
-    if (!token) {
-        return false;
-    }
-    
-    // 清除URL中的token
-    const newUrl = window.location.origin + window.location.pathname;
-    window.history.replaceState({}, document.title, newUrl);
-    
-    try {
-        const response = await fetch(`https://easyclass.zhrhello.top/easycore/api/cloud-lists/get_names?token=${token}`);
-        if (!response.ok) {
-            throw new Error('获取名单失败');
-        }
-        
-        const data = await response.json();
-        if (!data.names || !Array.isArray(data.names)) {
-            showCustomAlert('获取名单失败：数据格式错误');
-            return false;
-        }
-        
-        if (data.names.length === 0) {
-            showCustomAlert('获取的名单为空');
-            return false;
-        }
-        
-        // 填入名单到输入框
-        nameInput.value = data.names.join('\n');
-        return true;
-    } catch (error) {
-        showCustomAlert('导入失败：' + error.message);
-        return false;
-    }
+function clearImportTokenFromUrl() {
+    window.history.replaceState({}, document.title,
+        window.location.origin + window.location.pathname);
 }
 
-// 检查 URL 中的 token 参数并获取名单
-async function checkTokenAndImport() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('names_get_token');
-
-  if (!token) {
-    // 无token，检查是否有缓存的计票数据
-    checkForSavedSession();
-    return;
-  }
-
-  // 有 token，先获取新名单
-  try {
-    const response = await fetch(`https://easyclass.zhrhello.top/easycore/api/randamer/get_names?token=${token}`);
-    if (!response.ok) {
-      throw new Error('获取名单失败');
-    }
-
+async function fetchNamesByToken(url) {
+    const response = await fetch(url, { credentials: 'include' });
+    if (!response.ok) throw new Error('获取名单失败 (HTTP ' + response.status + ')');
     const data = await response.json();
-    if (!data.names || !Array.isArray(data.names)) {
-      showCustomAlert('获取名单失败：数据格式错误');
-      checkForSavedSession();
-      return;
-    }
-
-    if (data.names.length === 0) {
-      showCustomAlert('获取的名单为空');
-      checkForSavedSession();
-      return;
-    }
-
-    // 清除URL中的token
-    const newUrl = window.location.origin + window.location.pathname;
-    window.history.replaceState({}, document.title, newUrl);
-
-    // 检查是否有缓存的计票数据
-    if (Storage.hasActiveSession()) {
-      const savedData = Storage.loadVoteProgress();
-      const savedNames = savedData.namesData.map(item => item.name);
-
-      if (compareNamesList(savedNames, data.names)) {
-        // 名单相同，询问是否继续
-        showContinueVoteModal(savedData, data.names, true);
-      } else {
-        // 名单不同，直接使用新名单
-        Storage.clearVoteData();
-        nameInput.value = data.names.join('\n');
-        await uploadNames();
-      }
-    } else {
-      // 无缓存，直接使用新名单
-      nameInput.value = data.names.join('\n');
-      await uploadNames();
-    }
-  } catch (error) {
-    showCustomAlert('导入失败：' + error.message);
-    // 出错时检查是否有缓存可恢复
-    checkForSavedSession();
-  }
+    if (!data || !Array.isArray(data.names)) throw new Error('名单数据格式错误');
+    if (data.names.length === 0) throw new Error('名单为空');
+    return data.names;
 }
-// 上传名单到后端
+
+// 页面加载时检查 URL 里的导入 token；命中则带着名单打开新建弹窗
+async function checkImportTokenAndOpenCreate() {
+    const params = new URLSearchParams(window.location.search);
+    const cloudToken = params.get('cloud_list_token');
+    const randamerToken = params.get('names_get_token');
+    if (!cloudToken && !randamerToken) return false;
+
+    clearImportTokenFromUrl();
+    try {
+        const url = cloudToken
+            ? CloudSync.apiBaseForImport('api/cloud-lists/get_names?token=' + encodeURIComponent(cloudToken))
+            : CloudSync.apiBaseForImport('api/randamer/get_names?token=' + encodeURIComponent(randamerToken));
+        const names = await fetchNamesByToken(url);
+        openCreateTaskModal(names);
+        switchCreateSource('manual');
+        showCustomAlert('已导入 ' + names.length + ' 人，请确认后创建计票', '导入成功');
+        return true;
+    } catch (e) {
+        showCustomAlert('导入失败：' + e.message);
+        return false;
+    }
+}
+
+// 兼容旧调用点（events.js 已改为直接调 bootstrapTasks）
+async function checkCloudListTokenAndImport() { return false; }
+async function checkTokenAndImport() { return false; }
+
+// ==================== 新建计票的名单收集 ====================
+
+async function readCreateTaskNames() {
+    if (createTaskSource === 'cloud') {
+        const select = document.getElementById('createTaskCloudList');
+        const listId = select ? select.value : '';
+        if (!listId) { showCustomAlert('请选择一份云名单'); return null; }
+        let data;
+        try {
+            data = await CloudSync.api('api/lists/' + encodeURIComponent(listId));
+        } catch (e) {
+            showCustomAlert('读取云名单失败：' + e.message);
+            return null;
+        }
+        const items = Array.isArray(data.items) ? data.items : [];
+        const names = items.map(i => i.name).filter(Boolean);
+        if (names.length === 0) { showCustomAlert('该名单还没有名字'); return null; }
+        return names;
+    }
+    const textarea = document.getElementById('createTaskNames');
+    const text = textarea ? textarea.value.trim() : '';
+    const names = text.split('\n').map(n => n.trim()).filter(Boolean);
+    if (names.length === 0) { showCustomAlert('请输入至少一个姓名'); return null; }
+    return names;
+}
+
+// 「创建计票」按钮入口：收集名单 → 重名检测 → 建任务
 async function uploadNames() {
-const text = nameInput.value.trim();
-if (!text) {
-showCustomAlert('请输入至少一个姓名');
-return;
-}
-const names = text.split('\n').map(n => n.trim()).filter(n => n);
-if (names.length === 0) {
-showCustomAlert('请输入至少一个有效的姓名');
-return;
+    const btn = document.getElementById('confirmCreateTaskBtn');
+    if (btn && btn.disabled) return;
+    if (btn) { btn.disabled = true; btn.textContent = '检查中…'; }
+    try {
+        const names = await readCreateTaskNames();
+        if (!names) return;
+
+        const nameCount = {};
+        const duplicates = [];
+        names.forEach(function (name) {
+            nameCount[name] = (nameCount[name] || 0) + 1;
+            if (nameCount[name] === 2) duplicates.push(name);
+        });
+        if (duplicates.length > 0) {
+            const info = duplicates.map(n => n + '（出现' + nameCount[n] + '次）').join('\n');
+            showDuplicateHandleModal(info, names, nameCount);
+        } else {
+            processAndUploadNames(names, 'dedup');
+        }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '创建计票'; }
+    }
 }
 
-// 检测重名
-const nameCount = {};
-const duplicates = [];
-names.forEach(name => {
-  nameCount[name] = (nameCount[name] || 0) + 1;
-  if (nameCount[name] === 2) {
-    duplicates.push(name);
-  }
-});
-
-if (duplicates.length > 0) {
-  const duplicateInfo = duplicates.map(name => `${name}（出现${nameCount[name]}次）`).join('\n');
-  showDuplicateHandleModal(duplicateInfo, names, nameCount);
-} else {
-  processAndUploadNames(names, 'dedup');
-}
-}
-
-// 显示重名处理弹窗
 function showDuplicateHandleModal(duplicateInfo, names, nameCount) {
-  const modal = document.getElementById('duplicateHandleModal');
-  const duplicateList = document.getElementById('duplicateList');
-  duplicateList.textContent = duplicateInfo.replace(/\n/g, '\n');
-  duplicateList.innerHTML = duplicateInfo.replace(/\n/g, '<br>');
-  modal.classList.add('show');
-  // 存储待处理数据
-  modal.dataset.names = JSON.stringify(names);
-  modal.dataset.nameCount = JSON.stringify(nameCount);
+    const modal = document.getElementById('duplicateHandleModal');
+    document.getElementById('duplicateList').innerHTML =
+        duplicateInfo.split('\n').map(escapeHtml).join('<br>');
+    modal.classList.add('show');
+    modal.dataset.names = JSON.stringify(names);
+    modal.dataset.nameCount = JSON.stringify(nameCount);
 }
 
-// 处理重名 - 全部保留并编号
 function handleDuplicateKeepAll() {
-  const modal = document.getElementById('duplicateHandleModal');
-  const names = JSON.parse(modal.dataset.names);
-  const nameCount = JSON.parse(modal.dataset.nameCount);
-
-  // 为重复姓名添加编号
-  const nameOccurrence = {};
-  const numberedNames = names.map(name => {
-    nameOccurrence[name] = (nameOccurrence[name] || 0) + 1;
-    const count = nameOccurrence[name];
-    // 只有出现次数大于1的才编号
-    if (nameCount[name] > 1) {
-      return `${name}-${count}`;
-    }
-    return name;
-  });
-
-  closeDuplicateHandleModal();
-  processAndUploadNames(numberedNames, 'keepAll');
+    const modal = document.getElementById('duplicateHandleModal');
+    const names = JSON.parse(modal.dataset.names);
+    const nameCount = JSON.parse(modal.dataset.nameCount);
+    const occurrence = {};
+    const numbered = names.map(function (name) {
+        occurrence[name] = (occurrence[name] || 0) + 1;
+        return nameCount[name] > 1 ? name + '-' + occurrence[name] : name;
+    });
+    closeDuplicateHandleModal();
+    showCustomAlert('已为重复姓名添加编号，共 ' + numbered.length + ' 人');
+    processAndUploadNames(numbered, 'keepAll');
 }
 
-// 处理重名 - 去重处理
 function handleDuplicateDedup() {
-  const modal = document.getElementById('duplicateHandleModal');
-  const names = JSON.parse(modal.dataset.names);
-  closeDuplicateHandleModal();
-  processAndUploadNames(names, 'dedup');
+    const modal = document.getElementById('duplicateHandleModal');
+    const names = JSON.parse(modal.dataset.names);
+    closeDuplicateHandleModal();
+    processAndUploadNames(names, 'dedup');
 }
 
-// 关闭重名处理弹窗
 function closeDuplicateHandleModal() {
-  const modal = document.getElementById('duplicateHandleModal');
-  const promptPanel = modal.querySelector('.prompt-panel');
-  promptPanel.style.animation = 'slideOut 0.3s ease-out forwards';
-  modal.classList.add('hiding');
-  setTimeout(() => {
-    modal.classList.remove('show');
-    modal.classList.remove('hiding');
-    promptPanel.style.animation = '';
-  }, 300);
+    const modal = document.getElementById('duplicateHandleModal');
+    const panel = modal.querySelector('.prompt-panel');
+    panel.style.animation = 'slideOut 0.3s ease-out forwards';
+    modal.classList.add('hiding');
+    setTimeout(function () {
+        modal.classList.remove('show');
+        modal.classList.remove('hiding');
+        panel.style.animation = '';
+    }, 300);
 }
 
-// 处理并上传名单
 async function processAndUploadNames(names, mode) {
-let processedNames = names;
-
-if (mode === 'dedup') {
-  // 去重：保留每个姓名的第一次出现
-  const uniqueNames = [];
-  const seenNames = new Set();
-  names.forEach(name => {
-    if (!seenNames.has(name)) {
-      uniqueNames.push(name);
-      seenNames.add(name);
+    let processed = names;
+    if (mode === 'dedup') {
+        const seen = new Set();
+        processed = names.filter(function (n) {
+            if (seen.has(n)) return false;
+            seen.add(n);
+            return true;
+        });
+        const removed = names.length - processed.length;
+        if (removed > 0) showCustomAlert('已过滤 ' + removed + ' 个重复姓名，剩余 ' + processed.length + ' 人');
     }
-  });
-  processedNames = uniqueNames;
-
-  const removedCount = names.length - uniqueNames.length;
-  if (removedCount > 0) {
-    showCustomAlert(`已过滤 ${removedCount} 个重复姓名，剩余 ${uniqueNames.length} 人`);
-  }
-} else if (mode === 'keepAll') {
-  // 全部保留（已编号），只需提示
-  showCustomAlert(`已为重复姓名添加编号，共 ${names.length} 人`);
-}
-
-uploadBtn.disabled = true;
-uploadBtn.textContent = '处理中...';
-try {
-const apiPath = 'https://easyclass.zhrhello.top/easycore/api/pinyin';
-const response = await fetch(apiPath, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ names: processedNames })
-});
-if (!response.ok) {
-throw new Error('服务器处理失败');
-}
-const data = await response.json();
-appState.namesData = data.sortedNames;
-appState.groupedByLetter = data.groupedByLetter;
-appState.availableLetters = data.availableLetters;
-// 初始化投票数据
-appState.namesData.forEach(item => {
-appState.votes[item.name] = 0;
-});
-appState.totalVotes = 0;
-// 保存初始状态
-Storage.saveVoteProgress(appState);
-// 更新字母按钮状态
-updateLetterGrid();
-updateQuickSearchGrid();
-// 切换到主界面
-nameInputScreen.classList.add('hidden');
-mainApp.classList.add('visible');
-// 初始化界面
-initMainApp();
-} catch (error) {
-showCustomAlert('处理失败：' + error.message);
-uploadBtn.disabled = false;
-uploadBtn.textContent = '开始计票';
-}
+    await createTaskFromNames(processed);
 }

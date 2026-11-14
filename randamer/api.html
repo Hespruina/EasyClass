@@ -464,6 +464,8 @@
         socket.onmessage = function(event) {
             try {
                 const data = JSON.parse(event.data);
+                // 服务端 5s 一次的心跳，立即回 pong
+                if (data.type === 'ping') { wsSend({ type: 'pong', ts: data.ts }); return; }
                 if (data.type === 'set_code' && data.code) {
                     clearCodeTimeout();
                     reconnectFailCount = 0;

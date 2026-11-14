@@ -256,21 +256,23 @@ activeTouches.delete(touch.identifier);
 }
 }
 function addVote(name) {
-appState.votes[name]++;
+if (!currentTaskId) return;
+appState.votes[name] = (appState.votes[name] || 0) + 1;
 appState.totalVotes++;
 updateDisplay(name);
 updateTotal();
 updateRankList();
-Storage.saveVoteProgress(appState);
+CloudSync.vote(name, 'add');   // 每个操作立即落库，并广播给其它设备
 }
 function subVote(name) {
+if (!currentTaskId) return;
 if (appState.votes[name] > 0) {
 appState.votes[name]--;
 appState.totalVotes--;
 updateDisplay(name);
 updateTotal();
 updateRankList();
-Storage.saveVoteProgress(appState);
+CloudSync.vote(name, 'sub');
 }
 }
 function updateDisplay(name) {
@@ -354,7 +356,7 @@ modeTouchBtn.classList.add('active');
 }
 function resetData() {
 showCustomConfirm('确定清空所有票数？', (confirmed) => {
-if (confirmed) {
+if (!confirmed || !currentTaskId) return;
 Object.keys(appState.votes).forEach(key => {
 appState.votes[key] = 0;
 });
@@ -362,6 +364,6 @@ appState.totalVotes = 0;
 renderGrid();
 updateRankList(true);
 updateTotal();
-}
+CloudSync.resetVotes();   // 云端同步清空，其它设备同步归零
 });
 }

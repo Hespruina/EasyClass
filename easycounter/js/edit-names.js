@@ -577,6 +577,10 @@ function escapeHtml(text) {
 
 // 保存编辑后的名单
 async function saveEditedNames() {
+if (!currentTaskId) {
+showCustomAlert('请先从任务列表进入一次计票');
+return;
+}
 const newNames = getCurrentEditNames();
 if (newNames.length === 0) {
 showCustomAlert('请输入至少一个有效的姓名');
@@ -618,31 +622,10 @@ if (!confirmed) {
 return;
 }
 try {
-const apiPath = 'https://easyclass.zhrhello.top/easycore/api/pinyin';
-const response = await fetch(apiPath, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ names: newNames })
-});
-if (!response.ok) {
-throw new Error('服务器处理失败');
-}
-const data = await response.json();
-appState.namesData = data.sortedNames;
-appState.groupedByLetter = data.groupedByLetter;
-appState.availableLetters = data.availableLetters;
-// 重置投票数据
-appState.votes = {};
-appState.namesData.forEach(item => {
-appState.votes[item.name] = 0;
-});
-appState.totalVotes = 0;
-// 更新界面
+// 云端：后端重新按拼音排序 + 重置票数 + 立即落库 + 广播给其它设备
+await CloudSync.setNames(newNames);
 updateLetterGrid();
 updateQuickSearchGrid();
-renderGrid();
-updateRankList(true);
-updateTotal();
 closeEditNamesModal();
 } catch (error) {
 showCustomAlert('保存失败：' + error.message);

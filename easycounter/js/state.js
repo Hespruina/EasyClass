@@ -1,16 +1,18 @@
-// 应用状态
+// 应用状态（计票数据是云端快照在内存里的投影，浏览器不落盘）
 let appState = {
-votes: {},
-totalVotes: 0,
-touchMode: Storage.get('touchMode', 'mouse'),
-searchMode: Storage.get('searchMode', 'permanent'), // 'permanent' 或 'modal'
-namesData: [], // 从后端获取的排序后数据
-groupedByLetter: {},
-availableLetters: []
+    votes: {},
+    totalVotes: 0,
+    touchMode: Storage.get('touchMode', 'mouse'),
+    searchMode: Storage.get('searchMode', 'permanent'), // 'permanent' 或 'modal'
+    namesData: [], // 从云端快照获取的排序后数据
+    groupedByLetter: {},
+    availableLetters: []
 };
+// 当前打开的计票任务 id；null = 停在任务列表页（键盘快捷键 / 写操作都要判它）
+let currentTaskId = null;
 let sessionState = {
-suppressMismatchPrompt: false,
-modalJustOpened: false
+    suppressMismatchPrompt: false,
+    modalJustOpened: false
 };
 let activeTouches = new Map();
 let lastRankOrder = [];
@@ -18,10 +20,6 @@ let rankItemMap = new Map();
 // DOM 元素
 const nameInputScreen = document.getElementById('nameInputScreen');
 const mainApp = document.getElementById('mainApp');
-const nameInput = document.getElementById('nameInput');
-const uploadBtn = document.getElementById('uploadBtn');
-const importBtn = document.getElementById('importBtn');
-const cloudImportBtn = document.getElementById('cloudImportBtn');
 const grid = document.getElementById('voteGrid');
 const rankList = document.getElementById('rankList');
 const totalEl = document.getElementById('totalScore');
@@ -105,11 +103,3 @@ const customConfirmText = document.getElementById('customConfirmText');
 const customConfirmOkBtn = document.getElementById('customConfirmOkBtn');
 const customConfirmCancelBtn = document.getElementById('customConfirmCancelBtn');
 
-// 继续计票弹窗DOM元素
-const continueVoteModal = document.getElementById('continueVoteModal');
-const continueVoteText = document.getElementById('continueVoteText');
-const lastVoteTime = document.getElementById('lastVoteTime');
-const lastVoteCount = document.getElementById('lastVoteCount');
-const lastTotalVotes = document.getElementById('lastTotalVotes');
-const continueVoteBtn = document.getElementById('continueVoteBtn');
-const newVoteBtn = document.getElementById('newVoteBtn');

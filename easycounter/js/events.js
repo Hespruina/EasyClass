@@ -1,8 +1,7 @@
 
 // 事件监听
-uploadBtn.addEventListener('click', uploadNames);
-importBtn.addEventListener('click', importFromRandamer);
-cloudImportBtn.addEventListener('click', importFromCloudList);
+// 名单输入页已改为「任务列表 + 新建弹窗」，uploadBtn / importBtn / cloudImportBtn
+// 的绑定随旧页面一起移除（新入口在 tasks.js::initTaskUI 里）。
 searchBtn.addEventListener('click', openLetterSearch);
 settingsBtn.addEventListener('click', openSettings);
 closeSettingsBtn.addEventListener('click', closeSettings);
@@ -33,13 +32,6 @@ duplicateDedupBtn.addEventListener('click', handleDuplicateDedup);
 duplicateHandleModal.addEventListener('click', (e) => {
   if (e.target === duplicateHandleModal) {
     handleDuplicateDedup();
-  }
-});
-
-// 继续计票弹窗事件监听
-continueVoteModal.addEventListener('click', (e) => {
-  if (e.target === continueVoteModal) {
-    // 点击背景不关闭，必须做出选择
   }
 });
 
@@ -276,8 +268,14 @@ document.addEventListener('keydown', e => {
 if (['F12', 'U', 'I', 'J'].includes(e.key.toUpperCase()) && (e.ctrlKey || e.shiftKey || e.key === 'F12')) e.preventDefault();
 if (e.ctrlKey && ['+', '-', '0', 'r'].includes(e.key)) e.preventDefault();
 // ESC 键关闭弹窗
+const createTaskModal = document.getElementById('createTaskModal');
+const editTaskModal = document.getElementById('editTaskModal');
 if (e.key === 'Escape') {
-if (exportModal.classList.contains('show')) {
+if (createTaskModal.classList.contains('show')) {
+closeCreateTaskModal();
+} else if (editTaskModal.classList.contains('show')) {
+closeEditTaskModal();
+} else if (exportModal.classList.contains('show')) {
 closeExportModal();
 } else if (posterEditModal.classList.contains('show')) {
 closePosterEdit();
@@ -290,12 +288,14 @@ closeSettings();
 } else if (modeMismatchModal.classList.contains('show')) {
 closeModeMismatchPrompt();
 }
-// 操作方式选择弹窗和继续计票弹窗不能用 ESC 关闭
+// 操作方式选择弹窗不能用 ESC 关闭
 }
-// 键盘快速搜索：按下 A-Z 字母键触发搜索
+// 键盘快速搜索：按下 A-Z 字母键触发搜索（只在计票页生效）
 const key = e.key.toUpperCase();
-if (/^[A-Z]$/.test(key) && appState.namesData.length > 0) {
-const hasAnyModal = exportModal.classList.contains('show')
+if (/^[A-Z]$/.test(key) && currentTaskId && appState.namesData.length > 0) {
+const hasAnyModal = createTaskModal.classList.contains('show')
+|| editTaskModal.classList.contains('show')
+|| exportModal.classList.contains('show')
 || posterEditModal.classList.contains('show')
 || editNamesModal.classList.contains('show')
 || letterSearchModal.classList.contains('show')
@@ -304,18 +304,15 @@ const hasAnyModal = exportModal.classList.contains('show')
 || inputModeModal.classList.contains('show')
 || customAlertModal.classList.contains('show')
 || duplicateHandleModal.classList.contains('show')
-|| customConfirmModal.classList.contains('show')
-|| continueVoteModal.classList.contains('show');
+|| customConfirmModal.classList.contains('show');
 if (!hasAnyModal) {
 e.preventDefault();
 handleLetterClick(key);
 }
 }
 });
-// 页面加载时检查是否从易点名返回
+// 页面加载：先拉云端任务列表，再处理从易点名 / 云名单带回来的名单 token
 window.addEventListener('load', async () => {
-    const hasCloudToken = await checkCloudListTokenAndImport();
-    if (!hasCloudToken) {
-        checkTokenAndImport();
-    }
+    await bootstrapTasks();
+    await checkImportTokenAndOpenCreate();
 });

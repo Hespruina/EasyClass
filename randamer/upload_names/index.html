@@ -53,6 +53,13 @@
     };
     phoneSocket.onmessage = (event) => {
         console.log('Phone received message:', event.data);
+        // 服务端 5s 一次的心跳，立即回 pong
+        try {
+            const data = JSON.parse(event.data);
+            if (data && data.type === 'ping') {
+                wsSend({ type: 'pong', ts: data.ts });
+            }
+        } catch (e) { /* 非 JSON 消息忽略 */ }
     };
     phoneSocket.onerror = (err) => {
         console.error('Phone connection error:', err);

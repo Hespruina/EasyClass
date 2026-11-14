@@ -52,6 +52,7 @@
 <link rel="stylesheet" href="css/name-tags.css">
 <link rel="stylesheet" href="css/edit-names.css">
 <link rel="stylesheet" href="css/account.css">
+<link rel="stylesheet" href="css/tasks.css">
 <style>
 /* 返回首页按钮 */
 .home-link {
@@ -74,39 +75,56 @@ background: var(--primary);
 color: #000;
 box-shadow: 0 0 15px var(--primary-glow);
 }
+/* 所有页面的返回按钮统一在左上角（原来是 right:16px） */
 .home-link-corner {
 position: fixed;
 top: 16px;
-right: 16px;
+left: 16px;
+right: auto;
 z-index: 1001;
 }
 </style>
 
 </head>
 <body>
-<!-- 名单输入界面 -->
-<div class="name-input-screen" id="nameInputScreen">
-<!-- 返回首页（名单输入页） -->
-<a href="/" class="home-link home-link-corner">← 返回首页</a>
-<div class="name-input-container">
-<h1 class="name-input-title">易计票</h1>
-<p class="name-input-subtitle">请输入投票名单，每行一个姓名</p>
-<textarea class="name-textarea" id="nameInput" placeholder="张三&#10;李四&#10;王五&#10;赵六..."></textarea>
-<div style="display: flex; flex-direction: row; gap: 10px; margin-top: 15px;">
-<button class="upload-btn" id="uploadBtn" style="flex: 1;">开始计票</button>
-<button class="upload-btn" id="importBtn" style="flex: 1; background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)); border-color: rgba(255, 215, 0, 0.4); color: #ffd700;">从易点名导入</button>
+<!-- 首屏：计票任务列表（默认为空） -->
+<div class="task-list-screen" id="taskListScreen">
+<header class="task-header">
+<a href="/" class="home-link">← 返回工具列表</a>
+<h1 class="task-header-title">EasyCounter 易计票</h1>
+<button class="task-start-btn" id="startTaskBtn" type="button">＋ 开始计票</button>
+</header>
+<div class="task-list-body">
+<div class="task-list" id="taskList"></div>
+<div class="task-empty hidden" id="taskEmpty">
+<div class="task-empty-icon">
+<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm-4 4H7v-2h6v2zm4-8H7V7h10v2z"/></svg>
 </div>
-<div style="margin-top: 10px;">
-<button class="upload-btn" id="cloudImportBtn" style="width: 100%; background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1)); border-color: rgba(76, 175, 80, 0.4); color: #4caf50;">从云名单导入</button>
+<div class="task-empty-title">还没有计票任务</div>
+<div class="task-empty-desc">点击「开始计票」创建第一个任务。<br>名单与票数全部保存在云端，同一账号多设备实时同步。</div>
+<button class="task-start-btn" id="emptyStartBtn" type="button">＋ 开始计票</button>
+</div>
+<div class="task-list-error hidden" id="taskListError">
+<span id="taskListErrorText"></span>
+<button type="button" id="taskListRetryBtn">重试</button>
 </div>
 </div>
+<div class="task-list-footer" id="taskSyncStatus" data-kind="ok">正在连接云端…</div>
 </div>
-<!-- 主应用界面 -->
+
+<!-- 旧名单输入页的空壳：保留 id 供历史脚本引用，永远隐藏 -->
+<div class="name-input-screen hidden" id="nameInputScreen"></div>
+
+<!-- 主应用界面（计票页） -->
 <div class="main-app" id="mainApp">
 <header>
-<h1>易计票</h1>
+<div class="header-left">
+<a href="#" class="home-link" id="backToTasksBtn">← 返回任务列表</a>
+<a href="/" class="home-link home-link-secondary">工具列表</a>
+</div>
+<h1 class="main-header-title">EasyCounter 易计票</h1>
 <div class="header-controls">
-<a href="/" class="home-link">← 返回首页</a>
+<span class="counting-sync" id="countingSyncStatus" data-kind="ok"></span>
 <div class="total-score">总票数：<span id="totalScore">0</span></div>
 <button class="finish-btn" id="finishBtn">完成计票</button>
 </div>
@@ -342,7 +360,7 @@ z-index: 1001;
 </div>
 </div>
 <!-- 重名处理弹窗 -->
-<div class="modal-overlay" id="duplicateHandleModal">
+<div class="modal-overlay" id="duplicateHandleModal" style="z-index: 10001;">
 <div class="prompt-panel" style="max-width: 420px;">
 <div class="prompt-title">检测到重名</div>
 <div class="prompt-text" id="duplicateList" style="margin-bottom: 15px; max-height: 150px; overflow-y: auto; padding: 8px; background: var(--input-bg); border-radius: 8px; font-size: 13px;"></div>
@@ -360,22 +378,6 @@ z-index: 1001;
 <div class="btn-group">
 <button class="action-btn btn-secondary" id="customConfirmCancelBtn">取消</button>
 <button class="action-btn btn-confirm" id="customConfirmOkBtn">确定</button>
-</div>
-</div>
-</div>
-<!-- 继续计票确认弹窗 -->
-<div class="modal-overlay" id="continueVoteModal">
-<div class="prompt-panel" style="max-width: 400px;">
-<div class="prompt-title">继续上次计票？</div>
-<div class="prompt-text" id="continueVoteText">
-检测到未完成的计票<br>
-上次更新时间: <span id="lastVoteTime">--</span><br>
-参与人数: <span id="lastVoteCount">0</span>人<br>
-当前总票数: <span id="lastTotalVotes">0</span>票
-</div>
-<div class="btn-group">
-<button class="action-btn btn-secondary" id="newVoteBtn">开始新计票</button>
-<button class="action-btn btn-confirm" id="continueVoteBtn">继续计票</button>
 </div>
 </div>
 </div>
@@ -540,14 +542,69 @@ z-index: 1001;
 </div>
 </div>
 
+<!-- 新建计票任务 -->
+<div class="modal-overlay" id="createTaskModal" style="z-index: 9998;">
+<div class="task-modal-panel">
+<div class="task-modal-title">开始计票</div>
+<div class="task-modal-sub">给这次计票起个名字（留空自动按日期命名），再准备投票名单。</div>
+
+<div class="task-form-group">
+<label class="task-form-label" for="createTaskName">任务名称</label>
+<input class="task-input" type="text" id="createTaskName" maxlength="60" placeholder="11月24日 计票2">
+</div>
+
+<div class="task-form-group">
+<label class="task-form-label">名单来源</label>
+<div class="task-source-tabs">
+<button type="button" class="task-source-tab active" id="createSourceManual">手动输入</button>
+<button type="button" class="task-source-tab" id="createSourceCloud">选择云名单</button>
+</div>
+
+<div id="createManualArea">
+<textarea class="task-textarea" id="createTaskNames" placeholder="张三&#10;李四&#10;王五&#10;每行一个姓名"></textarea>
+<div class="task-form-hint">每行一个姓名；重名会在创建时询问「全部保留并编号」或「去重」。</div>
+<button type="button" class="task-link-btn" id="createRandamerImportBtn">从易点名导入名单</button>
+</div>
+
+<div id="createCloudArea" class="hidden">
+<select class="task-select" id="createTaskCloudList"></select>
+<div class="task-form-hint">云名单来自 EasyCore 账号（游客也能用）。创建时会复制名单快照，之后改动名单不影响已有计票。</div>
+</div>
+</div>
+
+<div class="task-modal-footer">
+<button type="button" class="action-btn btn-secondary" id="cancelCreateTaskBtn">取消</button>
+<button type="button" class="action-btn btn-confirm" id="confirmCreateTaskBtn">创建计票</button>
+</div>
+</div>
+</div>
+
+<!-- 编辑计票信息 -->
+<div class="modal-overlay" id="editTaskModal" style="z-index: 9998;">
+<div class="task-modal-panel" style="width: min(440px, calc(100vw - 32px));">
+<div class="task-modal-title">编辑信息</div>
+<div class="task-modal-sub">修改本次计票的名称。投票名单与票数请在计票页的「编辑名单」中调整。</div>
+<input type="hidden" id="editTaskId">
+<div class="task-form-group">
+<label class="task-form-label" for="editTaskName">任务名称</label>
+<input class="task-input" type="text" id="editTaskName" maxlength="60">
+</div>
+<div class="task-modal-footer">
+<button type="button" class="action-btn btn-secondary" id="cancelEditTaskBtn">取消</button>
+<button type="button" class="action-btn btn-confirm" id="confirmEditTaskBtn">保存</button>
+</div>
+</div>
+</div>
+
 <!-- JS Modules - 按依赖顺序加载 -->
 <script src="js/post-themes.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/theme-manager.js"></script>
 <script src="js/state.js"></script>
 <script src="js/dialogs.js"></script>
-<script src="js/session.js"></script>
 <script src="js/search.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/tasks.js"></script>
 <script src="js/import.js"></script>
 <script src="js/init.js"></script>
 <script src="js/core.js"></script>

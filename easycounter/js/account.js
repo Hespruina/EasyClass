@@ -377,20 +377,24 @@ async function importCloudListByToken(token) {
             throw new Error('名单为空');
         }
         
-        // 填入名单到输入框
-        const nameInputEl = document.getElementById('nameInput');
+        // 名单输入页已改成「新建计票」弹窗：把名单填进弹窗并打开它
+        if (typeof openCreateTaskModal === 'function') {
+            openCreateTaskModal(data.names);
+        }
+        const nameInputEl = document.getElementById('createTaskNames');
         if (nameInputEl) {
             nameInputEl.value = data.names.join('\n');
         }
-        
+        if (typeof switchCreateSource === 'function') switchCreateSource('manual');
+
         console.log('成功导入云名单，数量:', data.names.length);
-        
+
         // 清除URL中的token
         const newUrl = window.location.origin + window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
-        
-        showCustomAlert('成功导入 ' + data.names.length + ' 人', '提示');
-        
+
+        showCustomAlert('成功导入 ' + data.names.length + ' 人，请确认后创建计票', '提示');
+
         return true;
     } catch (error) {
         console.error('导入名单失败:', error);
@@ -398,15 +402,10 @@ async function importCloudListByToken(token) {
     }
 }
 
-// 修改云名单导入函数
+// 云名单入口：直接打开「开始计票」弹窗并切到云名单来源
 function importFromCloudList() {
-    if (isLoggedIn) {
-        openSettings();
-        switchToAccountTab();
-        fetchAndRenderCloudLists();
-    } else {
-        window.location.href = 'https://easyclass.zhrhello.top/easycore/';
-    }
+    if (typeof openCreateTaskModal === 'function') openCreateTaskModal();
+    if (typeof switchCreateSource === 'function') switchCreateSource('cloud');
 }
 
 // 切换到账户标签页
@@ -463,8 +462,10 @@ function initAccountSystem() {
         });
     }
     
-    // 页面加载时获取用户信息
-    fetchUserInfo();
+    // 不在这里取用户信息：/api/user/info 与 /api/counter/tasks 都会在「无会话」时
+    // 自动开游客账号，两个请求并发会各建一个游客、后写的 Cookie 覆盖先写的，
+    // 表现为「刚建的计票任务凭空消失」。改由 bootstrapTasks() 在首个云端请求
+    // 拿到 Cookie 之后再串行调用（见 tasks.js）。
 }
 
 // 在页面加载完成后初始化

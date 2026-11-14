@@ -1,0 +1,172 @@
+/* 主应用界面 */
+.main-app {
+display: none;
+flex: 1;
+flex-direction: column;
+height: 100vh;
+}
+.main-app.visible {
+display: flex;
+}
+header {
+height: 60px;
+min-height: 60px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 0 20px;
+background: var(--header-bg);
+border-bottom: 1px solid var(--primary-border);
+z-index: 100;
+flex-shrink: 0;
+}
+header h1 {
+font-family: 'ZCOOL KuaiLe', cursive;
+color: var(--primary);
+font-size: clamp(18px, 2.5vw, 24px);
+letter-spacing: 2px;
+white-space: nowrap;
+}
+.header-controls {
+display: flex;
+align-items: center;
+gap: 15px;
+}
+.settings-btn {
+width: 36px;
+height: 36px;
+border-radius: 50%;
+background: var(--primary-dim);
+border: 1px solid var(--primary-border-strong);
+color: var(--primary);
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+transition: all 0.2s;
+flex-shrink: 0;
+padding: 0;
+}
+.settings-btn svg {
+width: 18px;
+height: 18px;
+fill: currentColor;
+}
+.settings-btn:active {
+transform: rotate(90deg);
+background: var(--primary-border-strong);
+}
+
+/*
+ * 三栏布局：左侧完成情况总览 1/4 + 中间数据栏 1/4 + 学生卡片 1/2。
+ * 「中间栏左边距 : 中间栏右边距 = 1 : 2」即总览占 25%、卡片区占 50%。
+ * 不再提供拖动分隔条。
+ */
+.workspace {
+flex: 1;
+display: flex;
+height: calc(100vh - 60px);
+overflow: hidden;
+position: relative;
+}
+.overview-side {
+flex: 0 0 25%;
+width: 25%;
+min-width: 200px;
+max-width: 420px;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+background: var(--rank-panel-bg);
+border-right: 1px solid var(--primary-border);
+}
+.overview-panel {
+flex: 0 0 25%;
+width: 25%;
+min-width: 220px;
+max-width: 420px;
+display: flex;
+flex-direction: column;
+overflow-x: hidden;
+overflow-y: auto;
+background: var(--rank-panel-bg);
+border-right: 1px solid var(--primary-border);
+}
+.overview-panel .quick-search-container { margin-top: auto; }
+.overview-panel .quick-search-container.hidden + .action-buttons-container { margin-top: auto; }
+.overview-list {
+flex: 1;
+overflow-y: auto;
+overflow-x: hidden;
+padding: 8px 10px 10px;
+scrollbar-width: thin;
+scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+-webkit-overflow-scrolling: touch;
+}
+.overview-list::-webkit-scrollbar { width: 6px; }
+.overview-list::-webkit-scrollbar-track { background: var(--scrollbar-bg); border-radius: 3px; }
+.overview-list::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+.overview-list::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+.vote-area {
+flex: 1;
+padding: 15px;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+background: var(--bg-color);
+min-width: 0;
+touch-action: pan-y;
+}
+.vote-grid {
+flex: 1;
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+grid-auto-rows: min-content;
+gap: 12px;
+width: 100%;
+height: 100%;
+overflow-y: auto;
+padding-bottom: 10px;
+scrollbar-width: thin;
+scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+align-content: start;
+touch-action: pan-y;
+-webkit-overflow-scrolling: touch;
+}
+.vote-grid::-webkit-scrollbar { width: 6px; }
+.vote-grid::-webkit-scrollbar-track { background: var(--scrollbar-bg); border-radius: 3px; }
+.vote-grid::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+
+/* 中等屏幕：两栏收窄，卡片区仍占一半 */
+@media (max-width: 1024px) {
+.overview-side { flex: 0 0 26%; width: 26%; min-width: 180px; }
+.overview-panel { flex: 0 0 24%; width: 24%; min-width: 190px; }
+}
+
+/* 窄屏：上下堆叠，总览限高，仍可滚动 */
+@media (max-width: 720px) {
+.workspace { flex-direction: column; height: auto; overflow: visible; }
+.overview-side {
+flex: 0 0 auto;
+width: 100%;
+max-width: none;
+min-width: 0;
+max-height: 26vh;
+border-right: none;
+border-bottom: 1px solid var(--primary-border);
+}
+.overview-panel {
+flex: 0 0 auto;
+width: 100%;
+max-width: none;
+min-width: 0;
+border-right: none;
+border-bottom: 1px solid var(--primary-border);
+}
+.overview-list { min-height: 0; }
+.vote-area { flex: 1; min-height: 55vh; }
+header { padding: 0 12px; }
+header h1 { font-size: 16px; letter-spacing: 1px; }
+.home-link-secondary { display: none; }
+}

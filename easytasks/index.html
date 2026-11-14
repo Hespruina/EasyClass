@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>易任务 EasyTasks - 教学任务完成情况统计</title>
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<meta name="description" content="易任务是一款免费的在线教学任务统计工具，支持按学生记录完成进度（0–100%）、五星评分、分状态总览与全班统计。适用于文言文背诵、读书打卡、作业完成情况等场景。无需注册，即开即用。">
+<meta name="keywords" content="教学任务,任务统计,完成进度,背诵打卡,学生评分,五星评分,班级任务,进度统计">
+<meta name="author" content="易任务 EasyTasks">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#23242a">
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "y9dascui0p");
+</script>
+<link rel="canonical" href="https://easyclass.zhrhello.top/easytasks/">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "易任务 EasyTasks",
+  "description": "在线教学任务完成情况统计工具，支持学生完成进度、五星评分、分组总览与全班统计",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "inLanguage": "zh-CN"
+}
+</script>
+
+<!-- CSS Modules -->
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/vote-rank.css">
+<link rel="stylesheet" href="css/search.css">
+<link rel="stylesheet" href="css/buttons.css">
+<link rel="stylesheet" href="css/name-tags.css">
+<link rel="stylesheet" href="css/edit-names.css">
+<link rel="stylesheet" href="css/account.css">
+<link rel="stylesheet" href="css/tasks.css">
+<style>
+/* 返回首页按钮 */
+.home-link {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+color: var(--primary);
+text-decoration: none;
+font-size: 14px;
+font-weight: 600;
+padding: 7px 14px;
+border: 1px solid var(--primary-border-strong);
+border-radius: 999px;
+background: var(--primary-dim);
+transition: background 0.2s, color 0.2s, transform 0.12s;
+white-space: nowrap;
+}
+.home-link:hover {
+background: var(--primary);
+color: var(--btn-confirm-color);
+}
+/* 所有页面的返回按钮统一在左上角（原来是 right:16px） */
+.home-link-corner {
+position: fixed;
+top: 16px;
+left: 16px;
+right: auto;
+z-index: 1001;
+}
+</style>
+
+</head>
+<body>
+<!-- 首屏：学习任务列表（默认为空） -->
+<div class="task-list-screen" id="taskListScreen">
+<header class="task-header">
+<a href="/" class="home-link">← 返回工具列表</a>
+<h1 class="task-header-title">EasyTasks 易任务</h1>
+<button class="task-start-btn" id="startTaskBtn" type="button">＋ 新建任务</button>
+</header>
+<div class="task-list-body">
+<div class="task-overview hidden" id="taskOverview"></div>
+<div class="task-list" id="taskList"></div>
+<div class="task-empty hidden" id="taskEmpty">
+<div class="task-empty-icon">
+<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm-4 4H7v-2h6v2zm4-8H7V7h10v2z"/></svg>
+</div>
+<div class="task-empty-title">还没有任务</div>
+<div class="task-empty-desc">点击「新建任务」创建第一个任务。<br>名单、进度与评分全部保存在云端，同一账号多设备实时同步。</div>
+<button class="task-start-btn" id="emptyStartBtn" type="button">＋ 新建任务</button>
+</div>
+<div class="task-list-error hidden" id="taskListError">
+<span id="taskListErrorText"></span>
+<button type="button" id="taskListRetryBtn">重试</button>
+</div>
+</div>
+<div class="task-list-footer" id="taskSyncStatus" data-kind="ok">正在连接云端…</div>
+</div>
+
+<!-- 旧名单输入页的空壳：保留 id 供历史脚本引用，永远隐藏 -->
+<div class="name-input-screen hidden" id="nameInputScreen"></div>
+
+<!-- 主应用界面（任务详情页） -->
+<div class="main-app" id="mainApp">
+<header>
+<div class="header-left">
+<a href="#" class="home-link" id="backToTasksBtn">← 返回任务列表</a>
+<a href="/" class="home-link home-link-secondary">工具列表</a>
+</div>
+<h1 class="main-header-title" id="countingTaskName">EasyTasks 易任务</h1>
+<div class="header-controls">
+<span class="counting-sync" id="countingSyncStatus" data-kind="ok"></span>
+<button class="finish-btn" id="finishBtn">导出结果</button>
+</div>
+</header>
+<div class="workspace">
+<aside class="overview-side">
+<div class="overview-list" id="overviewList"></div>
+</aside>
+<aside class="overview-panel">
+<div class="overview-stats">
+<div class="overview-stat overview-stat-done">
+<b id="overviewDoneCount">0</b>
+<span>已完成</span>
+</div>
+<div class="overview-stat overview-stat-undone">
+<b id="overviewUndoneCount">0</b>
+<span>未完成</span>
+</div>
+<div class="overview-stat overview-stat-total">
+<b id="overviewTotalCount">0</b>
+<span>总学生</span>
+</div>
+<div class="overview-stat overview-stat-progress">
+<b id="overviewProgressPercent">0%</b>
+<span>总进度</span>
+</div>
+</div>
+<div class="quick-search-container" id="quickSearchContainer">
+<div class="quick-search-grid" id="quickSearchGrid">
+<!-- 字母按钮将通过 JS 生成 -->
+</div>
+</div>
+<!-- 搜索、编辑名单和设置按钮 -->
+<div class="action-buttons-container" id="actionButtonsContainer">
+<button class="action-btn-inline" id="searchBtn" title="按拼音首字母查找">
+<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+<span>搜索</span>
+</button>
+<button class="action-btn-inline" id="editNamesBtn" title="编辑名单">
+<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+<span>编辑名单</span>
+</button>
+<button class="action-btn-inline" id="settingsBtn" title="设置">
+<svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.49l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+<span>设置</span>
+</button>
+</div>
+</aside>
+<div class="vote-area">
+<div class="vote-grid" id="voteGrid"></div>
+</div>
+</div>
+</div>
+<!-- 拼音首字母查找弹窗 -->
+<div class="letter-search-modal" id="letterSearchModal">
+<div class="letter-search-panel">
+<div class="letter-grid" id="letterGrid">
+<!-- 字母按钮将通过 JS 生成 -->
+</div>
+</div>
+</div>
+<!-- 全屏设置面板 -->
+<div class="settings-fullscreen-overlay" id="settingsModal">
+<div class="settings-fullscreen-container">
+<div class="settings-fullscreen-header">
+<div class="settings-fullscreen-title">系统设置</div>
+<button class="settings-fullscreen-close" id="closeSettingsBtn">&times;</button>
+</div>
+<div class="settings-tabs">
+<div class="settings-tab active" data-tab="settings">设置</div>
+<div class="settings-tab" data-tab="account">我的</div>
+</div>
+<div class="settings-fullscreen-body">
+<div class="settings-tab-content active" id="settingsTab">
+<div class="setting-item">
+<label class="setting-label">快速查找</label>
+<div class="toggle-group">
+<div class="toggle-option" data-search="permanent" id="searchPermanent">常驻显示</div>
+<div class="toggle-option" data-search="modal" id="searchModal">弹窗模式</div>
+</div>
+<div style="font-size: 12px; color: var(--text-dim); margin-top: 8px;">
+常驻：字母快捷键固定在完成情况总览栏下方<br>
+弹窗：点击搜索按钮弹出字母面板
+</div>
+</div>
+<div class="setting-item">
+<label class="setting-label">外观主题</label>
+<div class="toggle-group three-options" id="themeToggleGroup">
+<div class="toggle-option" data-theme="system" id="themeSystem">跟随系统</div>
+<div class="toggle-option" data-theme="light" id="themeLight">浅色模式</div>
+<div class="toggle-option" data-theme="dark" id="themeDark">深色模式</div>
+</div>
+<div style="font-size: 12px; color: var(--text-dim); margin-top: 8px;">
+跟随系统：自动匹配操作系统主题设置
+</div>
+</div>
+<div class="btn-group">
+<button class="action-btn btn-reset" id="resetDataBtn">清空所有进度与评分</button>
+</div>
+<div class="data-info" style="color: var(--name-change-tag-add-color);">✓ 设置已自动保存</div>
+</div>
+<div class="settings-tab-content" id="accountTab">
+<div class="account-section" id="accountSection">
+<div class="account-loading" id="accountLoading">
+<div class="loading-spinner"></div>
+<span>加载中...</span>
+</div>
+<div class="account-logged-in hidden" id="accountLoggedIn">
+<div class="account-header">
+<div class="account-avatar-container" id="accountAvatarContainer">
+<div class="account-avatar" id="accountAvatar"></div>
+</div>
+<div class="account-details">
+<div class="account-name" id="accountName">-</div>
+<div class="account-email" id="accountEmail">-</div>
+</div>
+</div>
+<div class="account-actions">
+<button class="account-logout-btn" id="accountLogoutBtn">登出</button>
+</div>
+</div>
+<div class="account-logged-out hidden" id="accountLoggedOut">
+<div class="account-avatar-default">
+<svg viewBox="0 0 24 24" fill="currentColor" width="64" height="64"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+</div>
+<div class="account-logged-out-text">
+<p>未登录</p>
+<span>登录后可查看和管理云名单</span>
+</div>
+<button class="account-login-btn" id="accountLoginBtn">登录 EasyCore</button>
+</div>
+<div class="cloud-list-section hidden" id="cloudListSection">
+<h3 class="cloud-list-title">云名单导入</h3>
+<div class="cloud-list-container" id="cloudListContainer"></div>
+<div class="cloud-list-empty hidden" id="cloudListEmpty">
+<svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+<p>暂无云名单</p>
+<span>请先在云端创建名单</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 编辑名单弹窗 -->
+<div class="modal-overlay" id="editNamesModal">
+<div class="edit-names-panel">
+<div class="edit-names-header">
+<div class="edit-names-title">编辑名单</div>
+<button class="edit-names-close" id="closeEditNamesBtn">&times;</button>
+</div>
+<div class="edit-names-body">
+<div class="edit-names-cards-container" id="editNamesCardsContainer">
+<!-- 名字卡片将通过 JS 生成 -->
+</div>
+</div>
+<div class="edit-names-footer">
+<div class="edit-names-footer-left">
+<button class="action-btn-inline" id="addNameBtn" style="width: auto; padding: 10px 20px;">
+<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+<span>添加名字</span>
+</button>
+<button class="action-btn-inline" id="batchAddNamesBtn" style="width: auto; padding: 10px 20px;">
+<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+<span>批量添加</span>
+</button>
+<button class="action-btn-inline" id="batchSelectBtn" style="width: auto; padding: 10px 20px;">
+<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
+<span>多选</span>
+</button>
+<button class="action-btn-inline" id="clearAllNamesBtn" style="width: auto; padding: 10px 20px; background: var(--btn-reset-bg); border-color: var(--btn-reset-border); color: var(--btn-reset-color);">
+<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+<span>清空名单</span>
+</button>
+</div>
+<div class="edit-names-footer-right">
+<div id="batchOperations" style="display: none; gap: 10px;">
+<button class="action-btn-inline" id="batchDeleteBtn" style="width: auto; padding: 10px 20px; background: var(--btn-reset-hover-bg); border-color: var(--btn-reset-hover-border); color: var(--btn-reset-color);">
+<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+<span>批量删除</span>
+</button>
+<button class="action-btn btn-secondary" id="cancelBatchBtn">取消多选</button>
+</div>
+<div id="singleOperations" style="display: flex; gap: 12px;">
+<button class="action-btn btn-secondary" id="cancelEditNamesBtn">取消</button>
+<button class="action-btn btn-confirm" id="saveNamesBtn">保存</button>
+<button class="action-btn btn-cloud-save hidden" id="saveCloudNamesBtn" style="background: var(--name-change-tag-add-bg); border-color: var(--name-change-tag-add-border); color: var(--name-change-tag-add-color);">
+                            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px; fill: currentColor;"><path d="M544 864V672h128L512 480 352 672h128v192H320v-1.6c-5.376.32-10.496 1.6-16 1.6A240 240 0 0 1 64 624c0-123.136 93.12-223.488 212.608-237.248A239.808 239.808 0 0 1 512 192a239.872 239.872 0 0 1 235.456 194.752c119.488 13.76 212.48 114.112 212.48 237.248a240 240 0 0 1-240 240c-5.376 0-10.56-1.28-16-1.6v1.6H544z"></path></svg>
+                            <span>保存到云端</span>
+                        </button>
+</div>
+</div>
+</div>
+<div class="data-info">⚠ 注意：修改名单将清空所有学生的进度与评分</div>
+</div>
+</div>
+<!-- 通用提示弹窗（z-index 需高于 saveCloudNamesModal 10000 / batchAddNamesModal 9999，避免提示框被盖住） -->
+<div class="modal-overlay" id="customAlertModal" style="z-index: 10001;">
+<div class="prompt-panel" style="max-width: 400px;">
+<div class="prompt-title" id="customAlertTitle">提示</div>
+<div class="prompt-text" id="customAlertText"></div>
+<div class="btn-group">
+<button class="action-btn btn-confirm" id="customAlertBtn">确定</button>
+</div>
+</div>
+</div>
+<!-- 重名处理弹窗 -->
+<div class="modal-overlay" id="duplicateHandleModal" style="z-index: 10001;">
+<div class="prompt-panel" style="max-width: 420px;">
+<div class="prompt-title">检测到重名</div>
+<div class="prompt-text" id="duplicateList" style="margin-bottom: 15px; max-height: 150px; overflow-y: auto; padding: 8px; background: var(--input-bg); border-radius: 8px; font-size: 13px;"></div>
+<div class="btn-group" style="flex-direction: column; gap: 10px;">
+<button class="action-btn btn-confirm" id="duplicateKeepAllBtn">全部保留</button>
+<button class="action-btn btn-secondary" id="duplicateDedupBtn">去重处理</button>
+</div>
+</div>
+</div>
+<!-- 通用确认弹窗（z-index 需高于 saveCloudNamesModal 10000 / batchAddNamesModal 9999，避免确认框被盖住） -->
+<div class="modal-overlay" id="customConfirmModal" style="z-index: 10001;">
+<div class="prompt-panel" style="max-width: 400px;">
+<div class="prompt-title" id="customConfirmTitle">确认</div>
+<div class="prompt-text" id="customConfirmText"></div>
+<div class="btn-group">
+<button class="action-btn btn-secondary" id="customConfirmCancelBtn">取消</button>
+<button class="action-btn btn-confirm" id="customConfirmOkBtn">确定</button>
+</div>
+</div>
+</div>
+<!-- 学生进度 / 星级弹窗 -->
+<div class="modal-overlay student-modal" id="studentModal">
+<div class="student-modal-panel">
+<div class="student-modal-header">
+<div class="student-modal-title" id="studentModalName">学生</div>
+<button class="student-modal-close" id="closeStudentModalBtn" type="button">&times;</button>
+</div>
+<div class="student-modal-body">
+<div class="student-progress-head">
+<span class="student-progress-label" id="studentProgressLabel">完成进度</span>
+<span class="student-status-label" id="studentStatusLabel" data-status="todo">未开始</span>
+</div>
+<div class="student-progress-value" id="studentProgressValue">0%</div>
+<input type="range" class="student-progress-range" id="studentProgressRange" min="0" max="100" step="1" value="0">
+<div class="student-progress-scale" id="studentProgressScale"><span>0%</span><span>100%</span></div>
+<div class="student-step-options hidden" id="studentStepOptions"></div>
+<div class="student-once-options hidden" id="studentOnceOptions">
+<label class="student-once-toggle">
+<input type="checkbox" id="studentOnceCheckbox">
+<span class="student-once-box" aria-hidden="true"></span>
+<span class="student-once-text">已完成</span>
+</label>
+</div>
+<div class="student-stars-block">
+<div class="student-stars-label">评分（再次点击当前星级可清除）</div>
+<div class="student-stars" id="studentStars"></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 批量添加名字弹窗 -->
+<div class="modal-overlay" id="batchAddNamesModal" style="z-index: 9999;">
+<div class="prompt-panel" style="max-width: 500px;">
+<div class="prompt-title">批量添加名字</div>
+<div class="prompt-text" style="text-align: left; margin-bottom: 15px;">
+请输入要添加的名字，每行一个：
+</div>
+<textarea class="name-textarea" id="batchAddNamesInput" style="height: 200px; min-height: 200px;" placeholder="张三&#10;李四&#10;王五&#10;..."></textarea>
+<div class="btn-group">
+<button class="action-btn btn-secondary" id="cancelBatchAddBtn">取消</button>
+<button class="action-btn btn-confirm" id="confirmBatchAddBtn">添加</button>
+</div>
+</div>
+</div>
+
+<!-- 保存到云名单弹窗 -->
+<div class="modal-overlay" id="saveCloudNamesModal" style="z-index: 10000;">
+<div class="prompt-panel" style="max-width: 500px;">
+<div class="prompt-title">保存到云名单</div>
+<div class="prompt-text" style="text-align: left; margin-bottom: 15px;">
+请选择保存方式：
+</div>
+<div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+<div class="save-cloud-option save-cloud-option-new" id="createNewListOption">
+<div class="save-cloud-option-title">新建名单</div>
+<div class="save-cloud-option-desc">创建新的云名单</div>
+</div>
+<div class="save-cloud-option save-cloud-option-overwrite" id="overwriteListOption">
+<div class="save-cloud-option-title">覆盖现有名单</div>
+<div class="save-cloud-option-desc">选择一个已有的云名单覆盖</div>
+</div>
+</div>
+<div id="newListInputArea" style="display: none; margin-bottom: 15px;">
+<input type="text" class="save-cloud-input" id="newListNameInput" placeholder="输入新名单名称">
+</div>
+<div id="existingListSelectArea" style="display: none; margin-bottom: 15px; max-height: 200px; overflow-y: auto;">
+<div id="existingListContainer" style="display: flex; flex-direction: column; gap: 10px;">
+</div>
+</div>
+<div class="btn-group">
+<button class="action-btn btn-secondary" id="cancelSaveCloudBtn">取消</button>
+<button class="action-btn btn-confirm" id="confirmSaveCloudBtn" disabled>保存</button>
+</div>
+</div>
+</div>
+
+<!-- 新建学习任务 -->
+<div class="modal-overlay" id="createTaskModal" style="z-index: 9998;">
+<div class="task-modal-panel">
+<div class="task-modal-title">新建任务</div>
+<div class="task-modal-sub">给这次任务起个名字（留空自动按日期命名），再准备学生名单。</div>
+
+<div class="task-form-group">
+<label class="task-form-label" for="createTaskName">任务名称</label>
+<input class="task-input" type="text" id="createTaskName" maxlength="60" placeholder="11月14日 任务2">
+</div>
+
+<div class="task-form-group">
+<label class="task-form-label">完成方式</label>
+<div class="task-mode-tabs" id="createModeTabs">
+<button type="button" class="task-mode-tab active" data-mode="percent">百分制</button>
+<button type="button" class="task-mode-tab" data-mode="steps">分次数</button>
+<button type="button" class="task-mode-tab" data-mode="once">一次完成</button>
+</div>
+<div class="task-steps-row hidden" id="createStepsRow">
+<span class="task-steps-label">分几次完成</span>
+<button type="button" class="task-step-quick" data-steps="2">2 次</button>
+<button type="button" class="task-step-quick" data-steps="3">3 次</button>
+<button type="button" class="task-step-quick" data-steps="4">4 次</button>
+<input class="task-steps-input" type="number" id="createStepsInput" min="2" max="20" value="3">
+<span class="task-steps-suffix">次</span>
+</div>
+<div class="task-form-hint">百分制：0–100 无级拖动；分次数：按次数选择进度（适合分多次背诵）；一次完成：只有完成 / 未完成。</div>
+</div>
+
+<div class="task-form-group">
+<label class="task-form-label">名单来源</label>
+<div class="task-source-tabs">
+<button type="button" class="task-source-tab active" id="createSourceManual">手动输入</button>
+<button type="button" class="task-source-tab" id="createSourceCloud">选择云名单</button>
+</div>
+
+<div id="createManualArea">
+<textarea class="task-textarea" id="createTaskNames" placeholder="张三&#10;李四&#10;王五&#10;每行一个姓名"></textarea>
+<div class="task-form-hint">每行一个姓名；重名会在创建时询问「全部保留并编号」或「去重」。</div>
+<button type="button" class="task-link-btn" id="createRandamerImportBtn">从易点名导入名单</button>
+</div>
+
+<div id="createCloudArea" class="hidden">
+<select class="task-select" id="createTaskCloudList"></select>
+<div class="task-form-hint">云名单来自 EasyCore 账号（游客也能用）。创建时会复制名单快照，之后改动名单不影响已有任务。</div>
+</div>
+</div>
+
+<div class="task-modal-footer">
+<button type="button" class="action-btn btn-secondary" id="cancelCreateTaskBtn">取消</button>
+<button type="button" class="action-btn btn-confirm" id="confirmCreateTaskBtn">创建任务</button>
+</div>
+</div>
+</div>
+
+<!-- 编辑任务信息 -->
+<div class="modal-overlay" id="editTaskModal" style="z-index: 9998;">
+<div class="task-modal-panel" style="width: min(440px, calc(100vw - 32px));">
+<div class="task-modal-title">编辑信息</div>
+<div class="task-modal-sub">修改任务名称与完成方式。学生名单与进度请在任务页的「编辑名单」中调整。</div>
+<input type="hidden" id="editTaskId">
+<div class="task-form-group">
+<label class="task-form-label" for="editTaskName">任务名称</label>
+<input class="task-input" type="text" id="editTaskName" maxlength="60">
+</div>
+<div class="task-form-group">
+<label class="task-form-label">完成方式</label>
+<div class="task-mode-tabs" id="editModeTabs">
+<button type="button" class="task-mode-tab active" data-mode="percent">百分制</button>
+<button type="button" class="task-mode-tab" data-mode="steps">分次数</button>
+<button type="button" class="task-mode-tab" data-mode="once">一次完成</button>
+</div>
+<div class="task-steps-row hidden" id="editStepsRow">
+<span class="task-steps-label">分几次完成</span>
+<button type="button" class="task-step-quick" data-steps="2">2 次</button>
+<button type="button" class="task-step-quick" data-steps="3">3 次</button>
+<button type="button" class="task-step-quick" data-steps="4">4 次</button>
+<input class="task-steps-input" type="number" id="editStepsInput" min="2" max="20" value="3">
+<span class="task-steps-suffix">次</span>
+</div>
+<div class="task-form-hint">切换完成方式不会清空已有进度：分次数制会按四舍五入换算成最接近的次数。</div>
+</div>
+<div class="task-modal-footer">
+<button type="button" class="action-btn btn-secondary" id="cancelEditTaskBtn">取消</button>
+<button type="button" class="action-btn btn-confirm" id="confirmEditTaskBtn">保存</button>
+</div>
+</div>
+</div>
+
+<!-- 进入任务加载遮罩（点击任务卡后、数据加载完成前显示） -->
+<div class="task-loading-overlay" id="taskLoadingOverlay">
+<div class="task-loading-panel">
+<div class="task-loading-spinner"></div>
+<div class="task-loading-text" id="taskLoadingText">正在加载任务数据…</div>
+</div>
+</div>
+
+<!-- JS Modules - 按依赖顺序加载 -->
+<script src="js/storage.js"></script>
+<script src="js/theme-manager.js"></script>
+<script src="js/state.js"></script>
+<script src="js/dialogs.js"></script>
+<script src="js/search.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/tasks.js"></script>
+<script src="js/import.js"></script>
+<script src="js/init.js"></script>
+<script src="js/core.js"></script>
+<script src="js/edit-names.js"></script>
+<script src="js/export.js"></script>
+<script src="js/events.js"></script>
+<script src="js/browser-detect.js"></script>
+<script src="js/account.js"></script>
+<script src="js/batch-add.js"></script>
+</body>
+</html>

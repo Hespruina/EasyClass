@@ -498,8 +498,7 @@ async function handleConfirmSaveCloud() {
     }
     
     const confirmBtn = document.getElementById('confirmSaveCloudBtn');
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = '保存中...';
+    setButtonBusy(confirmBtn, true, '保存中…');
     
     try {
         let listId;
@@ -509,8 +508,8 @@ async function handleConfirmSaveCloud() {
             
             if (!listName) {
                 showCustomAlert('请输入名单名称', '提示');
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = '保存';
+                setButtonBusy(confirmBtn, false);
+                updateSaveCloudConfirmButton();
                 return;
             }
             
@@ -532,8 +531,8 @@ async function handleConfirmSaveCloud() {
         } else if (saveCloudSaveMode === 'overwrite') {
             if (!saveCloudSelectedListId) {
                 showCustomAlert('请选择要覆盖的名单', '提示');
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = '保存';
+                setButtonBusy(confirmBtn, false);
+                updateSaveCloudConfirmButton();
                 return;
             }
             
@@ -561,8 +560,8 @@ async function handleConfirmSaveCloud() {
         console.error('保存云名单失败:', error);
         showCustomAlert('保存失败：' + error.message, '错误');
     } finally {
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = '保存';
+        setButtonBusy(confirmBtn, false);
+        updateSaveCloudConfirmButton();
     }
 }
 
@@ -621,6 +620,8 @@ showCustomConfirm(confirmMessage, async (confirmed) => {
 if (!confirmed) {
 return;
 }
+const saveBtn = document.getElementById('saveNamesBtn');
+setButtonBusy(saveBtn, true, '保存中…');
 try {
 // 云端：后端重新按拼音排序 + 重置票数 + 立即落库 + 广播给其它设备
 await CloudSync.setNames(newNames);
@@ -629,6 +630,8 @@ updateQuickSearchGrid();
 closeEditNamesModal();
 } catch (error) {
 showCustomAlert('保存失败：' + error.message);
+} finally {
+setButtonBusy(saveBtn, false);
 }
 });
 }

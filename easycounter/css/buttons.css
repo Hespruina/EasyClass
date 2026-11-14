@@ -40,4 +40,19 @@ transform: scale(.97);
 #settingsBtn:active svg {
 transform: rotate(90deg);
 }
+
+/* 异步按钮加载态：提交中显示转圈，不阻塞其它交互 */
+.btn-spinner {
+width: 14px;
+height: 14px;
+flex-shrink: 0;
+border: 2px solid currentColor;
+border-top-color: transparent;
+border-radius: 50%;
+animation: spin .7s linear infinite;
+}
+button.is-busy {
+pointer-events: none;
+opacity: .8;
+}
 /* 海报生成区域 */

@@ -99,25 +99,20 @@ async function readCreateTaskNames() {
 async function uploadNames() {
     const btn = document.getElementById('confirmCreateTaskBtn');
     if (btn && btn.disabled) return;
-    if (btn) { btn.disabled = true; btn.textContent = '检查中…'; }
-    try {
-        const names = await readCreateTaskNames();
-        if (!names) return;
+    const names = await readCreateTaskNames();
+    if (!names) return;
 
-        const nameCount = {};
-        const duplicates = [];
-        names.forEach(function (name) {
-            nameCount[name] = (nameCount[name] || 0) + 1;
-            if (nameCount[name] === 2) duplicates.push(name);
-        });
-        if (duplicates.length > 0) {
-            const info = duplicates.map(n => n + '（出现' + nameCount[n] + '次）').join('\n');
-            showDuplicateHandleModal(info, names, nameCount);
-        } else {
-            processAndUploadNames(names, 'dedup');
-        }
-    } finally {
-        if (btn) { btn.disabled = false; btn.textContent = '创建计票'; }
+    const nameCount = {};
+    const duplicates = [];
+    names.forEach(function (name) {
+        nameCount[name] = (nameCount[name] || 0) + 1;
+        if (nameCount[name] === 2) duplicates.push(name);
+    });
+    if (duplicates.length > 0) {
+        const info = duplicates.map(n => n + '（出现' + nameCount[n] + '次）').join('\n');
+        showDuplicateHandleModal(info, names, nameCount);
+    } else {
+        processAndUploadNames(names, 'dedup');
     }
 }
 

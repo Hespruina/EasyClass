@@ -193,6 +193,22 @@ async function loadCloudListsForCreate() {
     }
 }
 
+// 异步按钮加载态：保留原内容，显示转圈，完成后还原
+function setButtonBusy(btn, busy, busyText) {
+    if (!btn) return;
+    if (busy) {
+        if (btn.dataset.idleHtml === undefined) btn.dataset.idleHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.classList.add('is-busy');
+        btn.innerHTML = '<span class="btn-spinner"></span>' + (busyText || '处理中…');
+    } else if (btn.dataset.idleHtml !== undefined) {
+        btn.disabled = false;
+        btn.classList.remove('is-busy');
+        btn.innerHTML = btn.dataset.idleHtml;
+        delete btn.dataset.idleHtml;
+    }
+}
+
 async function createTaskFromNames(names) {
     const btn = document.getElementById('confirmCreateTaskBtn');
     const nameEl = document.getElementById('createTaskName');
@@ -201,7 +217,7 @@ async function createTaskFromNames(names) {
         showCustomAlert('请至少输入一个姓名');
         return;
     }
-    if (btn) { btn.disabled = true; btn.textContent = '创建中…'; }
+    setButtonBusy(btn, true, '创建中…');
     try {
         const data = await CloudSync.createTask(name, names);
         closeCreateTaskModal();
@@ -214,7 +230,7 @@ async function createTaskFromNames(names) {
     } catch (e) {
         showCustomAlert('创建失败：' + e.message);
     } finally {
-        if (btn) { btn.disabled = false; btn.textContent = '创建计票'; }
+        setButtonBusy(btn, false);
     }
 }
 
@@ -298,7 +314,7 @@ async function confirmEditTask() {
     const name = (document.getElementById('editTaskName').value || '').trim();
     if (!name) { showCustomAlert('请输入计票名称'); return; }
     const btn = document.getElementById('confirmEditTaskBtn');
-    btn.disabled = true;
+    setButtonBusy(btn, true, '保存中…');
     try {
         await CloudSync.renameTask(id, name);
         closeEditTaskModal();
@@ -306,7 +322,7 @@ async function confirmEditTask() {
     } catch (e) {
         showCustomAlert('保存失败：' + e.message);
     } finally {
-        btn.disabled = false;
+        setButtonBusy(btn, false);
     }
 }
 

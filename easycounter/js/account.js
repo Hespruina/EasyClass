@@ -303,10 +303,7 @@ async function selectCloudList(listId, button) {
         return;
     }
     
-    const originalText = button.textContent;
-    const originalDisabled = button.disabled;
-    button.disabled = true;
-    button.textContent = '导入中...';
+    setButtonBusy(button, true, '导入中…');
     
     const listItem = button.closest('.cloud-list-item');
     if (listItem) {
@@ -347,8 +344,7 @@ async function selectCloudList(listId, button) {
         showCustomAlert('导入失败：' + error.message);
         
         // 恢复按钮状态
-        button.disabled = false;
-        button.textContent = originalText;
+        setButtonBusy(button, false);
         if (listItem) {
             listItem.classList.remove('loading');
         }

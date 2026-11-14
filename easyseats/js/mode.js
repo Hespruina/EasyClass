@@ -15,6 +15,8 @@ import { closeGroupPanel, endManualGrouping, renderGroupPanel } from './group.js
 import { closeMenu } from './menu.js';
 import { applyLayout, collectArrangement, collectLayout, refreshAllowEmptyBtn } from './layout.js';
 import { apiPost, loadChart } from './api.js';
+import { flushViewSave } from './sync.js';
+import { hideSearchBar } from './search.js';
 import { hideLoading, hideNotice, showLoading, toast } from './ui.js';
 import { cancelSwap, clearSwapHint, closeNamePicker, setPickedSeat } from './swap.js';
 import { endSeatDrag } from './drag.js';
@@ -131,6 +133,7 @@ import { endSeatDrag } from './drag.js';
   // 返回 true = 可以离开，false = 用户选择留下
   export async function saveBeforeLeave() {
     if (!chart || !cloudLoaded) return true;   // 提示页 / 没加载成功：没有可保存的内容
+    flushViewSave();   // 在途的视角改动先落盘（view-only，不与下面的保存冲突）
 
     if (editMode) {
       if (!seats.length) return true;          // 空画布没有格局可存
@@ -211,6 +214,7 @@ import { endSeatDrag } from './drag.js';
     document.title = isLayout ? '易排座 · 格局编辑' : '易排座 · 手动排座';
 
     if (isLayout) {
+      hideSearchBar();   // 搜索条是排座模式的浮层，回格局编辑先收起来
       canvas.dataset.empty = '从「新座位」拖到画布，或点「一键铺座」按名单人数铺满';
       opHintMouse.innerHTML = '鼠标：<b>右键</b>空白 = 建座，<b>右键</b>座位 = 删除；<b>左键框选</b> = 建组 / 批量操作；<b>Ctrl+拖动</b> = 平移画布；<b>滚轮</b> = 缩放';
       opHintTouch.innerHTML = '触屏：单指拖座位 = 移动；空白单指拖 = 框选；双指拖动 = 平移，双指捏合 = 缩放';

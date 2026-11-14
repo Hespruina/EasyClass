@@ -6,7 +6,7 @@
 <title>易排座 · 教室座位编排</title>
 <meta name="description" content="易排座是免费的在线教室座位编排工具，支持自定义格局、小组划分、全班随机与组内随机排座，可手动微调并云端保存。">
 <link rel="canonical" href="https://easyclass.zhrhello.top/easyseats/">
-<link rel="icon" type="image/png" href="logo.png">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
 <link rel="apple-touch-icon" href="logo.png">
 <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
@@ -25,6 +25,7 @@
 <link rel="stylesheet" href="css/group-panel.css">
 <link rel="stylesheet" href="css/overlay.css">
 <link rel="stylesheet" href="css/manual-seating.css">
+<link rel="stylesheet" href="css/search.css">
 <link rel="stylesheet" href="css/loading.css">
 <link rel="stylesheet" href="css/responsive.css">
 </head>
@@ -71,6 +72,17 @@
         </button>
       </div>
       <div class="rb-label">排座</div>
+    </div>
+
+    <!-- 查找（仅排座模式） -->
+    <div class="rb-group" data-mode="seat">
+      <div class="rb-row">
+        <button id="searchBtn" class="rb-btn" type="button" title="按姓名查找同学坐在哪">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+          <span class="rb-txt">搜索</span>
+        </button>
+      </div>
+      <div class="rb-label">查找</div>
     </div>
 
     <!-- 座位 -->
@@ -166,6 +178,16 @@
   </div>
 
   <div id="loading"><div class="spinner"></div><span id="loadingText">加载中…</span></div>
+
+  <!-- 手动排座搜索条（ribbon「搜索」按钮开关，js/search.js） -->
+  <div id="seatSearch">
+    <div class="ss-row">
+      <span class="ss-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+      <input id="seatSearchInput" type="text" placeholder="输入姓名查找座位…" autocomplete="off">
+      <button id="seatSearchClose" class="ss-close" type="button" title="关闭（Esc）">×</button>
+    </div>
+    <div id="seatSearchResults" class="ss-results"></div>
+  </div>
 </div>
 
 <aside id="groupPanel">
@@ -191,6 +213,7 @@
     <div class="mouse-only" id="opHintMouse"></div>
     <div id="opHintTouch"></div>
   </div>
+  <span id="syncStatus"></span>
   <span id="zoomHint">缩放 100%</span>
 </div>
 

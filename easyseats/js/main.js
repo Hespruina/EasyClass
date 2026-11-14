@@ -10,7 +10,8 @@ import {
   gridSwitchWrap, groupOverviewBtn, groupPanel, groupPanelBody, groupPanelClose, groups,
   initChartId, listItems, manualGroupBtn, manualGrouping, manualSeating, manualSelected, marquee,
   namePickerClose, noticeGoBtn, noticeReloadBtn, npBody, npCurrent, npSearch, offsetX, offsetY,
-  pickerSeat, pinch, reloadBtn, saveBtn, scale, seatSource, seats, seatsFit, setBootToastShown,
+  pickerSeat, pinch, reloadBtn, saveBtn, scale, searchBtn, seatSearchClose, seatSearchInput,
+  seatSearchResults, seatSource, seats, seatsFit, setBootToastShown,
   setChart, setChartList, setListItems, setMarquee, setOffsetX, setOffsetY, setPinch, setSaveLabel,
   setScale, setTwoFinger, tabLayout, tabSeat, touchPan, twoFinger
 } from './state.js';
@@ -35,6 +36,11 @@ import {
 } from './swap.js';
 import { exportSeatImage } from './export.js';
 import { applyModeUI, goConsole, markLayoutSaved, reloadChart, switchMode } from './mode.js';
+import {
+  hideSearchBar, onSearchInput, onSearchKeydown, onSearchResultsClick, toggleSearchBar
+} from './search.js';
+import { handleNpKeydown } from './swap.js';
+import { disconnect as syncDisconnect } from './sync.js';
   setSaveLabel(saveBtn.innerHTML);
 
   /* ================================================================
@@ -414,7 +420,18 @@ import { applyModeUI, goConsole, markLayoutSaved, reloadChart, switchMode } from
     if (name) assignNameToSeat(seat, name);
   });
   npSearch.addEventListener('input', renderNamePicker);
+  npSearch.addEventListener('keydown', handleNpKeydown);
   namePickerClose.addEventListener('click', closeNamePicker);
+
+  /* ================================================================
+   *  手动排座搜索（ribbon「搜索」按钮 → 画布顶部浮动搜索条）
+   * ================================================================ */
+
+  searchBtn.addEventListener('click', toggleSearchBar);
+  seatSearchClose.addEventListener('click', hideSearchBar);
+  seatSearchInput.addEventListener('input', onSearchInput);
+  seatSearchInput.addEventListener('keydown', onSearchKeydown);
+  seatSearchResults.addEventListener('click', onSearchResultsClick);
 
   tabSeat.addEventListener('click', () => { if (!tabSeat.disabled) switchMode(false); });
   tabLayout.addEventListener('click', () => { if (!tabLayout.disabled) switchMode(true); });
@@ -483,6 +500,7 @@ import { applyModeUI, goConsole, markLayoutSaved, reloadChart, switchMode } from
         setChart(null);
         setChartList([]);
         clearLayout();
+        syncDisconnect();      // 没有座位表就没有同步连接
         applyModeUI();
         showNotice('还没有座位表',
           '请先到 EasyCore 控制台的「座位表」页创建一个座位表（创建时要选择它使用的名单），'

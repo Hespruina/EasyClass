@@ -5,11 +5,12 @@
 
 import {
   API_BASE, allowEmptySeats, chart, chartList, chartSelect, editMode, listItems, seatsFit,
-  seatsFitFor, setChart, setChartList, setCloudLoaded, setListItems
+  seatsFitFor, setChart, setChartList, setCloudLoaded, setListItems, wsConnId
 } from './state.js';
 import { applyArrangement, applyLayout, clearLayout } from './layout.js';
 import { escapeHtml, hideLoading, hideNotice, showLoading, showNotice, toast } from './ui.js';
 import { applyModeUI, clearSeatingSelection } from './mode.js';
+import { connect as syncConnect, disconnect as syncDisconnect } from './sync.js';
 
   /* ================================================================
    *  云端接口
@@ -26,6 +27,13 @@ import { applyModeUI, clearSeatingSelection } from './mode.js';
   }
 
   export async function apiSend(method, path, body) {
+    // 座位表写请求带上本机 WS 连接 id（sync.js 的 hello 下发）：
+    // 服务端广播据此跳过发起者连接，本机不收回声。
+    // body 可能是 undefined / null（POST /layout 等都带 body，但兜底一下）。
+    if (method !== 'GET' && path.indexOf('/seat-charts/') === 0
+        && body && typeof body === 'object' && wsConnId) {
+      body = Object.assign({}, body, { conn_id: wsConnId });
+    }
     const res = await fetch(API_BASE + path, {
       method: method,
       credentials: 'same-origin',
@@ -78,6 +86,7 @@ import { applyModeUI, clearSeatingSelection } from './mode.js';
 
   export async function loadChart(chartId) {
     clearSeatingSelection();   // 换表 / 重新加载时清掉旧的选中态（模式本身不变）
+    syncDisconnect();          // 换表 / 重载：旧同步连接作废（成功后按新表重连）
     // URL 同步：直接分享 / 刷新都能回到同一个座位表
     const url = new URL(window.location.href);
     url.searchParams.set('cloud_seats_id', String(chartId));
@@ -90,6 +99,7 @@ import { applyModeUI, clearSeatingSelection } from './mode.js';
       setListItems(data.items || []);
       const ok = presentChart();
       applyModeUI();
+      syncConnect(chartId);    // 加载成功：订阅这张表的实时同步（同表重载不重连）
       return ok;
     } catch (err) {
       clearLayout();

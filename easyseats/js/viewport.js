@@ -8,6 +8,7 @@ import {
   offsetY, scale, seats, setCancelSeatDrag, setMarquee, setOffsetX, setOffsetY, setPinch, setScale,
   setTouchPan, setTwoFinger, touchPan, twoFinger, world, zoomHint
 } from './state.js';
+import { noteViewChanged } from './sync.js';
 
   /* ================================================================
    *  坐标换算
@@ -28,6 +29,8 @@ import {
     canvas.style.backgroundPosition =
       offsetX + 'px ' + offsetY + 'px';
     zoomHint.textContent = '缩放 ' + Math.round(scale * 100) + '%';
+    // 相机位置变了：防抖持久化到云端（layout.view），下次打开视角一致（js/sync.js）
+    noteViewChanged();
   }
 
   export function zoomAt(clientX, clientY, newScale) {

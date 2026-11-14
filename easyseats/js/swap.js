@@ -116,17 +116,55 @@ import { saveArrangement } from './arrange.js';
 
     if (!names.length) {
       setNpCurrent([]);
+      npSetHl(-1);
       npBody.innerHTML = '<div class="np-empty">全班同学都已经排到座位上。<br>'
         + '想换人请点座位选「与其他同学换座」。</div>';
       return;
     }
     if (!shown.length) {
       setNpCurrent([]);
+      npSetHl(-1);
       npBody.innerHTML = '<div class="np-empty">没有匹配「' + escapeHtml(kw) + '」的同学</div>';
       return;
     }
     npBody.innerHTML = shown.map((n, i) =>
       '<div class="np-item" data-idx="' + i + '">' + escapeHtml(n) + '</div>').join('');
+    npSetHl(0);   // 默认高亮第一条：回车直接落座，↑↓ 可换人
+  }
+
+  /* ---------- 键盘操作（输入框自动聚焦 + ↑↓ 选择 + 回车落座） ---------- */
+
+  let npHl = -1;   // 当前键盘高亮的条目下标（对齐 npCurrent）
+
+  function npSetHl(i) {
+    npHl = i;
+    npBody.querySelectorAll('.np-item').forEach((el, idx) => {
+      el.classList.toggle('hl', idx === npHl);
+    });
+    const el = npBody.querySelector('.np-item.hl');
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+  }
+
+  // main.js 绑定在 npSearch 的 keydown 上：只在本面板打开时有意义
+  export function handleNpKeydown(e) {
+    if (!namePicker.classList.contains('show')) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (npCurrent.length) npSetHl(Math.min(npHl + 1, npCurrent.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (npCurrent.length) npSetHl(Math.max(npHl - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const name = npCurrent[npHl];
+      if (!name || !pickerSeat) return;
+      const seat = pickerSeat;
+      closeNamePicker();
+      assignNameToSeat(seat, name);   // 与点击结果走同一条路径
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      closeNamePicker();
+    }
   }
 
   export function openNamePicker(seat) {
@@ -136,6 +174,7 @@ import { saveArrangement } from './arrange.js';
     npSearch.value = '';
     renderNamePicker();
     namePicker.classList.add('show');
+    npSearch.focus();           // 键盘焦点直接进搜索框，抬起头就能打字
   }
 
   export function closeNamePicker() {

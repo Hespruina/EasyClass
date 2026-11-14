@@ -33,6 +33,15 @@
   font-family: "ZCOOL KuaiLe", sans-serif;
 }
 
+/* 实时同步状态（js/sync.js 维护；空字符串时不占宽度） */
+#syncStatus {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+#syncStatus[data-kind="warn"] { color: var(--warn); }
+
 /* 鼠标设备只显示鼠标提示，触屏设备只显示触屏提示 */
 @media (hover: hover) and (pointer: fine) { #opHintTouch { display: none; } }
 @media (hover: none) { #opHintMouse { display: none; } }

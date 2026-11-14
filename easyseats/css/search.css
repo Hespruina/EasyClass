@@ -1,0 +1,82 @@
+/* 手动排座搜索：ribbon「搜索」按钮开关的画布顶部浮动搜索条（js/search.js）
+ * 圆角遵循设计系统：容器 8px / 控件 4px / 徽标胶囊 999px；纯色底、无光效。
+ */
+#seatSearch {
+  display: none;
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(340px, calc(100% - 24px));
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  z-index: 420;                       /* 高于画布提示层(400)，低于加载层(600) */
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .5);
+}
+#seatSearch.show { display: block; }
+
+.ss-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+}
+.ss-row .ss-ico { flex: 0 0 auto; display: flex; color: var(--muted); }
+.ss-row .ss-ico svg { width: 15px; height: 15px; }
+#seatSearchInput {
+  flex: 1 1 auto; min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--accent);
+  font-size: 13px; font-family: inherit;
+  padding: 6px 8px;
+  outline: none;
+}
+#seatSearchInput:focus { border-color: var(--accent); }
+#seatSearchInput::placeholder { color: var(--gray); }
+.ss-close {
+  flex: 0 0 auto;
+  border: none; background: transparent; color: var(--muted);
+  font-size: 18px; line-height: 1; cursor: pointer; padding: 0 4px;
+}
+.ss-close:hover { color: var(--danger); }
+
+.ss-results {
+  max-height: 220px; overflow-y: auto;
+  border-top: 1px solid var(--line);
+  padding: 4px;
+}
+.ss-hint, .ss-empty {
+  padding: 10px 8px; font-size: 12px; color: var(--muted);
+  text-align: center; line-height: 1.6;
+}
+.ss-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 7px 9px; margin: 2px;
+  border-radius: 4px;
+  font-size: 13px; color: #cfd8dc;
+  cursor: pointer;
+}
+.ss-item:hover, .ss-item.hl { background: rgba(69, 243, 255, .14); color: var(--accent); }
+.ss-item.unseated .ss-name { color: var(--muted); }
+.ss-item.unseated { cursor: default; }
+.ss-badge {
+  flex: 0 0 auto;
+  font-size: 10.5px; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 1px 7px;
+}
+.ss-item.hl .ss-badge, .ss-item:hover .ss-badge { color: var(--accent); border-color: var(--accent-lo); }
+
+/* 搜索命中的座位：居中定位后短暂高亮（同 .picked 语言，不发光） */
+.seat.search-hit {
+  background: rgba(69, 243, 255, .28) !important;
+  border-color: var(--accent) !important;
+  outline: 2px solid var(--accent); outline-offset: 2px;
+  z-index: 9;
+}
+
+/* 窄屏：搜索条贴满左右边距 */
+@media (max-width: 900px) {
+  #seatSearch { top: 8px; }
+}

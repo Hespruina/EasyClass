@@ -20,6 +20,10 @@
   // 保存按钮的原始内容（SVG + 文案）在 DOM 就绪后抓取，保存失败 / 完成时用它还原
   export let SAVE_LABEL = '';
 
+  // 本机这条座位表同步 WS 连接的 id（服务端 hello 下发）。写格局 / 排座结果的
+  // 请求把它带给服务端，广播据此跳过本机连接，不回声。同步逻辑见 js/sync.js。
+  export let wsConnId = null;
+
   /* ==================== 模式 ==================== */
   export const params = new URLSearchParams(window.location.search);
   // 当前选项卡。带 ?mode=edit_cloud_seats_set&cloud_seats_id=X 进来停在「格局编辑」，
@@ -74,6 +78,16 @@
   export const toastText   = document.getElementById('toastText');
   export const opHintMouse = document.getElementById('opHintMouse');
   export const opHintTouch = document.getElementById('opHintTouch');
+
+  // 实时同步状态（底栏，js/sync.js 维护）
+  export const syncStatus  = document.getElementById('syncStatus');
+
+  // 手动排座搜索（ribbon「搜索」按钮 + 画布顶部浮动搜索条，js/search.js）
+  export const searchBtn   = document.getElementById('searchBtn');
+  export const seatSearch  = document.getElementById('seatSearch');
+  export const seatSearchInput = document.getElementById('seatSearchInput');
+  export const seatSearchResults = document.getElementById('seatSearchResults');
+  export const seatSearchClose = document.getElementById('seatSearchClose');
 
   /* ==================== 状态 ==================== */
   export let seats = [];                 // {id, x, y, col, row, groupId, el}
@@ -223,6 +237,7 @@ export function setDragSwap(v) { dragSwap = v; }
 export function setSavedLayoutSignature(v) { savedLayoutSignature = v; }
 export function setBootToastShown(v) { bootToastShown = v; }
 export function setLeavingForConsole(v) { leavingForConsole = v; }
+export function setWsConnId(v) { wsConnId = v; }
 
 // 「先自增再取新值」的表达式场景（原代码 seat.js 里 id || (++seatSeq)）
 export function nextSeatSeq() { return ++seatSeq; }

@@ -1,0 +1,41 @@
+/* 前端设计风格体系 — 响应式与 reduced-motion
+ * 文档页 design/index.html 的样式之一，加载顺序：tokens → layout → specimens → responsive。
+ * 本目录仅作规范文档，不进交付树；生产页面按 13 章约定逐页内联。
+ */
+
+/* ============ 3 · 响应式 ============ */
+@media (max-width:1180px){
+  .d-main{padding:0 32px 120px}
+  .d-hero::before{inset:0 -32px 0 -32px}
+  .d-hero-grid{grid-template-columns:minmax(0,1fr) 210px;gap:24px}
+}
+@media (max-width:900px){
+  :root{--nav-w:0px}
+  .d-nav{position:static;width:auto;height:auto;max-height:none;border-right:none;border-bottom:1px solid var(--border)}
+  .d-nav-brand{padding:14px 18px}
+  .d-nav-meta,.d-nav-foot{display:none}
+  .d-nav-scroll{display:flex;gap:4px;overflow-x:auto;padding:8px 12px}
+  .d-nav-label,.d-nav a.sub{display:none}
+  .d-nav a{white-space:nowrap;padding:6px 10px}
+  .d-nav a .n{display:none}
+  .d-nav a.active::before{display:none}
+  .d-main{margin-left:0;padding:0 20px 100px}
+  .d-hero{padding-top:44px}
+  .d-hero::before{inset:0 -20px 0 -20px}
+  .d-hero-grid{grid-template-columns:1fr}
+  .d-logo-plate{display:none}
+  .d-spec-meta{grid-template-columns:1fr}
+  .d-spec-meta>div+div{border-left:none;border-top:1px solid var(--border)}
+  .d-sec-head{grid-template-columns:56px minmax(0,1fr);gap:12px}
+  .d-sec-no{font-size:1.8rem}
+  .d-vs{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .d-hero h1{font-size:2rem}
+  .d-tier{flex-direction:column}
+  .d-tier>div{flex:none !important}
+  .d-grid.g2,.d-grid.g3,.d-grid.g4{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
+}

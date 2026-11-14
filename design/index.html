@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>前端设计风格体系 · 规范与教材</title>
+<meta name="description" content="前端设计风格体系：设计规范、双轨令牌、浅色主题、全部元素教材示例与工程落地约束。">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://google-fonts.mirrors.sjtug.sjtu.edu.cn">
+<link href="https://google-fonts.mirrors.sjtug.sjtu.edu.cn/css2?family=Noto+Sans+SC:wght@100..900&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
+<!-- 样式按 令牌 → 外壳 → 标本 → 响应式 顺序加载，顺序不可换（覆盖关系依赖它） -->
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/specimens.css">
+<link rel="stylesheet" href="css/responsive.css">
+<!-- 浅色主题成对令牌层：必须最后加载；由 js/main.js 写 html[data-theme="light"] 激活 -->
+<link rel="stylesheet" href="css/theme-light.css">
+</head>
+<body>
+
+<div class="d-progress" id="dProgress"></div>
+
+<!-- ================= 目录 ================= -->
+<nav class="d-nav" aria-label="文档目录">
+  <div class="d-nav-brand">
+    <div><b>前端设计风格体系</b><small>规范 · 教材 · 双主题</small></div>
+  </div>
+  <div class="d-nav-meta">
+    版本 <code>v1.0</code> · 2026-11-14<br>
+    基准 <code>点名框（舞台层）</code><br>
+    真源 <code>UI-DETAIL 内部备忘</code>
+  </div>
+  <div class="d-nav-scroll" id="dNavScroll">
+    <div class="d-nav-label">规范</div>
+    <a href="#overview"><span class="n">00</span>文档说明</a>
+    <a href="#benchmark"><span class="n">01</span>基准层级与适用范围</a>
+    <a href="#principles"><span class="n">02</span>设计原则</a>
+    <a href="#stage"><span class="n">03</span>最高基准：点名框解剖</a>
+    <a href="#tokens"><span class="n">04</span>双轨令牌体系</a>
+    <a href="#color"><span class="n">05</span>色彩规范</a>
+    <a href="#type"><span class="n">06</span>字体与排版</a>
+    <a href="#space"><span class="n">07</span>空间 · 圆角 · 描边 · 阴影</a>
+    <a href="#motion"><span class="n">08</span>动效系统</a>
+    <div class="d-nav-label">教材示例</div>
+    <a href="#components"><span class="n">09</span>组件教材总览</a>
+    <a class="sub" href="#c-buttons">09.1 按钮</a>
+    <a class="sub" href="#c-iconbtn">09.2 图标钮与浮动圆钮</a>
+    <a class="sub" href="#c-input">09.3 输入与表单</a>
+    <a class="sub" href="#c-switch">09.4 开关 / 三态 / 选择</a>
+    <a class="sub" href="#c-card">09.5 卡片与容器</a>
+    <a class="sub" href="#c-badge">09.6 徽章与状态胶囊</a>
+    <a class="sub" href="#c-nav">09.7 导航与选项卡</a>
+    <a class="sub" href="#c-modal">09.8 对话框与遮罩</a>
+    <a class="sub" href="#c-feedback">09.9 反馈：Toast / 加载 / 空态</a>
+    <a class="sub" href="#c-data">09.10 数据展示</a>
+    <a class="sub" href="#c-seat">09.11 座位与画布</a>
+    <a class="sub" href="#c-ribbon">09.12 Ribbon 功能区</a>
+    <a class="sub" href="#c-icon">09.13 图标系统</a>
+    <a class="sub" href="#c-counter">09.14 浅色主题与成对令牌</a>
+    <div class="d-nav-label">落地</div>
+    <a href="#layout"><span class="n">10</span>布局与响应式</a>
+    <a href="#a11y"><span class="n">11</span>可访问性与文案</a>
+    <a href="#antipattern"><span class="n">12</span>禁用清单与反模式</a>
+    <a href="#engineering"><span class="n">13</span>工程落地约束</a>
+    <a href="#checklist"><span class="n">14</span>检查清单与代码速查</a>
+  </div>
+  <div class="d-nav-foot"><button class="theme-toggle" type="button" aria-label="切换浅色 / 深色主题">切换浅色主题</button>本页不进发布目录，仅供规范查阅。<br>源码：<code>index.html</code> + <code>css/</code> + <code>js/</code><br>生产页面样式仍逐页内联。</div>
+</nav>
+
+<main class="d-main">
+<div class="d-wrap">
+
+<!-- ================= 00 HERO ================= -->
+<header class="d-hero" id="overview">
+  <div class="d-kicker">DESIGN SYSTEM · SPECIFICATION &amp; TEACHING SPECIMENS</div>
+  <h1>前端设计风格体系<br><em>规范 · 教材 · 双主题</em></h1>
+  <div class="sub">一份规范 · 两套令牌 · 全部元素标本</div>
+  <p class="d-lede">
+    项目此前没有成文的前端设计体系，风格散落在各页面的内联样式与备忘里。本页把散落的约定收拢成
+    <b>可检索、可复制、可对照</b>的单一规范：既写清数值，也把每个元素做成可交互的教材标本。
+    以<b>舞台层点名框</b>为最高基准确定气质与色彩原点，以舞台层其它组件、排座工具页、控制层为组件与令牌基准，
+    以参考层为浅色双主题治理范本。
+  </p>
+  <div class="d-hero-meta">
+    <span class="d-chip"><b>版本</b><code>v1.0</code></span>
+    <span class="d-chip"><b>更新</b>2026-11-14</span>
+    <span class="d-chip"><b>主色</b><code>#45f3ff</code></span>
+    <span class="d-chip"><b>主题</b>深色 / 浅色成对令牌</span>
+    <span class="d-chip"><b>标本</b>14 组 / 60+ 元素</span>
+  </div>
+
+  <div class="d-hero-grid">
+    <div>
+      <div class="d-h4">本页如何读</div>
+      <p class="d-p">
+        每个标本卡固定四段：<b>实时样例</b>（可悬停、可点击）→ <b>规范值表</b>（逐项写出真实数值与出处）→
+        <b>应当 / 禁止</b>（防回归）→ <b>实现代码</b>（可一键复制）。标本 CSS 使用与生产页面
+        <b>完全相同的类名</b>；数值按本规范（含 2026-11-14 小圆角 / 零发光新规）呈现，03 章点名框为逐值复刻、不做收敛。
+      </p>
+      <div class="d-callout">
+        <b>本页即按本规范编写。</b>文档外壳使用控制层（Console）令牌；被展示的舞台层标本使用舞台层（Stage）令牌。文档自身拆为 <code>index.html</code> + <code>css/</code> 四个样式 + <code>js/main.js</code>，仅为便于编辑；<b>生产页面仍按 13 章约定逐页内联</b>，两者不冲突。
+        两套令牌都叫 <code>--bg</code> 却取值不同——这不是笔误，而是本项目最重要的分层约定，见 04 章。
+      </div>
+    </div>
+    <div class="d-logo-plate">
+      <p style="font-size:.9375rem;line-height:1.9"><b>双主题实时标本</b><br>本页自身即浅色 / 深色成对令牌的完整演示：点击下方按钮切换主题，全部 14 组标本随 <code>html[data-theme]</code> 整体翻转，选择持久化到 <code>localStorage</code>（详见 09.14）。</p>
+      <div class="d-row" style="margin-top:12px"><button class="btn btn-primary btn-sm theme-toggle" type="button">切换浅色主题</button></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 01 基准层级 ================= -->
+<section class="d-section" id="benchmark">
+  <div class="d-sec-head"><div class="d-sec-no">01</div><div>
+    <h2>基准层级与适用范围</h2>
+    <p>当两处风格冲突时，按 S → A → B 裁决；同一层内按"离点名框越近，表现力预算越高"裁决。层级不是质量评级，而是<b>可借鉴的授权范围</b>。</p>
+  </div></div>
+
+  <div class="d-tier">
+    <div class="s"><b>S · 最高基准</b><strong>舞台层点名框</strong><span>决定气质：强调色三态、展示字体、唯一焦点、恒定容器、旋转描边与呼吸动效。所有"品牌高光"从这里取。</span></div>
+    <div class="a"><b>A · 基准</b><strong>舞台层其它组件 / 排座工具页 / 控制层</strong><span>决定成文规范：令牌、按钮、卡片、模态、导航、Ribbon、座位、动效与禁用清单。</span></div>
+    <div class="b"><b>B · 参考</b><strong>参考层（双主题范本）</strong><span>提供双主题令牌治理、榜单状态色、数据展示与海报版式；不作为主界面配色依据。</span></div>
+  </div>
+
+  <div class="d-table-wrap"><table class="d-table">
+    <thead><tr><th>层级</th><th>源文件</th><th>贡献的规范</th><th>不可外溢的部分</th></tr></thead>
+    <tbody>
+      <tr><td>S · 点名框</td><td><span class="dim">舞台层点名页 · 结构区与样式区</span></td><td>380×420 恒定容器、<code>#45f3ff → #35eaff → #25daff</code> 三态、ZCOOL 双展示字、<code>:before</code> 旋转描边、姓名框呼吸、唯一焦点原则</td><td>旋转描边 / 姓名呼吸只允许出现在点名框（均为实色渐变与中性黑阴影，<b>不含任何发光</b>）；全站禁止一切发光光晕散色光效</td></tr>
+      <tr><td>A · 舞台层其它</td><td><span class="dim">点名页全部样式 + 手机端 / 接口页</span></td><td>舞台层令牌、40px 浮动圆钮、设置面板、气泡提示、性别三态、小组标签、二维码框</td><td>源码中残留的彩色 glow / <code>text-shadow</code> 发光 / 无限脉冲一律视为历史债务，全站禁止（见 12 章）</td></tr>
+      <tr><td>A · 排座工具页</td><td><span class="dim">样式文件组（拆分式 CSS）</span></td><td>Office Ribbon 信息架构、46/56 座位网格、面板/菜单/Toast/状态栏、手势与拖动状态色</td><td>专业工具的密集功能区不适用于门户与控制台</td></tr>
+      <tr><td>A · 控制层</td><td><span class="dim">页面组（主界面 / 登录 / 合并 / 名单选择）</span></td><td><b>唯一样式真源</b>：控制层令牌、按钮/输入/卡片/模态/侧栏、动效层、禁用清单</td><td>控制层禁止 ZCOOL 卡通字、禁止一切发光光晕散色光效与毛玻璃</td></tr>
+      <tr><td>B · 参考层</td><td><span class="dim">令牌文件 + 组件样式组</span></td><td>成对令牌（暗/浅）、语义化命名、金/银/铜榜单色、状态色 tint 体系</td><td>浅色主题与海报渐变仅用于其自身；其霓虹发光属待收敛历史债务，<b>不得回灌</b> S / A 层</td></tr>
+      <tr><td>真源文档</td><td><code>.workbuddy/memory/UI-DETAIL.md</code></td><td>设计系统段、禁用清单、动效层三坑、Ribbon 结构、点名框演进史</td><td>本页与真源冲突时，以真源 + 生产代码为准，并同步修订本页</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="d-callout"><b>裁决示例。</b>「按钮 hover 到底变亮还是变暗？」——舞台层深底青按钮走变暗三态（<code>#35eaff</code>），控制层青底深字按钮走提亮（<code>#74f6ff</code>）。两者都对，取决于所在层与文字对比方向；跨层复制令牌块会立刻暴露为"按钮变色不对"。<br><b>2026-11-14 新增两条最高优先级裁决</b>：<b>小圆角优先</b>（07 章）与<b>零发光光晕散色光效</b>（12 章）；与任何层级、任何历史实现冲突时，一律以这两条为准。</div>
+</section>
+
+<!-- ================= 02 设计原则 ================= -->
+<section class="d-section" id="principles">
+  <div class="d-sec-head"><div class="d-sec-no">02</div><div>
+    <h2>设计原则</h2>
+    <p>八条约束，用来在没有人审核时也能做出与现有一致的决定。设计上下文：使用者是教师在课堂大屏上操作、学生在手机端遥控；场景是点名、排座、计票；气质是<b>冷静可信的工具，带一点课堂的活泼</b>——活泼只出现在舞台层。</p>
+  </div></div>
+
+  <div class="d-grid g2">
+    <div class="d-panel"><h3>01 · 单一强调色</h3><p class="d-p" style="margin:0">全局只有 <code>#45f3ff</code> 一种强调色，且只用于<b>当前项 / 主操作 / 链接 / 焦点 / 数值标注</b>。其余层次一律靠石板灰的明度差与 1px 描边表达。青色铺满边框、阴影、文字就是"AI 味"的起点。</p></div>
+    <div class="d-panel"><h3>02 · 唯一焦点</h3><p class="d-p" style="margin:0">一屏一个主按钮、一个当前导航项。点名框把这条做到极致：<b>恒定 380×420，只装标题 + 姓名框 + 开始/停止</b>，筛选条件一律放到右侧独立面板，条件增减永不影响框内留白。</p></div>
+    <div class="d-panel"><h3>03 · 实色与描边表达层级</h3><p class="d-p" style="margin:0">层级 = 背景明度（<code>#0f1419 → #161d24 → #1c242d → #232e39</code>）+ 1px 中性描边。不用毛玻璃、<b>不用任何发光光晕散色光效</b>（彩色 glow、text-shadow 发光、模糊光晕、radial 散色一概禁止）、不用卡片套卡片。悬停上浮只允许中性黑阴影；圆角一律小圆角（4 / 8 / 16）。</p></div>
+    <div class="d-panel"><h3>04 · 动效只表达因果</h3><p class="d-p" style="margin:0">动画解释<b>层级、顺序、因果</b>：谁先出现、谁从哪来、状态怎么变。不做常驻循环装饰。状态切换 150–300ms，统一 <code>cubic-bezier(.16,1,.3,1)</code>，并尊重 <code>prefers-reduced-motion</code>。</p></div>
+    <div class="d-panel"><h3>05 · 内容决定容器，不是反过来</h3><p class="d-p" style="margin:0">面板高度随内容自适应（<code>.filter-panel</code> 垂直居中、上下等量扩展），绝不为了"对齐"给容器写死高度再裁内容。点名框的 420px 是<b>唯一</b>被允许的恒定容器，因为它承载的是一次性展示，不是列表。</p></div>
+    <div class="d-panel"><h3>06 · 品牌字只上舞台</h3><p class="d-p" style="margin:0"><code>ZCOOL KuaiLe</code> / <code>ZCOOL QingKe HuangYou</code> 只用于点名框标题、姓名、品牌字标、小组标签、状态栏提示词。控制台与所有数据密集界面一律 <code>Noto Sans SC</code> 分级字重。</p></div>
+    <div class="d-panel"><h3>07 · 令牌不硬编码</h3><p class="d-p" style="margin:0">颜色一律 <code>var(--accent)</code> / <code>var(--male)</code> / <code>var(--danger)</code>。参考层 2026-11-14 的真实事故：令牌定义了却没被 CSS 用，浅色模式整片仍是暗色霓虹。<b>定义了就要用，改了就要全链路验。</b></p></div>
+    <div class="d-panel"><h3>08 · 小圆角 + 零发光</h3><p class="d-p" style="margin:0">本项目<b>偏好小圆角</b>：控件 4px、容器 8px、模态 16px（详见 07 章），此前开发未注意，后续必须遵守。<b>禁止一切发光光晕散色光效</b>——彩色 glow、发光 <code>text-shadow</code>、模糊光晕、radial 散色背景、毛玻璃，因为这样显得很 AI（详见 12 章）。</p></div>
+    <div class="d-panel" style="border-color:var(--accent-line);background:var(--accent-tint)"><h3>验收问题：AI Slop Test</h3><p class="d-p" style="margin:0">把界面给别人看，说"这是 AI 做的"，对方会立刻相信吗？若会，就是失败。本项目靠三件事避开：<b>石板灰而非紫蓝渐变</b>、<b>零发光光晕</b>、<b>4 / 8px 小圆角而非大圆角卡片墙</b>、<b>中文品牌字与发丝线编号的数据手册感</b>。</p></div>
+  </div>
+</section>
+
+<!-- ================= 03 点名框 ================= -->
+<section class="d-section" id="stage">
+  <div class="d-sec-head"><div class="d-sec-no">03</div><div>
+    <h2>最高基准：点名框解剖</h2>
+    <p>下方的标本是舞台层点名区的逐值复刻，可点击「开始 / 停止」观察真实的旋转描边、姓名呼吸与按钮换态。它是全站气质的原点，<b>所有表现力预算从这里分配</b>。</p>
+  </div></div>
+
+  <div class="d-panel" style="padding:18px">
+    <div class="d-bp-scroll"><div class="d-bp-wrap">
+      <div class="d-bp-dim w">380 px</div>
+      <div class="d-bp-dim h">420 px</div>
+      <div class="stage">
+        <main class="dianmingkuang" id="demoDmk" role="main" aria-label="随机点名主区域（教材标本）">
+          <section class="neirongquyu">
+            <h1>随机点名</h1>
+            <div class="xingmingxianshi" id="demoName" role="status" aria-live="polite" aria-atomic="true">就很随机</div>
+            <div class="anniucontaner">
+              <button class="anniu chuxian" id="demoStart" type="button">开始</button>
+              <button class="anniu yincang" id="demoStop" type="button">停止</button>
+            </div>
+          </section>
+        </main>
+        <aside class="filter-panel" aria-label="抽选条件">
+          <h2 class="filter-panel-title">抽选条件</h2>
+          <section class="filter-section">
+            <div class="filter-section-title">抽选性别</div>
+            <div class="gender-filter-group" role="group" aria-label="抽选性别筛选">
+              <button class="gender-filter-btn active" type="button" data-gender="all" title="不限制性别（默认）">－</button>
+              <button class="gender-filter-btn" type="button" data-gender="male" title="只抽男生">♂</button>
+              <button class="gender-filter-btn" type="button" data-gender="female" title="只抽女生">♀</button>
+            </div>
+          </section>
+          <section class="filter-section">
+            <div class="filter-section-title">按组抽选</div>
+            <div class="group-filter-row">
+              <button class="group-pick-btn" type="button">挑选小组</button>
+              <button class="group-cancel-btn" type="button" disabled>取消小组</button>
+            </div>
+            <div class="group-chip-list"><span class="group-chip muted">不挑小组</span></div>
+          </section>
+        </aside>
+      </div>
+      <div class="d-bp-note" style="left:0;top:442px">↑ inset: 2px 内容区 · padding 50px 40px</div>
+      <div class="d-bp-note" style="left:404px;top:0">+18px → 232px 独立面板</div>
+    </div></div>
+    <p class="d-caption" style="margin-top:6px">固定尺寸标本：窄屏可横向滚动查看，不缩放，以便逐像素对照。<br><b>圆角说明：</b>框体 / 内容区 <code>8px</code>、开始停止按钮 <code>4px</code>、姓名展示框 <code>10px</code>（展示特例）——这四处是 07 章小圆角规范的基准；<b>右侧筛选面板 12px 不是</b>（用户明确：未按最初设计规范实现），仅作结构记录，不得引用。旋转描边是实色渐变、姓名呼吸是中性黑阴影，<b>均非发光光晕</b>。</p>
+  </div>
+
+  <div class="d-grid g2" style="margin-top:18px">
+    <div class="d-panel"><h3>结构与数值</h3>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>部位</th><th>规范值</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>.dianmingkuang</td><td><code>380 × 420</code></td><td>恒定；<code>overflow:hidden</code>、<code>border-radius:8px</code>、<code>linear-gradient(135deg,#1c1c1c,#23242a)</code></td></tr>
+          <tr><td>::before</td><td><code>rotate .1s linear infinite</code></td><td>旋转描边；默认 <code>opacity:0;visibility:hidden</code>，仅抽选态显示</td></tr>
+          <tr><td>::after</td><td><code>maichong 2s infinite</code></td><td><code>rgba(255,255,255,.1)</code> 背景脉冲；尺寸 100% 跟随容器</td></tr>
+          <tr><td>.neirongquyu</td><td><code>inset:2px</code></td><td><code>#28292d</code> 实色内容区；<code>padding:50px 40px</code>；z-index 2</td></tr>
+          <tr><td>h1</td><td><code>1.5em / ZCOOL KuaiLe</code></td><td><code>#45f3ff</code>、<code>letter-spacing:.1em</code>、字重 400</td></tr>
+          <tr><td>.xingmingxianshi</td><td><code>2em / ZCOOL QingKe HuangYou</code></td><td><code>margin:20px 0</code>、<code>padding:20px</code>、<code>width:80%;max-width:300px</code>、<code>radius:10px</code>、<code>rgba(255,255,255,.1)</code></td></tr>
+          <tr><td>.anniucontaner</td><td><code>margin-top:50px</code></td><td>按钮容器；<b>再加一行会溢出被裁</b></td></tr>
+          <tr><td>.anniu</td><td><code>radius:4px / padding:11px 0</code></td><td>三态 <code>#45f3ff → #35eaff → #25daff</code>；<code>:active scale(.95)</code></td></tr>
+          <tr><td>.filter-panel</td><td><code>232px / radius 12 / padding 18</code></td><td><code>left:calc(100% + 18px)</code>、<code>top:50%;translateY(-50%)</code>、绝对定位不占位</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="d-panel"><h3>为什么它是最高基准</h3>
+      <p class="d-p"><b>① 恒定性。</b>框内永远只有三个元素，不因功能增加而变形。演进史是一条不断做减法的路：框内加筛选行 → 按内容加高 500px（错）→ 固定 450px + 控件贴底（用户否：中间空一大截）→ <b>最终独立面板</b>。</p>
+      <p class="d-p"><b>② 焦点纯度。</b>抽选时全屏只有一个在动的姓名，旋转描边与呼吸把它框住；其它控件全部退到暗处。这是"唯一焦点"最完整的实现。</p>
+      <p class="d-p"><b>③ 色与字的原点。</b><code>#45f3ff</code> 三态、ZCOOL 双展示字、深色石板底，都是从这里扩散到门户、排座工具页与参考层的。</p>
+      <div class="d-flag do" style="margin-top:14px"><b>应当</b>新增抽选条件一律进 <code>.filter-panel</code> 的 <code>.filter-section</code>；区块间分隔线靠相邻选择器自动出现/消失；窄屏 <code>@media(max-width:700px)</code> 让面板落到框下方一列。</div>
+      <div class="d-flag dont"><b>禁止</b>往 <code>.neirongquyu</code> 加任何第四行；禁止把 420px 改成按内容自适应；禁止把旋转描边/呼吸搬到普通卡片。</div>
+    </div>
+  </div>
+
+  <div class="d-spec" style="margin-top:18px">
+    <div class="d-spec-head"><span class="d-spec-id">03.1</span><h3>结构骨架</h3><p>点名框只做定位参照，筛选面板绝对定位贴右侧，两者高度互不耦合。</p><span class="d-spec-src">舞台层点名页 · 结构区</span></div>
+    <div class="d-spec-demo" style="padding:16px 22px;background-image:none">
+      <div class="d-row" style="gap:8px;font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted)">
+        <span style="color:var(--accent)">&lt;div class="stage"&gt;</span> → <span>&lt;main class="dianmingkuang"&gt;</span> → <span>&lt;section class="neirongquyu"&gt;</span><br>
+        <span style="margin-left:26px">h1 · .xingmingxianshi · .anniucontaner(.anniu × 2)</span><br>
+        <span style="color:var(--accent)">&lt;aside class="filter-panel"&gt;</span> → <span>.filter-panel-title + .filter-section × N</span>
+      </div>
+    </div>
+    <details class="d-code"><summary>查看 HTML 与核心 CSS</summary><button class="d-copy" type="button">复制</button><pre><span class="c">/* HTML：条件永不进框 */</span>
+<span class="t">&lt;div class="stage"&gt;</span>
+  <span class="t">&lt;main class="dianmingkuang"&gt;</span>
+    <span class="t">&lt;section class="neirongquyu"&gt;</span>
+      <span class="t">&lt;h1&gt;</span>随机点名<span class="t">&lt;/h1&gt;</span>
+      <span class="t">&lt;div class="xingmingxianshi"&gt;</span>就很随机<span class="t">&lt;/div&gt;</span>
+      <span class="t">&lt;div class="anniucontaner"&gt;</span>
+        <span class="t">&lt;button class="anniu chuxian"&gt;</span>开始<span class="t">&lt;/button&gt;</span>
+        <span class="t">&lt;button class="anniu yincang"&gt;</span>停止<span class="t">&lt;/button&gt;</span>
+      <span class="t">&lt;/div&gt;</span>
+    <span class="t">&lt;/section&gt;</span>
+  <span class="t">&lt;/main&gt;</span>
+  <span class="t">&lt;aside class="filter-panel"&gt;</span>…<span class="t">&lt;/aside&gt;</span>
+<span class="t">&lt;/div&gt;</span>
+
+<span class="c">/* CSS：只改一处高度，::before/::after 用 100% 跟随 */</span>
+<span class="k">.dianmingkuang</span>{width:380px;height:420px;border-radius:8px;overflow:hidden}
+<span class="k">.neirongquyu</span>{position:absolute;inset:2px;background:#28292d;padding:50px 40px;border-radius:8px;z-index:2}
+<span class="k">.filter-panel</span>{position:absolute;left:calc(100% + 18px);top:50%;transform:translateY(-50%);width:232px;padding:18px;border-radius:12px}
+<span class="k">.filter-section + .filter-section</span>{padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}</pre></details>
+  </div>
+</section>
+
+<!-- ================= 04 双轨令牌 ================= -->
+<section class="d-section" id="tokens">
+  <div class="d-sec-head"><div class="d-sec-no">04</div><div>
+    <h2>双轨令牌体系</h2>
+    <p>项目里存在两套同源令牌：都保留 <code>#45f3ff</code>，但底色与语义分工不同。<b>它们不是新旧版本，而是分层</b>。最容易踩的坑是同名变量 <code>--bg</code>、<code>--accent</code>、<code>--danger</code> 取值不同——复制令牌块时必须整块复制，绝不跨层拼接。</p>
+  </div></div>
+
+  <div class="d-grid g2">
+    <div class="d-panel"><h3>控制层 Console · 数据密集</h3>
+      <p class="d-p" style="margin-bottom:12px">适用：控制层主界面 / 登录 / 合并 / 名单选择，以及一切"表格、列表、设置、账号"界面。<b>克制、零发光光晕散色光效、小圆角、无品牌字。</b></p>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>变量</th><th>值</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>--bg</td><td><code>#0f1419</code></td><td>页面底色</td></tr>
+          <tr><td>--surface</td><td><code>#161d24</code></td><td>面板 / 侧栏</td></tr>
+          <tr><td>--surface-2</td><td><code>#1c242d</code></td><td>次级面板 / 名字卡</td></tr>
+          <tr><td>--surface-3</td><td><code>#232e39</code></td><td>输入框 / 悬停</td></tr>
+          <tr><td>--border</td><td><code>#29333e</code></td><td>1px 中性描边</td></tr>
+          <tr><td>--border-strong</td><td><code>#3b4854</code></td><td>强调描边 / 次按钮</td></tr>
+          <tr><td>--text</td><td><code>#e7edf3</code></td><td>正文</td></tr>
+          <tr><td>--text-muted</td><td><code>#93a1b0</code></td><td>辅助文字</td></tr>
+          <tr><td>--text-faint</td><td><code>#6b7885</code></td><td>弱文字 / 占位符</td></tr>
+          <tr><td>--accent</td><td><code>#45f3ff</code></td><td>当前项 / 主操作 / 链接 / 焦点</td></tr>
+          <tr><td>--accent-ink</td><td><code>#062329</code></td><td>青底上的深字</td></tr>
+          <tr><td>--accent-tint</td><td><code>rgba(69,243,255,.10)</code></td><td>当前项底 / 焦点环</td></tr>
+          <tr><td>--accent-line</td><td><code>rgba(69,243,255,.42)</code></td><td>强调描边</td></tr>
+          <tr><td>--success / --warning / --danger</td><td><code>#46b17b / #d9a441 / #e5655f</code></td><td>状态三色（各配 tint .10–.12）</td></tr>
+          <tr><td>--male / --female</td><td><code>#5aa9ff / #ff8fbf</code></td><td>性别标记</td></tr>
+          <tr><td>--radius-sm / - / -lg</td><td><code>4 / 8 / 8px</code></td><td>小圆角：控件 4px / 容器 8px（2026-11-14 新规）</td></tr>
+          <tr><td>--radius-modal</td><td><code>16px</code></td><td>模态框，以舞台层设置模态框为准（唯一容器级例外）</td></tr>
+          <tr><td>--ease</td><td><code>cubic-bezier(.16,1,.3,1)</code></td><td>统一缓动</td></tr>
+        </tbody>
+      </table></div>
+      <details class="d-code"><summary>复制控制层令牌块</summary><button class="d-copy" type="button">复制</button><pre><span class="k">:root</span>{
+  <span class="v">--bg</span>:#0f1419;            <span class="v">--surface</span>:#161d24;
+  <span class="v">--surface-2</span>:#1c242d;     <span class="v">--surface-3</span>:#232e39;
+  <span class="v">--border</span>:#29333e;         <span class="v">--border-strong</span>:#3b4854;
+  <span class="v">--text</span>:#e7edf3;            <span class="v">--text-muted</span>:#93a1b0;    <span class="v">--text-faint</span>:#6b7885;
+  <span class="v">--accent</span>:#45f3ff;          <span class="v">--accent-ink</span>:#062329;
+  <span class="v">--accent-tint</span>:rgba(69,243,255,.10);  <span class="v">--accent-line</span>:rgba(69,243,255,.42);
+  <span class="v">--success</span>:#46b17b;  <span class="v">--warning</span>:#d9a441;  <span class="v">--danger</span>:#e5655f;
+  <span class="v">--male</span>:#5aa9ff;    <span class="v">--female</span>:#ff8fbf;
+  <span class="c">/* 小圆角优先（2026-11-14）：控件 4px / 容器 8px / 模态 16px */</span>
+  <span class="v">--radius-sm</span>:4px; <span class="v">--radius</span>:8px; <span class="v">--radius-lg</span>:8px;
+  <span class="v">--radius-modal</span>:16px;
+  <span class="v">--shadow</span>:0 16px 40px rgba(0,0,0,.5);
+  <span class="v">--ease</span>:cubic-bezier(.16,1,.3,1);
+}
+<span class="c">/* 背景 = 纯色；禁止 radial 散色光晕 / 发光 / 星点 */</span>
+<span class="k">body</span>{background-color:var(--bg);color:var(--text)}</pre></details>
+    </div>
+
+    <div class="d-panel"><h3>舞台层 Stage · 工具界面</h3>
+      <p class="d-p" style="margin-bottom:12px">适用：点名框与舞台层其它组件、排座工具页、门户首页。<b>深灰底 + 青色描边 + 品牌字</b>，允许有限的表现力。</p>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>变量</th><th>值</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>--bg</td><td><code>#23242a</code></td><td>页面底色 / 画布</td></tr>
+          <tr><td>--panel</td><td><code>#1c1c1c</code></td><td>面板 / 容器 / 浮层</td></tr>
+          <tr><td>--panel-2</td><td><code>#28292d</code></td><td>次级面板 / 座位 / 内容区</td></tr>
+          <tr><td>--line</td><td><code>#33343b</code></td><td>分隔线 / 网格</td></tr>
+          <tr><td>--accent</td><td><code>#45f3ff</code></td><td>主色（与控制台同源）</td></tr>
+          <tr><td>--accent-hi</td><td><code>#35eaff</code></td><td>hover（变暗）</td></tr>
+          <tr><td>--accent-lo</td><td><code>#25daff</code></td><td>active（更暗）</td></tr>
+          <tr><td>--muted</td><td><code>#8f8f8f</code></td><td>次要文字</td></tr>
+          <tr><td>--gray</td><td><code>#666</code></td><td>中性按钮 / 未选中轨道</td></tr>
+          <tr><td>--danger</td><td><code>#ff6b6b</code></td><td>危险</td></tr>
+          <tr><td>--warn</td><td><code>#ffd700</code></td><td>金色：选中 / 高亮 / 落点（非"警告"）</td></tr>
+          <tr><td>性别（字面值）</td><td><code>#4da6ff / #ff8fbf</code></td><td>♂ / ♀ 三态筛选</td></tr>
+          <tr><td>门户同源值</td><td><code>--bg-primary:#23242a</code> 等</td><td><code>index.html</code> 另有一套语义命名，取值一致</td></tr>
+        </tbody>
+      </table></div>
+      <details class="d-code"><summary>复制舞台层令牌块</summary><button class="d-copy" type="button">复制</button><pre><span class="c">/* 舞台层令牌块 —— 对齐点名页；新规：全站禁止发光光晕散色光效 */</span>
+<span class="k">:root</span>{
+  <span class="v">--bg</span>:#23242a;        <span class="c">/* 页面底色 */</span>
+  <span class="v">--panel</span>:#1c1c1c;     <span class="c">/* 面板 / 容器 */</span>
+  <span class="v">--panel-2</span>:#28292d;   <span class="c">/* 次级面板 */</span>
+  <span class="v">--line</span>:#33343b;      <span class="c">/* 分隔线 */</span>
+  <span class="v">--accent</span>:#45f3ff;    <span class="v">--accent-hi</span>:#35eaff;  <span class="v">--accent-lo</span>:#25daff;
+  <span class="v">--muted</span>:#8f8f8f;    <span class="v">--gray</span>:#666;
+  <span class="v">--danger</span>:#ff6b6b;   <span class="v">--warn</span>:#ffd700;
+}
+<span class="c">/* 字体：舞台层专用 */</span>
+<span class="k">@import</span> url('…/css2?family=Noto+Sans+SC:wght@100..900&amp;family=ZCOOL+KuaiLe&amp;family=ZCOOL+QingKe+HuangYou&amp;display=swap');</pre></details>
+    </div>
+  </div>
+
+  <div class="d-callout"><b>同名不同值速查。</b><code>--bg</code>：<code>#0f1419</code> vs <code>#23242a</code>；<code>--danger</code>：<code>#e5655f</code> vs <code>#ff6b6b</code>；性别蓝：<code>#5aa9ff</code> vs <code>#4da6ff</code>。<b>禁止跨层复制单个变量。</b>新增页面先定层，再整块粘贴对应令牌。<br><b>2026-11-14 同步修订：</b>圆角令牌已改为 <code>4 / 8 / 16px</code>（小圆角新规，见 07 章）；页面背景改为纯色，<b>不再有 radial 光晕</b>，且全站禁止一切发光光晕散色光效。</div>
+</section>
+
+<!-- ================= 05 色彩 ================= -->
+<section class="d-section" id="color">
+  <div class="d-sec-head"><div class="d-sec-no">05</div><div>
+    <h2>色彩规范</h2>
+    <p>色板分四组：底与面（层级）、文本（对比）、强调（唯一）、语义（状态与性别）。所有色块下方标注真实出处，用于逐值核对。</p>
+  </div></div>
+
+  <div class="d-h3">控制层色板</div>
+  <div class="d-swatches">
+    <div class="d-sw"><div class="chip" style="background:#0f1419"></div><div class="meta"><b>底色</b><code>#0f1419</code><span>--bg · 页面</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#161d24"></div><div class="meta"><b>面板</b><code>#161d24</code><span>--surface</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#1c242d"></div><div class="meta"><b>次级面板</b><code>#1c242d</code><span>--surface-2</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#232e39"></div><div class="meta"><b>输入 / 悬停</b><code>#232e39</code><span>--surface-3</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#29333e"></div><div class="meta"><b>描边</b><code>#29333e</code><span>--border · 1px</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#3b4854"></div><div class="meta"><b>强调描边</b><code>#3b4854</code><span>--border-strong</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#e7edf3"></div><div class="meta"><b>正文</b><code>#e7edf3</code><span>--text</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#93a1b0"></div><div class="meta"><b>辅助文字</b><code>#93a1b0</code><span>--text-muted</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#7e8b98"></div><div class="meta"><b>弱文字（校正）</b><code>#7e8b98</code><span>--text-faint · 4.9:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#45f3ff"></div><div class="meta"><b>强调（保留）</b><code>#45f3ff</code><span>--accent</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#46b17b"></div><div class="meta"><b>成功</b><code>#46b17b</code><span>--success</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#d9a441"></div><div class="meta"><b>提醒</b><code>#d9a441</code><span>--warning</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#e5655f"></div><div class="meta"><b>危险</b><code>#e5655f</code><span>--danger</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#5aa9ff"></div><div class="meta"><b>男 ♂</b><code>#5aa9ff</code><span>--male</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#ff8fbf"></div><div class="meta"><b>女 ♀</b><code>#ff8fbf</code><span>--female</span></div></div>
+  </div>
+
+  <div class="d-h3">舞台层色板与三态</div>
+  <div class="d-swatches">
+    <div class="d-sw"><div class="chip" style="background:#23242a"></div><div class="meta"><b>底色</b><code>#23242a</code><span>--bg</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#1c1c1c"></div><div class="meta"><b>面板</b><code>#1c1c1c</code><span>--panel</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#28292d"></div><div class="meta"><b>内容区</b><code>#28292d</code><span>--panel-2 / .neirongquyu</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#33343b"></div><div class="meta"><b>分隔线</b><code>#33343b</code><span>--line</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#45f3ff"></div><div class="meta"><b>常态</b><code>#45f3ff</code><span>--accent</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#35eaff"></div><div class="meta"><b>hover</b><code>#35eaff</code><span>--accent-hi</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#25daff"></div><div class="meta"><b>active</b><code>#25daff</code><span>--accent-lo</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#8f8f8f"></div><div class="meta"><b>次要文字</b><code>#8f8f8f</code><span>--muted</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#666"></div><div class="meta"><b>中性</b><code>#666</code><span>--gray / 开关轨道</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#ff6b6b"></div><div class="meta"><b>危险</b><code>#ff6b6b</code><span>--danger</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#ffd700"></div><div class="meta"><b>选中 / 落点</b><code>#ffd700</code><span>--warn（金色，非警告）</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#4da6ff"></div><div class="meta"><b>男 ♂</b><code>#4da6ff</code><span>舞台层性别筛选</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#ff8fbf"></div><div class="meta"><b>女 ♀</b><code>#ff8fbf</code><span>舞台层性别筛选（浅色用 #bd4b76）</span></div></div>
+  </div>
+
+  <div class="d-h3">浅色模式色板（<code>data-theme="light"</code> · 参考层基准，2026-11-14 对比度校正后）</div>
+  <div class="d-swatches">
+    <div class="d-sw"><div class="chip" style="background:#f5f5f0;border:1px solid #d1d5db"></div><div class="meta"><b>底色</b><code>#f5f5f0</code><span>--bg</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#ffffff;border:1px solid #d1d5db"></div><div class="meta"><b>面板</b><code>#ffffff</code><span>--surface</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#f0f0eb;border:1px solid #d1d5db"></div><div class="meta"><b>次级面板</b><code>#f0f0eb</code><span>--surface-2</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#e8e8e3;border:1px solid #d1d5db"></div><div class="meta"><b>输入 / 悬停</b><code>#e8e8e3</code><span>--surface-3</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:rgba(45,95,138,.16)"></div><div class="meta"><b>描边</b><code>rgba(45,95,138,.16)</code><span>--border</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#d1d5db"></div><div class="meta"><b>强调描边</b><code>#d1d5db</code><span>--border-strong</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#1a1a1a"></div><div class="meta"><b>正文</b><code>#1a1a1a</code><span>--text · 15.9:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#5b6470"></div><div class="meta"><b>辅助文字</b><code>#5b6470</code><span>--text-muted · 6.0:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#66707a"></div><div class="meta"><b>弱文字（校正）</b><code>#66707a</code><span>--text-faint · 4.6:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#2d5f8a"></div><div class="meta"><b>强调（钢蓝）</b><code>#2d5f8a</code><span>--accent · 6.7:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#3a72a1"></div><div class="meta"><b>hover</b><code>#3a72a1</code><span>--accent-hi · 5.1:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#1f7a4d"></div><div class="meta"><b>成功</b><code>#1f7a4d</code><span>--success · 5.3:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#8a6d1f"></div><div class="meta"><b>提醒</b><code>#8a6d1f</code><span>--warning · 4.9:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#dc3545"></div><div class="meta"><b>危险</b><code>#dc3545</code><span>--danger · 4.5:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#2d6fc0"></div><div class="meta"><b>男 ♂</b><code>#2d6fc0</code><span>--male · 5.1:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#bd4b76"></div><div class="meta"><b>女 ♀（校正）</b><code>#bd4b76</code><span>--female · 4.7:1</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#eceae4;border:1px solid #d1d5db"></div><div class="meta"><b>舞台层画布</b><code>#eceae4</code><span>--s-bg</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#ffffff;border:1px solid #d1d5db"></div><div class="meta"><b>舞台层面板</b><code>#ffffff</code><span>--s-panel</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#b8860b"></div><div class="meta"><b>金</b><code>#b8860b</code><span>金银铜浅色对</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#708090"></div><div class="meta"><b>银</b><code>#708090</code><span>榜单银</span></div></div>
+    <div class="d-sw"><div class="chip" style="background:#8b4513"></div><div class="meta"><b>铜</b><code>#8b4513</code><span>榜单铜</span></div></div>
+  </div>
+
+  <div class="d-grid g2" style="margin-top:20px">
+    <div class="d-panel"><h3>语义角色（强制）</h3>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>角色</th><th>允许出现的位置</th></tr></thead>
+        <tbody>
+          <tr><td>强调青</td><td>当前导航项、主按钮、链接、焦点环、数值标注、座位/面板描边</td></tr>
+          <tr><td>文本三级</td><td>正文 <code>--text</code> → 辅助 <code>--text-muted</code> → 弱 <code>--text-faint</code>；<b>不要靠透明度临时造第四级</b></td></tr>
+          <tr><td>状态三色</td><td>仅 badge / toast / hint / 校验提示；不用于普通按钮或大面积底</td></tr>
+          <tr><td>性别两色</td><td>仅 ♂ / ♀ 标记与性别筛选；取值 <code>'male' / 'female' / null</code>，未设置显示 <code>－</code></td></tr>
+          <tr><td>中性阴影</td><td><code>0 12px 28px -10px rgba(0,0,0,.62)</code> 悬停；<code>0 16px 40px rgba(0,0,0,.5)</code> 模态；<b>只允许中性黑投影，禁止一切发光光晕散色光效</b></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="d-panel"><h3>对比与 tint 约定</h3>
+      <p class="d-p">青底必须配深字 <code>--accent-ink:#062329</code>（舞台层用 <code>#23242a</code>），不能配白字。状态色的底一律用对应 tint（透明度 .10–.12），边用该色 .30–.45 透明，文字用实色，形成「淡底 + 细边 + 实字」三段式。</p>
+      <p class="d-p">参考层的双主题治理给出可复用做法：<b>每个语义令牌在 <code>:root</code> 与 <code>[data-theme="light"]</code> 成对声明</b>，组件 CSS 只写 <code>var(--x)</code>；暗色下未定义变量会让整条声明失效，所以"定义了就要用、用了就要定义"必须双向校验。</p>
+      <p class="d-p">本页自身的浅色实现（<code>css/theme-light.css</code>，目录底部可切换）就是按这套方法落地的完整范例，教材见 09.14：成对令牌 + 硬编码覆写两层，<b>浅色主色换成 <code>#2d5f8a</code>，不是把 <code>#45f3ff</code> 原样搬进浅色</b>。</p>
+      <div class="d-flag do"><b>应当</b><code>var(--male)</code> / <code>var(--female)</code> / <code>var(--danger)</code> 走令牌；改性别字段时全链路 5 份 <code>parseNameWithGender()</code> 副本同步。</div>
+      <div class="d-flag dont"><b>禁止</b>内联写死 <code>#4da6ff</code> / <code>#ff8fbf</code> / <code>#48c78e</code> / <code>#ff6b6b</code> / <code>#45f3ff</code>；禁止纯黑 <code>#000</code> 与纯白 <code>#fff</code> 作背景；禁止 radial 散色光晕背景、发光边框与一切发光光晕散色光效（背景必须是纯色）。</div>
+    </div>
+  </div>
+
+  <div class="d-h3">可读性标准（WCAG 2.1 AA · 两主题分别验）</div>
+  <div class="d-grid g2" style="margin-top:14px">
+    <div class="d-panel"><h3>达标线</h3>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>内容</th><th>要求</th></tr></thead><tbody>
+          <tr><td>正文 / 小字</td><td>≥ <code>4.5 : 1</code></td></tr>
+          <tr><td>大字（≥18.66px 粗体或 ≥24px）</td><td>≥ <code>3 : 1</code></td></tr>
+          <tr><td>UI 边界 / 控件描边 / 焦点环</td><td>≥ <code>3 : 1</code>（非文字对比）</td></tr>
+          <tr><td>纯装饰 / 禁用态</td><td>豁免；禁用态仍建议 ≥ <code>3 : 1</code></td></tr>
+        </tbody></table></div>
+      <p class="d-p" style="margin-top:10px"><b>新增颜色必须先算对比度再入库，深浅两套分别验</b>；keyframes 里的颜色走令牌，否则浅色必漏。</p>
+    </div>
+    <div class="d-panel"><h3>关键对实测（2026-11-14 脚本核算）</h3>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>配对</th><th>对比度</th></tr></thead><tbody>
+          <tr><td>正文 / 底</td><td>深 <code>15.7</code> · 浅 <code>15.9</code></td></tr>
+          <tr><td>辅助文字 / 面板</td><td>深 <code>6.5</code> · 浅 <code>6.0</code></td></tr>
+          <tr><td>弱文字 / 面板（校正后）</td><td>深 <code>4.9</code> · 浅 <code>4.6</code></td></tr>
+          <tr><td>主色</td><td>深青 <code>13.7</code> · 浅钢蓝 <code>6.7</code></td></tr>
+          <tr><td>状态三色 / 白卡（浅）</td><td>危险 <code>4.5</code> · 提醒 <code>4.9</code> · 成功 <code>5.3</code></td></tr>
+          <tr><td>性别两色（浅，校正后）</td><td>男 <code>5.1</code> · 女 <code>4.7</code></td></tr>
+          <tr><td>空座字 / 空座底（校正后）</td><td>深 <code>4.8</code> · 浅 <code>4.7</code></td></tr>
+        </tbody></table></div>
+    </div>
+  </div>
+  <div class="d-callout"><b>校正登记（2026-11-14）。</b>为达标共修正 5 处：深色弱文字 <code>#6b7885 → #7e8b98</code>（3.76→4.88）、浅色弱文字 <code>#8a94a0 → #66707a</code>（2.81→4.61）、浅色女 ♀ <code>#c95c8e → #bd4b76</code>（3.89→4.74）、浅色空座字 <code>#9aa3ad → #5d6670</code>（2.05→4.67）、深色空座字 <code>#5c5d66 → #8b8c95</code>（2.46→4.80，生产端仍为旧值，登记待收敛）。另将舞台层浅色 <code>--s-muted</code> 收敛为 <code>#5b6470</code>。</div>
+</section>
+
+<!-- ================= 06 字体 ================= -->
+<section class="d-section" id="type">
+  <div class="d-sec-head"><div class="d-sec-no">06</div><div>
+    <h2>字体与排版</h2>
+    <p>三套字体各司其职，一条铁律：<b>数据密集界面只用 Noto Sans SC</b>。字号采用固定 rem 阶梯，不写缩放公式；数字一律等宽对齐。</p>
+  </div></div>
+
+  <div class="d-grid g3">
+    <div class="d-panel"><h3>Noto Sans SC · 正文字</h3>
+      <div style="font-size:2rem;font-weight:700;line-height:1.4">通用设计体系</div>
+      <p class="d-caption">字重 100–900（可变字体）；控制台只用到 400 / 500 / 600 / 700。<br>回退：<code>-apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif</code>。</p>
+    </div>
+    <div class="d-panel"><h3>ZCOOL KuaiLe · 品牌字</h3>
+      <div style="font-family:var(--font-brand);font-size:2rem;color:var(--accent);line-height:1.4">随机点名</div>
+      <p class="d-caption">仅舞台层：点名框标题、按钮、品牌字标、小组名、状态栏提示词、Ribbon 页签。<b>控制层禁用。</b></p>
+    </div>
+    <div class="d-panel"><h3>ZCOOL QingKe HuangYou · 展示字</h3>
+      <div style="font-family:var(--font-display);font-size:2rem;color:var(--accent);line-height:1.4">就很随机</div>
+      <p class="d-caption">仅点名框姓名显示；必须带 <code>Noto Sans SC</code> 备用字与 <code>line-height:1.2</code>，防止字高差异顶破布局。</p>
+    </div>
+  </div>
+
+  <div class="d-h3">字号阶梯（控制层）</div>
+  <div class="d-table-wrap"><table class="d-table">
+    <thead><tr><th>层级</th><th>字号 / 字重</th><th>实时样例</th><th>出处</th></tr></thead>
+    <tbody>
+      <tr><td>页面标题 h1</td><td><code>1.375rem / 700</code><br><span class="dim">letter-spacing:-.01em</span></td><td><span style="font-size:1.375rem;font-weight:700;letter-spacing:-.01em">名单管理</span></td><td>控制层主界面</td></tr>
+      <tr><td>卡片标题</td><td><code>1rem / 600</code></td><td><span style="font-size:1rem;font-weight:600">三年二班</span></td><td>.list-card-title</td></tr>
+      <tr><td>区块标题</td><td><code>.9375rem / 600</code></td><td><span style="font-size:.9375rem;font-weight:600">账号信息</span></td><td>.account-card h2</td></tr>
+      <tr><td>正文 / 按钮</td><td><code>.875rem / 400·600</code></td><td><span style="font-size:.875rem">创建和管理您的云名单</span></td><td>body / .btn</td></tr>
+      <tr><td>辅助文字</td><td><code>.8125rem / 400</code></td><td><span style="font-size:.8125rem;color:var(--text-muted)">最近更新 · 3 天前 · 共 42 人</span></td><td>--text-muted</td></tr>
+      <tr><td>标签 / 徽章</td><td><code>.75rem / .6875rem</code></td><td><span class="prefix-card-badge">默认前缀</span></td><td>.prefix-card-badge</td></tr>
+      <tr><td>点名框姓名（舞台）</td><td><code>2em / 400</code></td><td><span style="font-family:var(--font-display);font-size:2em;color:var(--accent);line-height:1.2">张伟</span></td><td>.xingmingxianshi</td></tr>
+      <tr><td>数字（等宽）</td><td><code>font-variant-numeric:tabular-nums</code></td><td><span class="mono" style="font-weight:600">884217 · 1,024 · 96</span></td><td>设备码 / 计数 / 榜单</td></tr>
+      <tr><td>等宽 6 位码</td><td><code>1.375rem / letter-spacing:.42em</code><br><span class="dim">text-indent:.21em 补半格居中</span></td><td><span class="mono" style="font-size:1.375rem;font-weight:700;letter-spacing:.42em;text-indent:.21em;color:var(--accent)">482913</span></td><td>.device-auth-code-input</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="d-flag do" style="margin-top:16px"><b>应当</b>标题字距 <code>-.01em</code>、品牌字距 <code>.1em</code>、小标题 <code>.06–.08em</code>；正文行高 1.6、说明文字 1.8–1.9；长文本 <code>text-wrap:pretty</code> 与 <code>word-break</code> 防溢出。</div>
+  <div class="d-flag dont"><b>禁止</b>用 Inter / Roboto / Arial 作展示字；禁止用等宽字体冒充"技术感"；禁止在标题上叠发光 <code>text-shadow</code>（一切发光光晕散色光效均禁止）；禁止给 h1 加大图标 + 圆角徽章的通用模板式组合。</div>
+</section>
+
+<!-- ================= 07 空间 ================= -->
+<section class="d-section" id="space">
+  <div class="d-sec-head"><div class="d-sec-no">07</div><div>
+    <h2>空间 · 圆角 · 描边 · 阴影</h2>
+    <p>间距不是"看着差不多"，而是有节奏的阶梯。<b>2026-11-14 新规：本项目偏好小圆角</b>——此前开发没有注意这一点，后续所有页面按下面四档执行；历史大圆角统一登记为偏差，逐步收敛。</p>
+  </div></div>
+
+  <div class="d-callout"><b>新规 · 小圆角优先（2026-11-14 确立，最高优先级）</b><br>
+  　基准只有两处：<b>点名框</b>（<b>不含筛选面板</b>——它当初没有按最初的设计规范做，其 12px 圆角与混合底色不得引用）与 <b>设置模态框（基准）</b>。<br>
+  　· <b>按钮</b>：以点名框「开始 / 停止」<code>.anniu</code> 的 <code>4px</code> 为准（设置框 <code>#save-settings</code> 同样是 4px）。<br>
+  　· <b>输入框等控件</b>：以设置框 <code>.setting-item input[type=number]</code> 的 <code>4px</code> 为准。<br>
+  　· <b>面板 / 卡片 / 容器</b>：以点名框框体 <code>.dianmingkuang</code> 与内容区 <code>.neirongquyu</code> 的 <code>8px</code> 为准。<br>
+  　· <b>模态框</b>：以设置模态框 <code>.settings-content</code> 的 <code>16px</code> 为准（用户指定；唯一允许的较大容器级圆角，内部控件仍 4px）。<br>
+  　凡 <code>7 / 10 / 12 / 14px</code> 等中间值一律视为漂移，见下方「偏差登记」，<b>不得再作为新页面的基准</b>。</div>
+
+  <div class="d-grid g2">
+    <div class="d-panel"><h3>间距阶梯</h3>
+      <div class="d-ruler">
+        <div class="d-ruler-row"><span class="lb">4px</span><div class="bar" style="width:4px"></div><span class="vl">图标内隙 / 徽章内</span></div>
+        <div class="d-ruler-row"><span class="lb">6–8px</span><div class="bar" style="width:8px"></div><span class="vl">按钮组 gap / 标签 gap / 性别钮 gap</span></div>
+        <div class="d-ruler-row"><span class="lb">10–12px</span><div class="bar" style="width:12px"></div><span class="vl">卡片内 gap / 表格单元格 / grid gap</span></div>
+        <div class="d-ruler-row"><span class="lb">14–16px</span><div class="bar" style="width:16px"></div><span class="vl">卡片 padding / 面板间距 / 列表 gap</span></div>
+        <div class="d-ruler-row"><span class="lb">18–22px</span><div class="bar" style="width:22px"></div><span class="vl">面板 padding / 模态 header / 主区内边距</span></div>
+        <div class="d-ruler-row"><span class="lb">24–32px</span><div class="bar" style="width:32px"></div><span class="vl">侧栏 padding / 主区 padding / 章节间距</span></div>
+        <div class="d-ruler-row"><span class="lb">40–50px</span><div class="bar" style="width:50px"></div><span class="vl">点名框内容区 padding / 按钮容器 margin-top</span></div>
+        <div class="d-ruler-row"><span class="lb">72px</span><div class="bar" style="width:72px"></div><span class="vl">规范文档章节上间距</span></div>
+      </div>
+      <p class="d-caption"><b>关键常量：</b>侧栏 240px · 控制台主区 <code>28px 32px</code> · Ribbon 高 119px（52 顶栏 + 38 页签 + 78 功能区 + 2px 青底边）· 状态栏 32px · 浮动圆钮 40px（间距 50px = 40 + 10）· 座位 46px / 网格 56px。</p>
+    </div>
+    <div class="d-panel"><h3>圆角规范（四档，小圆角优先）</h3>
+      <div class="d-radius-row">
+        <div><div class="box" style="border-radius:4px">4</div><small>控件级 · 基准</small></div>
+        <div><div class="box" style="border-radius:8px">8</div><small>容器级 · 基准</small></div>
+        <div><div class="box" style="border-radius:16px">16</div><small>模态级 · 设置框</small></div>
+        <div><div class="box" style="border-radius:999px">∞</div><small>胶囊 / 正圆（形状特例）</small></div>
+      </div>
+      <div class="d-h4">规范值与基准出处（实测值）</div>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>档位</th><th>值</th><th>基准出处</th><th>适用</th></tr></thead>
+        <tbody>
+          <tr><td>控件级</td><td><code>4px</code></td><td>点名框 <code>.anniu</code> L205；设置框 <code>input[type=number]</code> L1116、<code>#save-settings</code> L1204</td><td>所有按钮、输入框、下拉、小图标钮、座位块、Ribbon 按钮</td></tr>
+          <tr><td>容器级</td><td><code>8px</code></td><td>点名框 <code>.dianmingkuang</code> L69、<code>.neirongquyu</code> L133、二维码框 L300、菜单、Toast</td><td>面板、卡片、内容区、气泡、菜单（提示模态归模态级 16px）</td></tr>
+          <tr><td>模态级</td><td><code>16px</code></td><td>设置模态框 <code>.settings-content</code> L1087（<b>用户指定</b>）</td><td>仅模态面板；内部控件仍 4px</td></tr>
+          <tr><td>展示特例</td><td><code>10px</code></td><td>点名框 <code>.xingmingxianshi</code> L160（S 级基准的展示元素）</td><td>只此一处，<b>不得外推</b>到其它控件</td></tr>
+          <tr><td>形状特例</td><td><code>999px / 50%</code></td><td>徽章胶囊、40px 圆钮、toggle 轨道</td><td>仅胶囊与正圆，不作普通容器圆角</td></tr>
+        </tbody>
+      </table></div>
+      <div class="d-h4">偏差登记（历史值，不得作为基准）</div>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>旧值</th><th>出现位置</th><th>收敛目标</th></tr></thead>
+        <tbody>
+          <tr><td><code>12px</code></td><td><b>筛选面板 <code>.filter-panel</code> L535</b>（用户明确：未按最初设计规范实现）、小组项 L767 等</td><td><code>8px</code>；筛选面板整体不作为基准；提示卡已改按模态级 16px（2026-11-14）</td></tr>
+          <tr><td><code>7 / 10 / 14px</code></td><td>控制层历史令牌 <code>--radius-sm / --radius / --radius-lg</code></td><td><code>4 / 8 / 8px</code></td></tr>
+          <tr><td><code>16px</code></td><td>舞台层各类弹窗面板、参考层编辑名单面板（普通容器用）</td><td><code>8px</code>；仅设置模态框保留 16px</td></tr>
+          <tr><td><code>5 / 6px</code></td><td>Ribbon 按钮、部分小图标钮（排座座位 6px 为实测保留，不收敛）</td><td><code>4px</code></td></tr>
+          <tr><td><code>10px</code></td><td>性别筛选钮、小组按钮、小组框（舞台层控件）</td><td><code>4px</code>（控件）/ <code>8px</code>（框）</td></tr>
+        </tbody>
+      </table></div>
+      <div class="d-h4">描边与阴影（均非发光）</div>
+      <div class="d-table-wrap"><table class="d-table">
+        <tbody>
+          <tr><td>中性描边</td><td><code>1px solid var(--border)</code></td></tr>
+          <tr><td>强调描边</td><td><code>1px solid var(--border-strong)</code> / <code>1px solid var(--accent-line)</code></td></tr>
+          <tr><td>舞台层描边</td><td><code>1px solid var(--accent)</code>（面板/座位）；<code>2px solid var(--accent)</code>（Ribbon 底边）</td></tr>
+          <tr><td>分隔线</td><td>区块间 <code>border-top:1px</code>；<code>.filter-section + .filter-section</code> 自动出现</td></tr>
+          <tr><td>悬停上浮</td><td><code>translateY(-3px)</code> + <code>0 12px 28px -10px rgba(0,0,0,.62)</code></td></tr>
+          <tr><td>模态阴影</td><td><code>0 16px 40px rgba(0,0,0,.5)</code></td></tr>
+          <tr><td>焦点环</td><td><code>outline:2px solid var(--accent); outline-offset:2px</code> / 输入 <code>box-shadow:0 0 0 3px var(--accent-tint)</code></td></tr>
+        </tbody>
+      </table></div>
+      <div class="d-flag dont" style="margin-top:12px"><b>禁止</b>一切发光光晕散色光效（彩色 glow、发光 <code>text-shadow</code>、模糊光晕、radial 散色背景、毛玻璃 <code>backdrop-filter</code>）；禁止大圆角（普通容器 &gt;8px、控件 &gt;4px）；禁止无意义装饰火花线。<br><b>允许</b>：焦点环 <code>0 0 0 3px var(--accent-tint)</code> 是<b>实色描边</b>（无 blur），中性黑阴影是<b>投影</b>，二者都不是发光。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 08 动效 ================= -->
+<section class="d-section" id="motion">
+  <div class="d-sec-head"><div class="d-sec-no">08</div><div>
+    <h2>动效系统</h2>
+    <p>统一缓动 <code>cubic-bezier(.16,1,.3,1)</code>（指数 ease-out），状态切换 150–300ms。动画只表达层级、顺序、因果，<b>不做常驻循环装饰</b>——这是与旧版"AI 味"的分界线。点名框的三支循环动画是全站唯一例外。</p>
+  </div></div>
+
+  <div class="d-grid g2">
+    <div class="d-panel"><h3>动画清单</h3>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>Keyframes</th><th>作用</th><th>时长</th></tr></thead>
+        <tbody>
+          <tr><td>riseIn</td><td>入场 <code>translateY(12px)</code></td><td><code>.42–.46s</code></td></tr>
+          <tr><td>slideInL</td><td>侧栏从左侧入</td><td><code>.4s</code></td></tr>
+          <tr><td>popIn</td><td>空状态图标 / 汇总数字格</td><td><code>.35s</code></td></tr>
+          <tr><td>barGrow</td><td>当前导航竖条长出来</td><td><code>.2s</code></td></tr>
+          <tr><td>slideIn / slideOut</td><td>模态开合（JS 触发）</td><td><code>.2s</code></td></tr>
+          <tr><td>panelIn / panelOut</td><td>面板开合</td><td><code>.2s</code></td></tr>
+          <tr><td>overlayIn / overlayOut</td><td>遮罩淡入淡出</td><td><code>.2s ease-out</code></td></tr>
+          <tr><td>tabIn / fadeIn</td><td>选项卡切换 / 名字卡片加载态</td><td><code>.18–.5s</code></td></tr>
+          <tr><td>spin</td><td>加载转圈（唯一功能性循环）</td><td><code>.7–1s linear infinite</code></td></tr>
+          <tr><td>donghua / maichong / huxi</td><td><b>舞台层专用</b>：旋转描边 / 背景脉冲 / 姓名呼吸</td><td><code>.1s / 2s / .5s</code></td></tr>
+        </tbody>
+      </table></div>
+      <div class="d-h4">入场序列：前 8 张 40ms 步进</div>
+      <div class="d-stagger"><div>0ms</div><div>40</div><div>80</div><div>120</div><div>160</div><div>200</div><div>240</div><div>280</div></div>
+      <p class="d-caption">JS 动态生成的卡片自带内联 <code>animation-delay = index*0.05s</code>，长列表会拖到秒级。用 <code>.lists-grid > .list-card</code> 的 <code>!important</code> 接管节奏（作者 !important &gt; 内联普通声明），统一压到前 8 张。</p>
+    </div>
+    <div class="d-panel"><h3>实时演示 · 点击重播</h3>
+      <div class="d-fx-stage" id="fxStage">
+        <div class="d-fx-box fx-rise">riseIn</div>
+        <div class="d-fx-box fx-pop">popIn</div>
+        <div class="d-fx-box fx-slide">slideInL</div>
+        <div class="d-fx-box fx-fade">fadeIn</div>
+      </div>
+      <div class="d-row" style="margin-top:12px"><button class="btn btn-secondary btn-sm" type="button" id="fxReplay">重播入场</button><button class="action-btn-inline" type="button" id="fxStagger">重播序列</button></div>
+      <div class="d-h4">三条必须记住的坑</div>
+      <div class="d-flag do"><b>坑 1 · 别删 slideIn/slideOut</b>控制层主界面的 JS 有 6 处 <code>panel.style.animation = 'slideIn/slideOut …'</code>，内联 animation 会覆盖 CSS 的 panelIn，删掉这两个 keyframes 模态会"啪"地硬出现。</div>
+      <div class="d-flag do"><b>坑 2 · fill-mode 只能用 backwards</b>入场动画一律 <code>animation-fill-mode: backwards</code>。<code>both/forwards</code> 会长期占住 transform，把卡片 hover 上浮永久压死。</div>
+      <div class="d-flag do"><b>坑 3 · 用 !important 压住内联 delay</b>长列表 stagger 必须用作者 <code>!important</code> 覆盖 JS 内联 <code>animation-delay</code>，否则第 30 张卡片要等 1.5s 才出现。</div>
+      <div class="d-flag dont" style="margin-top:8px"><b>禁止</b>bounce / breathe / twinkle / pulse 无限循环装饰（点名框抽选态除外）、<b>禁止发光 / 光晕脉冲类动画</b>；禁止回弹缓动；禁止动画化布局属性；四页均须带 <code>@media (prefers-reduced-motion: reduce)</code> 兜底。</div>
+    </div>
+  </div>
+
+  <div class="d-spec" style="margin-top:18px">
+    <div class="d-spec-head"><span class="d-spec-id">08.1</span><h3>动效层代码块</h3><p>每页 <code>&lt;/style&gt;</code> 前与令牌块同源复制；顺序：keyframes → 入场 → hover → reduced-motion。</p><span class="d-spec-src">UI-DETAIL.md「动效层」</span></div>
+    <details class="d-code" open><summary>复制动效层</summary><button class="d-copy" type="button">复制</button><pre><span class="k">@keyframes riseIn</span>{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+<span class="k">@keyframes popIn</span>{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+<span class="k">@keyframes slideInL</span>{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+<span class="k">@keyframes barGrow</span>{from{transform:translateY(-50%) scaleY(.15)}to{transform:translateY(-50%) scaleY(1)}}
+<span class="k">@keyframes slideIn</span>{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+<span class="k">@keyframes slideOut</span>{from{opacity:1}to{opacity:0;transform:translateY(10px) scale(.99)}}
+<span class="c">/* 入场只允许 backwards，绝不用 both / forwards */</span>
+<span class="k">.panel</span>{animation:riseIn .45s var(--ease) <span class="t">backwards</span>}
+<span class="c">/* 悬停上浮用中性黑阴影，按钮按下 scale(.97) */</span>
+<span class="k">.list-card:hover</span>{transform:translateY(-3px);box-shadow:0 12px 28px -10px rgba(0,0,0,.62)}
+<span class="k">.btn:active:not(:disabled)</span>{transform:scale(.97)}
+<span class="c">/* 作者 !important 接管 JS 内联 delay，前 8 张 40ms 步进 */</span>
+<span class="k">.lists-grid &gt; .list-card</span>{animation-delay:0s <span class="t">!important</span>}
+<span class="k">@media (prefers-reduced-motion:reduce)</span>{
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}</pre></details>
+  </div>
+</section>
+
+<!-- ================= 09 组件教材 ================= -->
+<section class="d-section" id="components">
+  <div class="d-sec-head"><div class="d-sec-no">09</div><div>
+    <h2>组件教材总览</h2>
+    <p>14 组标本覆盖本项目全部 UI 元素。每张卡：<b>实时样例 → 规范值 → 应当/禁止 → 代码</b>。样例可悬停、可点击，交互由本页脚本驱动。类名与生产页面同源；<b>圆角已按 07 章小圆角新规收敛到 4 / 8 / 16</b>，与生产源码不一致处以新规为准（历史值见 07 章偏差表）；<b>03 章点名框为逐值复刻，不做收敛</b>。所有标本<b>零发光</b>。</p>
+  </div></div>
+  <div class="d-panel tight">
+    <div class="d-row" style="gap:8px">
+      <a class="d-chip" href="#c-buttons">09.1 按钮</a><a class="d-chip" href="#c-iconbtn">09.2 图标钮</a><a class="d-chip" href="#c-input">09.3 输入</a>
+      <a class="d-chip" href="#c-switch">09.4 开关</a><a class="d-chip" href="#c-card">09.5 卡片</a><a class="d-chip" href="#c-badge">09.6 徽章</a>
+      <a class="d-chip" href="#c-nav">09.7 导航</a><a class="d-chip" href="#c-modal">09.8 模态</a><a class="d-chip" href="#c-feedback">09.9 反馈</a>
+      <a class="d-chip" href="#c-data">09.10 数据</a><a class="d-chip" href="#c-seat">09.11 座位</a><a class="d-chip" href="#c-ribbon">09.12 Ribbon</a>
+      <a class="d-chip" href="#c-icon">09.13 图标</a><a class="d-chip" href="#c-counter">09.14 双主题</a>
+    </div>
+  </div>
+
+  <!-- 09.1 按钮 -->
+  <article class="d-spec" id="c-buttons">
+    <div class="d-spec-head"><span class="d-spec-id">09.1</span><h3>按钮 · Button</h3><p>一屏一个主按钮。三级：主操作（青实底）/ 次操作（描边）/ 危险（红描边）。</p><span class="d-spec-src">控制层主界面 / 舞台层点名页</span></div>
+    <div class="d-spec-demo">
+      <div class="d-legend"><span><b>①</b> 常态</span><span><b>②</b> 悬停（移上去）</span><span><b>③</b> 按下（按住）</span><span><b>④</b> 禁用</span><span><b>⑤</b> 加载中</span></div>
+      <div class="d-row" style="margin-bottom:12px">
+        <button class="btn btn-primary" type="button">创建新名单</button>
+        <button class="btn btn-secondary" type="button">取消</button>
+        <button class="btn btn-danger" type="button">删除</button>
+        <button class="btn btn-primary" type="button" disabled>已禁用</button>
+        <button class="btn btn-primary" type="button"><span class="btn-spinner"></span>正在保存…</button>
+      </div>
+      <div class="d-row" style="margin-bottom:12px">
+        <button class="btn btn-primary btn-sm" type="button">编辑</button>
+        <button class="btn btn-secondary btn-sm" type="button">排座位</button>
+        <button class="btn btn-danger btn-sm" type="button">删除</button>
+        <button class="action-btn-inline" type="button">添加名字</button>
+        <button class="action-btn-inline danger" type="button">清空名单</button>
+      </div>
+      <div class="d-row stage" style="background:var(--s-bg);padding:14px;border-radius:var(--r)">
+        <span style="color:var(--s-muted);font-size:.75rem;margin-right:6px">舞台层 .anniu 三态</span>
+        <button class="anniu" type="button" style="position:static;transform:none;width:120px">开始</button>
+        <span class="mono" style="color:var(--text-faint);font-size:.6875rem">#45f3ff → hover #35eaff → active #25daff</span>
+      </div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>尺寸</td><td><code>padding:9px 16px</code>；小号 <code>6px 12px</code></td></tr>
+        <tr><td>圆角 / 字</td><td><code>4px</code>（点名框 .anniu 同款）/ <code>.875rem 600</code></td></tr>
+        <tr><td>主按钮</td><td>青实底 + <code>--accent-ink</code> 深字；hover 提亮 <code>#74f6ff</code></td></tr>
+        <tr><td>次按钮</td><td>透明底 + <code>--border-strong</code>；hover <code>--surface-3</code></td></tr>
+        <tr><td>危险按钮</td><td>透明底 + 红 .45 边；hover 变红实底白字</td></tr>
+        <tr><td>禁用 / 加载</td><td><code>opacity:.5;cursor:not-allowed</code> / spinner + <code>pointer-events:none</code></td></tr>
+        <tr><td>按下</td><td><code>transform:scale(.97)</code>（全站统一）</td></tr>
+        <tr><td>过渡</td><td><code>.15s var(--ease)</code>，只动 color / background / border / transform</td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>每屏至多一个主按钮；图标 + 文字同排 <code>gap:8px</code>；动态文案只改 <code>.rb-txt</code>，不要整块改 <code>textContent</code>（会抹掉 SVG）。</div>
+      <div class="d-flag dont"><b>禁止</b>渐变底按钮、hover 上浮、一切发光光晕散色光效、圆角 999px 药丸按钮、&gt;4px 的大圆角按钮、所有按钮都做成主色。</div>
+    </div></div>
+    <details class="d-code"><summary>查看实现代码</summary><button class="d-copy" type="button">复制</button><pre><span class="k">.btn</span>{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 16px;
+  border-radius:4px;border:1px solid transparent;font-family:inherit;
+  font-size:.875rem;font-weight:600;cursor:pointer;white-space:nowrap;
+  transition:background-color .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease)}
+<span class="k">.btn-primary</span>{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+<span class="k">.btn-primary:hover</span>{background:#74f6ff;border-color:#74f6ff}
+<span class="k">.btn-secondary</span>{background:transparent;border-color:var(--border-strong);color:var(--text)}
+<span class="k">.btn-danger</span>{background:transparent;border-color:rgba(229,101,95,.45);color:var(--danger)}
+<span class="k">.btn:disabled</span>{opacity:.5;cursor:not-allowed}
+<span class="k">.btn:active:not(:disabled)</span>{transform:scale(.97)}</pre></details>
+  </article>
+
+  <!-- 09.2 图标钮 -->
+  <article class="d-spec" id="c-iconbtn">
+    <div class="d-spec-head"><span class="d-spec-id">09.2</span><h3>图标按钮与浮动圆钮</h3><p>舞台层左下角的 40px 圆钮阵列是 舞台层 的标志性交互；控制层用 <code>.action-btn-inline</code> 承载图标 + 文字。<b>2026-11-14 修订：</b>气泡去掉青色发光阴影，圆角由 16px 收敛到 8px。</p><span class="d-spec-src">舞台层浮动圆钮 / 排座工具页 Ribbon</span></div>
+    <div class="d-spec-demo stage" style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap">
+      <div>
+        <div class="d-legend"><span><b>左下角浮动圆钮阵列</b> · 40px / 间距 50px / z-index 1000</span></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="settings-button" type="button" title="设置">⚙</button>
+          <button class="input-name-list-button" type="button" title="在此设备输入名单">✎</button>
+          <button class="home-button" type="button" title="返回首页">⌂</button>
+        </div>
+        <p class="d-caption">第二行：<code>bottom:70px;left:20px</code> 放「我的」，<code>left:70px</code> 放「云名单」；头像 tooltip 在<b>上方</b>（横向会被云名单按钮压住）。</p>
+      </div>
+      <div>
+        <div class="d-legend"><span><b>气泡提示</b> · 青底深字 / 圆角 8 / 品牌字 / 零发光</span></div>
+        <div style="padding:10px 0 22px"><span class="tooltip-bubble">扫码上传名单</span></div>
+      </div>
+      <div>
+        <div class="d-legend"><span><b>Ribbon 图标按钮</b> · 描边 / 12.5px</span></div>
+        <div class="rb-demo" style="display:inline-block"><div class="d-row" style="padding:12px;gap:8px">
+          <button class="rb-icon-btn" type="button" style="font-family:var(--font-ui)"><span>刷新</span></button>
+          <button class="rb-icon-btn" type="button" style="font-family:var(--font-ui)"><span>返回控制台</span></button>
+        </div></div>
+      </div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>圆钮</td><td><code>40×40 / border-radius:50% / padding:10px</code></td></tr>
+        <tr><td>定位</td><td><code>bottom:20px</code>；<code>left:20 / 70 / 120px</code>；第二行 <code>bottom:70px</code></td></tr>
+        <tr><td>底色 / 图标色</td><td><code>#45f3ff</code> / <code>#23242a</code>；hover <code>#35eaff + scale(1.1)</code></td></tr>
+        <tr><td>气泡</td><td><code>radius:8px</code>、ZCOOL KuaiLe、<code>::after</code> 三角 9px；<b>无阴影、无发光</b>（2026-11-14 去掉原先的青色发光阴影）</td></tr>
+        <tr><td>触摸目标</td><td>移动端实际命中区 ≥ <code>44px</code>（含 gap 与 padding）</td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>浮动按钮统一 40px、统一 z-index 1000、tooltip 方向按遮挡关系调整；新增按钮按 50px 步进排入阵列。</div>
+      <div class="d-flag dont"><b>禁止</b>给圆钮加任何发光光晕散色光效（含彩色 glow <code>box-shadow</code>、<code>text-shadow</code>、模糊光晕、radial 散色）；禁止用 emoji 代替图标字形；禁止自绘小图标按钮充当"刷新"（用户要求刷新按钮与 <code>.btn-primary</code> 同款）。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.3 输入 -->
+  <article class="d-spec" id="c-input">
+    <div class="d-spec-head"><span class="d-spec-id">09.3</span><h3>输入与表单</h3><p>输入框底用 <code>--surface-3</code>，焦点靠 1px 青边 + 3px <b>实色</b> tint 环（无 blur，不是发光）；圆角 4px。</p><span class="d-spec-src">控制层主界面输入组件</span></div>
+    <div class="d-spec-demo">
+      <div class="d-legend"><span><b>①</b> 常态</span><span><b>②</b> 聚焦（点进去）</span><span><b>③</b> 禁用</span><span><b>④</b> 6 位设备码</span><span><b>⑤</b> 搜索框（舞台层）</span></div>
+      <div class="d-grid g2" style="max-width:660px">
+        <div><label class="d-caption" style="display:block;margin:0 0 6px;color:var(--text-muted)">名单名称</label><input class="dialog-input" type="text" placeholder="例如：三年二班"></div>
+        <div><label class="d-caption" style="display:block;margin:0 0 6px;color:var(--text-muted)">禁用态</label><input class="dialog-input" type="text" value="只读内容" disabled></div>
+        <div><label class="d-caption" style="display:block;margin:0 0 6px;color:var(--text-muted)">授权码（等宽 6 位）</label><input class="device-auth-code-input" type="text" maxlength="6" placeholder="000000" inputmode="numeric"></div>
+        <div><label class="d-caption" style="display:block;margin:0 0 6px;color:var(--text-muted)">搜索姓名（舞台层）</label><input class="dialog-input" type="text" placeholder="搜索姓名…" style="background:var(--s-panel-2);border-color:var(--s-accent-lo);border-radius:4px;font-size:.8125rem"></div>
+      </div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>尺寸</td><td><code>padding:10px 12px</code> / <code>font-size:.9375rem</code> / <code>radius:4px</code>（设置框 input 同款）</td></tr>
+        <tr><td>底 / 边</td><td><code>var(--surface-3)</code> / <code>1px var(--border-strong)</code></td></tr>
+        <tr><td>焦点</td><td><code>outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-tint)</code></td></tr>
+        <tr><td>占位符</td><td><code>var(--text-faint)</code></td></tr>
+        <tr><td>6 位码</td><td><code>letter-spacing:.42em</code> + <code>text-indent:.21em</code> 补半格居中、<code>tabular-nums</code></td></tr>
+        <tr><td>行内改名</td><td>Enter / 失焦 = 确认，Escape = 取消，<b>不生成确认取消按钮</b></td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>名字卡片改名后调 <code>refreshEditNamesFromDOM()</code> 重建（避免 <code>dataset.index</code> 失效错序）；「添加名字」输入框卡片仍保留按钮。</div>
+      <div class="d-flag dont"><b>禁止</b>焦点用任何发光光晕散色光效；禁止 <code>outline:none</code> 后不给任何替代焦点样式；禁止原生 <code>alert/confirm/prompt</code>（全部走 <code>openDialog()</code> 自包含模块）。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.4 开关 -->
+  <article class="d-spec" id="c-switch">
+    <div class="d-spec-head"><span class="d-spec-id">09.4</span><h3>开关 / 三态筛选 / 选择</h3><p>翻页笔开关、性别三态、小组标签、复选与下拉——全站选择类控件。</p><span class="d-spec-src">舞台层开关与小组组件 / 排座工具页 Ribbon</span></div>
+    <div class="d-spec-demo stage">
+      <div class="d-legend"><span><b>①</b> 翻页笔开关（点击）</span><span><b>②</b> 性别三态（点击）</span><span><b>③</b> 小组标签</span><span><b>④</b> 小组选择卡</span><span><b>⑤</b> 座位表下拉</span></div>
+      <div class="d-row" style="gap:28px;align-items:center;margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:10px"><label class="fanyebeikaiguan"><input type="checkbox" id="demoSwitch" checked><span class="slider"></span></label><span style="color:#d7d8dd;font-size:.8125rem">翻页笔遥控</span></div>
+        <div class="gender-filter-group" id="demoGender">
+          <button class="gender-filter-btn active" type="button" data-gender="all">－</button>
+          <button class="gender-filter-btn" type="button" data-gender="male">♂</button>
+          <button class="gender-filter-btn" type="button" data-gender="female">♀</button>
+        </div>
+        <div class="group-chip-list" style="width:auto"><span class="group-chip">第一组</span><span class="group-chip">第三组</span><span class="group-chip muted">不挑小组</span></div>
+      </div>
+      <div class="d-row" style="gap:16px;align-items:flex-start">
+        <div style="display:flex;gap:8px">
+          <div style="padding:10px 14px;background:rgba(69,243,255,.05);border:2px solid rgba(69,243,255,.2);border-radius:8px;color:#e6e6e6;font-size:.8125rem">○ 第一组</div>
+          <div style="padding:10px 14px;background:rgba(69,243,255,.16);border:2px solid #45f3ff;border-radius:8px;color:#e6e6e6;font-size:.8125rem">● 第二组</div>
+        </div>
+        <select style="appearance:none;background:var(--s-panel-2);color:var(--s-accent);border:1px solid var(--s-accent);border-radius:4px;padding:5px 12px;font-family:var(--font-ui);font-size:.8125rem">
+          <option>三年二班 · 座位表 A</option><option>三年二班 · 座位表 B</option>
+        </select>
+      </div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>开关</td><td><code>60×34</code> 轨道 / <code>26×26</code> 滑块 / <code>.4s</code>；关 <code>#666</code>、开 <code>#45f3ff</code></td></tr>
+        <tr><td>性别钮</td><td><code>52×40 / radius 4 / 2px 边</code>；全部=<code>－</code> 青、男=<code>♂ #4da6ff</code>、女=<code>♀ #ff8fbf</code></td></tr>
+        <tr><td>小组标签</td><td><code>radius:999px</code>、<code>3px 9px</code>；未选为虚线灰底 <code>.muted</code> 保留位置</td></tr>
+        <tr><td>并排按钮</td><td><code>.group-pick-btn</code> / <code>.group-cancel-btn</code> 均 <code>flex:1 1 0</code> 等宽平分一行</td></tr>
+        <tr><td>下拉</td><td>舞台层 <code>--panel-2</code> 底 + 青边 <code>radius:4px</code>；<code>min-width:0</code> 防撑破 flex</td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>性别存储取 <code>'male' / 'female' / null</code>，未设置显示 <code>－</code>；按钮状态靠 <code>data-gender</code> 属性选择器，不靠 JS 改文案。</div>
+      <div class="d-flag dont"><b>禁止</b>未选中组时把「取消小组」按钮移除（会跳行），应置灰保留位置；禁止给 <code>.rb-tab</code> 去掉常驻边框（未选中项会看着像纯文字）。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.5 卡片 -->
+  <article class="d-spec" id="c-card">
+    <div class="d-spec-head"><span class="d-spec-id">09.5</span><h3>卡片与容器</h3><p>实色面板 + 1px 中性描边，不套卡片、不毛玻璃。悬停上浮只用中性黑阴影；其中<b>提示模态以舞台层设置模态框为准</b>（<code>#1c1c1c</code> 底 / <code>2px #666</code> 边 / 16px）。</p><span class="d-spec-src">排座工具页提示模态 / 舞台层模态家族（设置模态框 · 通用提示面板）</span></div>
+    <div class="d-spec-demo">
+      <div class="d-legend"><span><b>①</b> 名单卡（悬停上浮）</span><span><b>②</b> 前缀行</span><span><b>③</b> 名字卡（行内编辑）</span><span><b>④</b> 提示模态（舞台层）</span></div>
+      <div class="d-grid g2" style="align-items:start">
+        <div class="list-card">
+          <div class="list-card-title">三年二班</div>
+          <div class="list-card-info"><span>42 人</span><span style="color:var(--male)">♂ 19</span><span style="color:var(--female)">♀ 23</span><span class="seat-tag">2 个座位表</span></div>
+          <div class="list-card-actions"><button class="btn btn-primary btn-sm" type="button">编辑</button><button class="btn btn-danger btn-sm" type="button">删除</button></div>
+        </div>
+        <div class="d-stack">
+          <div class="prefix-card"><span>请这位同学回答</span><span class="prefix-card-badge">默认前缀</span></div>
+          <div class="prefix-card blocked"><span>被屏蔽的前缀</span><span class="prefixes-inuse-tag">已屏蔽</span></div>
+          <div class="d-row" style="gap:8px">
+            <div class="edit-name-card"><span class="edit-name-display">张伟</span><div class="edit-name-actions"><button class="edit-name-edit-btn" type="button">✎</button><button class="edit-name-gender-btn gender-male" type="button">♂</button><button class="edit-name-delete-btn" type="button">×</button></div></div>
+            <div class="edit-name-card selected"><span class="edit-name-display">李思远</span><div class="edit-name-actions"><button class="edit-name-edit-btn" type="button">✎</button><button class="edit-name-gender-btn" type="button">－</button><button class="edit-name-delete-btn" type="button">×</button></div></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:18px;background:var(--s-bg);padding:18px;border-radius:var(--r)"><div class="notice-card" style="margin:0 auto">
+        <h3>还没有设定座位格局</h3><p>点名框里没有可用的座位格局，先去设定再开始排座。</p>
+        <div class="notice-actions"><button class="notice-btn primary" type="button">去设定格局</button><button class="notice-btn ghost" type="button">重新加载</button></div>
+      </div></div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>名单卡</td><td><code>--surface</code> 底 / <code>1px --border</code> / <code>radius 8</code> / <code>padding 18px</code></td></tr>
+        <tr><td>卡片网格</td><td><code>repeat(auto-fill,minmax(268px,1fr))</code> / <code>gap 14px</code>；门户产品卡 <code>minmax(300px,1fr)</code></td></tr>
+        <tr><td>前缀行</td><td><code>--surface-2</code> / <code>radius 4</code> / <code>11px 14px</code>；屏蔽态 <code>opacity:.55</code></td></tr>
+        <tr><td>名字卡</td><td><code>min-height:84px</code> / <code>radius 8</code>；选中 <code>--accent-tint</code> + <code>--accent-line</code></td></tr>
+        <tr><td>提示模态</td><td>以舞台层设置模态框为准：<code>#1c1c1c</code> 底 / <code>2px #666</code> 边 / <code>radius 16</code> / <code>padding 25px</code> / 阴影 <code>0 0 30px rgba(0,0,0,.5)</code>（中性黑）；标题青色 ZCOOL、正文 <code>#ddd</code></td></tr>
+        <tr><td>提示模态按钮</td><td><code>padding:10px 20px / radius 4 / 无边框</code>（设置模态框 <code>#save-settings</code> 同款）：确认 = 青底深字 hover <code>#35eaff</code>，次按钮 = <code>#666</code> 底白字 hover <code>#555</code>；<b>禁止复用 Ribbon 小按钮</b></td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>卡片 hover 上浮 <code>translateY(-3px)</code> + 中性黑阴影；标题 <code>word-break:break-word</code> 防长名单名撑破。</div>
+      <div class="d-flag dont"><b>禁止</b>卡片套卡片、毛玻璃、发光边框、一切发光光晕散色光效、左竖条强调、&gt;8px 大圆角（通用模板感；模态级 16px 例外）。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.6 徽章 -->
+  <article class="d-spec" id="c-badge">
+    <div class="d-spec-head"><span class="d-spec-id">09.6</span><h3>徽章与状态胶囊</h3><p>「淡底 + 细边 + 实字」三段式；状态色只在这里出现。</p><span class="d-spec-src">控制层主界面徽章组件</span></div>
+    <div class="d-spec-demo">
+      <div class="d-legend"><span><b>①</b> 格局状态三态</span><span><b>②</b> 账号 / 未保存</span><span><b>③</b> 前缀 / 计数</span><span><b>④</b> 性别标记</span></div>
+      <div class="d-row" style="margin-bottom:14px">
+        <span class="seat-status ok">● 已设定</span><span class="seat-status warn">● 未设定</span><span class="seat-status empty">○ 不一致</span>
+        <span class="guest-badge">游客</span><span class="unsaved-badge">未保存</span>
+        <span class="prefix-card-badge">默认前缀</span><span class="prefixes-inuse-tag">使用中</span><span class="seat-count-tag">42 座</span>
+      </div>
+      <div class="d-row"><span style="color:var(--male);font-weight:700;font-size:1.125rem">♂ 男</span><span style="color:var(--female);font-weight:700;font-size:1.125rem">♀ 女</span><span style="color:var(--text-faint);font-weight:700;font-size:1.125rem">－ 未设置</span>
+        <span class="d-chip" style="margin-left:10px">取值 <code>male / female / null</code></span></div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>胶囊</td><td><code>padding:2px 9px; radius:999px; font-size:.75rem</code>（小号 .6875rem）</td></tr>
+        <tr><td>成功 / 提醒 / 空</td><td><code>--success + tint .12 + 边 .35</code> / <code>--warning</code> / <code>--text-muted + --border-strong</code></td></tr>
+        <tr><td>游客 / 未保存</td><td>琥珀 <code>--warning</code> 系，边 <code>rgba(217,164,65,.4)</code></td></tr>
+        <tr><td>前缀徽章</td><td>青边 <code>--accent-line</code> + 青字，透明底</td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>状态Capsule 与文字基线对齐 <code>align-self:flex-start</code>；颜色一律走令牌。</div>
+      <div class="d-flag dont"><b>禁止</b>用状态色做大按钮或大面积底；禁止自制第四种"信息蓝"状态。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.7 导航 -->
+  <article class="d-spec" id="c-nav">
+    <div class="d-spec-head"><span class="d-spec-id">09.7</span><h3>导航与选项卡</h3><p>控制层侧栏当前项 = 淡青底 + 3px 竖条；舞台层 Ribbon 页签 = 常驻边框 + 选中反白。</p><span class="d-spec-src">控制层主界面侧栏 / 排座工具页 Ribbon</span></div>
+    <div class="d-spec-demo">
+      <div class="d-legend"><span><b>控制台骨架</b> · 240px 侧栏 + 主区 28px 32px</span></div>
+      <div class="d-mini" style="display:flex;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:var(--bg);max-width:720px">
+        <div style="width:196px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:14px 10px">
+          <div style="font-size:.875rem;font-weight:700;padding:4px 8px 12px;display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:2px;background:var(--accent)"></span>控制台</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--border);margin-bottom:8px">
+            <div class="sidebar-avatar">易</div><div><div style="font-size:.8125rem;font-weight:600">老师</div><div style="font-size:.6875rem;color:var(--text-faint)">已登录</div></div>
+          </div>
+          <div class="nav-item active" data-mini-nav><span class="ico"></span>我的账号</div>
+          <div class="nav-item" data-mini-nav><span class="ico"></span>名单管理</div>
+          <div class="nav-item" data-mini-nav><span class="ico"></span>座位表</div>
+          <div class="nav-item" data-mini-nav><span class="ico"></span>点名消息前缀</div>
+        </div>
+        <div style="flex:1;padding:18px;min-width:0">
+          <div style="font-size:1.25rem;font-weight:700">名单管理</div>
+          <div style="color:var(--text-muted);font-size:.8125rem;margin:3px 0 14px">创建和管理您的云名单</div>
+          <div class="d-row"><button class="btn btn-primary btn-sm" type="button">+ 创建新名单</button><button class="btn btn-secondary btn-sm" type="button">刷新</button></div>
+          <div style="margin-top:14px;color:var(--text-faint);font-size:.75rem;border-top:1px solid var(--border);padding-top:12px">当前项由 <code style="color:var(--accent)">.nav-item.active::before</code> 的 3px 青色竖条标识（barGrow 入场）。</div>
+        </div>
+      </div>
+      <p class="d-caption">选项卡规则：<code>switchTab</code> 切到<b>新</b> tab 自动刷新、重复点当前 tab 不刷新；每 tab 头部 <code>.tab-refresh-btn</code> 与 <code>.btn-primary</code> 同款（图标 + 「刷新」+ loading 转圈），别再自绘小图标按钮。</p>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>侧栏</td><td><code>240px</code> 固定 / <code>--surface</code> / 右 1px <code>--border</code></td></tr>
+        <tr><td>导航项</td><td><code>padding:10px 12px</code> / <code>radius 4</code> / <code>gap 11px</code></td></tr>
+        <tr><td>当前项</td><td><code>--accent-tint</code> 底 + 青字 + 3px 左侧竖条</td></tr>
+        <tr><td>头像</td><td><code>38×38</code> 圆 / tint 底 / <code>--accent-line</code> 边</td></tr>
+        <tr><td>Ribbon 页签</td><td><code>1px rgba(69,243,255,.55)</code> <b>常驻</b> + 淡青底；选中青底深字；<code>:disabled</code> 只降 <code>opacity:.38</code></td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>两页签尺寸对齐（都 1px 边 + <code>padding:6px 14px</code>），切换不抖动；<code>.rb-tabs gap:6px</code>。</div>
+      <div class="d-flag dont"><b>禁止</b>未选中页签 <code>border:none</code>；禁止 :disabled:hover 时保留 hover 底色；禁止功能区 <code>.rb-btn</code> 跟着页签加边框。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.8 模态 -->
+  <article class="d-spec" id="c-modal">
+    <div class="d-spec-head"><span class="d-spec-id">09.8</span><h3>对话框与遮罩</h3><p>点击「打开对话框」观察遮罩淡入 + 面板 slideIn；关闭走 slideOut，不做硬消失。面板与 09.5 提示模态同族：以舞台层设置模态框为准（<code>#1c1c1c</code> / <code>2px #666</code> / 16px）。</p><span class="d-spec-src">舞台层模态家族（编辑名单面板 · 设置模态框）/ 控制层主界面</span></div>
+    <div class="d-spec-demo">
+      <div class="d-legend"><span><b>①</b> 打开 / 关闭（可重复）</span><span><b>②</b> 确认 / 取消</span><span><b>③</b> 表单对话框</span></div>
+      <div class="d-row" style="margin-bottom:14px"><button class="btn btn-primary btn-sm" type="button" id="modalOpen">打开对话框</button><span class="d-chip">遮罩 <code>rgba(6,9,12,.72)</code></span></div>
+      <div class="d-modal-host" id="modalHost">
+        <div style="padding:18px;color:var(--text-faint);font-size:.75rem">此处模拟页面内容，对话框打开时被遮罩覆盖。</div>
+        <div class="modal-overlay" id="demoModal">
+          <div class="edit-names-panel">
+            <div class="edit-names-header"><span class="edit-names-title">删除名单</span><button class="edit-names-close" type="button" id="modalClose">×</button></div>
+            <div class="edit-names-body">确定要删除「三年二班」吗？该名单下的 2 个座位表也会一并删除，此操作不可撤销。</div>
+            <div class="edit-names-footer"><button class="dialog-btn dialog-btn-secondary" type="button" id="modalCancel">取消</button><button class="dialog-btn dialog-btn-confirm" type="button" id="modalOk">确定删除</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>遮罩</td><td><code>position:fixed;inset:0;z-index:1000</code>；<code>overlayIn/out .2s ease-out</code></td></tr>
+        <tr><td>面板</td><td>与舞台层模态家族基准一致（设置模态框 / 编辑名单面板 / 通用提示面板，三处同族）：<code>#1c1c1c</code> 底 / <code>2px #666</code> 边 / <code>radius 16</code> / 阴影 <code>0 0 30px rgba(0,0,0,.5)</code>（中性黑）</td></tr>
+        <tr><td>入场</td><td><code>panelIn .2s var(--ease)</code>；JS 触发的 <code>slideIn/slideOut</code> 必须保留</td></tr>
+        <tr><td>结构</td><td>header → body（可滚动）→ footer，<b>无分隔线</b>，纯间距分区（2026-11-14 用户去除蓝色分隔线）；标题青色 ZCOOL、正文 <code>#ddd</code></td></tr>
+        <tr><td>按钮</td><td>footer 右对齐，次按钮在左、主按钮在右，<code>gap 10px</code>；<code>padding:10px 20px / radius 8 / 无边框</code>（2026-11-14 用户修订：模态内按钮用正常圆角 8px，不用 4px 小圆角），<b>不随容器拉伸</b>：确认 = 青底深字 hover <code>#35eaff</code>，取消 = <code>#666</code> 底白字 hover <code>#555</code></td></tr>
+        <tr><td>原生对话框</td><td>全部替换为 <code>showCustomAlert / Confirm / Prompt</code>，返回 Promise</td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>打开前先 <code>classList.remove('hiding')</code>，避免上次关闭动画未结束带出淡出态；长内容 <code>max-height:85vh</code> + body 滚动。</div>
+      <div class="d-flag dont"><b>禁止</b>用原生 <code>confirm()</code>；禁止删除 <code>slideIn/slideOut</code> keyframes；禁止遮罩用 <code>rgba(0,0,0,.85)</code>  hardcoded（参考层已统一到 <code>var(--modal-bg)</code>）。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.9 反馈 -->
+  <article class="d-spec" id="c-feedback">
+    <div class="d-spec-head"><span class="d-spec-id">09.9</span><h3>反馈：Toast / 加载 / 空状态 / 提示条</h3><p>数据一变就更新提示，不等保存返回；长任务用 busy toast（不被定时器收回）。</p><span class="d-spec-src">排座工具页浮层与加载样式 / 控制层主界面</span></div>
+    <div class="d-spec-demo">
+      <div class="d-legend"><span><b>①</b> 普通 toast</span><span><b>②</b> 保存中 busy</span><span><b>③</b> 错误 toast</span><span><b>④</b> 加载</span><span><b>⑤</b> 空状态</span><span><b>⑥</b> 提示条</span></div>
+      <div class="d-row" style="margin-bottom:14px">
+        <button class="btn btn-secondary btn-sm" type="button" data-toast="ok">已保存到云端</button>
+        <button class="btn btn-secondary btn-sm" type="button" data-toast="busy">保存中…</button>
+        <button class="btn btn-danger btn-sm" type="button" data-toast="error">保存失败</button>
+      </div>
+      <div class="d-toast-host" style="background:var(--s-bg);border-radius:var(--r);margin-bottom:16px">
+        <span style="color:var(--s-muted);font-size:.75rem;align-self:flex-start;padding:12px 14px">舞台层画布（Toast 悬浮区）</span>
+        <div class="toast" id="demoToast"><span class="toast-spin"></span><span id="demoToastText">已保存到云端</span></div>
+      </div>
+      <div class="d-grid g3">
+        <div style="background:var(--s-bg);border-radius:var(--r);padding:12px;text-align:center"><div class="spinner" style="margin:8px auto 10px"></div><span style="color:var(--s-accent);font-size:.875rem">加载中…</span></div>
+        <div class="loading-state" style="background:var(--surface);border-radius:var(--r)"><div class="loading-spinner"></div>正在载入名单…</div>
+        <div class="empty-state" style="background:var(--surface);border-radius:var(--r)"><div class="empty-state-icon">○</div><h3>还没有名单</h3><p>创建第一份名单开始点名</p><button class="btn btn-primary btn-sm" type="button">创建名单</button></div>
+      </div>
+      <div class="banner" style="margin-top:16px"><b>提示</b> —— 保存格局后不再跳回控制台，留在原地即可点顶部「排座位」开始排座。</div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>Toast</td><td><code>left:50%;bottom:58px</code> / <code>radius 8</code> / <code>10px 20px</code> / 13.5px / <code>.25s</code></td></tr>
+        <tr><td>busy</td><td>flex（spinner + 文案）；<code>.busy</code> 不自动收回；普通 toast 会 <code>remove('busy')</code></td></tr>
+        <tr><td>错误</td><td><code>.error</code> 切红边红字（<code>#ff6b6b</code>）</td></tr>
+        <tr><td>Spinner</td><td><code>34px / 3px 边 / 1s linear infinite</code>（控制层 26px）</td></tr>
+        <tr><td>空状态</td><td>圆形图标底 <code>--accent-tint</code> + 标题 + 说明 + <b>一个</b>主按钮</td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>空状态给出下一步动作而非只说"暂无数据"；数据一变就 <code>updateSeatCountHint()</code>，不等保存返回。</div>
+      <div class="d-flag dont"><b>禁止</b>用 busy toast 报瞬时成功；禁止把错误 toast 做成常驻；禁止在加载态下仍允许按钮 hover 变色。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.10 数据 -->
+  <article class="d-spec" id="c-data">
+    <div class="d-spec-head"><span class="d-spec-id">09.10</span><h3>数据展示</h3><p>名单卡元信息、座位表卡片、榜单排名、统计数字格——数字一律等宽对齐。</p><span class="d-spec-src">控制层主界面 / 参考层榜单样式</span></div>
+    <div class="d-spec-demo">
+      <div class="d-grid g2">
+        <div class="d-stack">
+          <div class="d-legend"><span><b>座位表卡片</b></span></div>
+          <div class="list-card" style="max-width:none">
+            <div class="list-card-title">期中排座 · 三年二班</div>
+            <div class="seat-status ok" style="margin-bottom:10px">● 格局已设定</div>
+            <div style="display:flex;flex-direction:column;gap:6px;color:var(--text-muted);font-size:.8125rem;margin-bottom:14px">
+              <span>名单：<b style="color:var(--text)">三年二班</b> · 42 人</span><span>座位：<b style="color:var(--text)">42 座</b> · 6 组</span><span>最近排座：<b style="color:var(--text)">3 天前</b></span>
+            </div>
+            <div class="list-card-actions"><button class="btn btn-primary btn-sm" type="button">编辑</button><button class="btn btn-secondary btn-sm" type="button">排座位</button><button class="btn btn-danger btn-sm" type="button">删除</button></div>
+          </div>
+        </div>
+        <div class="d-stack">
+          <div class="d-legend"><span><b>榜单排名</b>（参考层参考色）</span></div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px">
+            <div class="rank-row t1"><span class="pos" style="color:#ffd700">1</span><span class="nm">王雨桐</span><span class="vt">28 票</span></div>
+            <div class="rank-row t2"><span class="pos" style="color:#c0c0c0">2</span><span class="nm">陈子墨</span><span class="vt">24 票</span></div>
+            <div class="rank-row t3"><span class="pos" style="color:#cd7f32">3</span><span class="nm">赵一诺</span><span class="vt">19 票</span></div>
+            <div class="rank-row"><span class="pos" style="color:var(--text-faint)">4</span><span class="nm">李思远</span><span class="vt">16 票</span></div>
+          </div>
+          <div class="d-legend" style="margin:8px 0 0"><span><b>汇总数字格</b> · popIn 入场</span></div>
+          <div class="d-row" style="gap:8px">
+            <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center"><div class="mono" style="font-size:1.375rem;font-weight:700;color:var(--accent)">42</div><div style="color:var(--text-faint);font-size:.6875rem">学生</div></div>
+            <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center"><div class="mono" style="font-size:1.375rem;font-weight:700;color:var(--accent)">6</div><div style="color:var(--text-faint);font-size:.6875rem">小组</div></div>
+            <div style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center"><div class="mono" style="font-size:1.375rem;font-weight:700;color:var(--accent)">2</div><div style="color:var(--text-faint);font-size:.6875rem">空座</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>元信息</td><td><code>.8125rem --text-muted</code>；关键值 <code>--text</code> 加 600；每行 <code>gap 6px</code></td></tr>
+        <tr><td>榜单前三</td><td>金 <code>#ffd700</code> / 银 <code>#c0c0c0</code> / 铜 <code>#cd7f32</code>，各 .1 透明横向渐变</td></tr>
+        <tr><td>数字</td><td><code>font-variant-numeric:tabular-nums</code> + 等宽字体；单位用弱色小字</td></tr>
+        <tr><td>座位一致性</td><td><code>verify_seat_count()</code> 以 layout 实际值为准，<b>不信缓存列</b></td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>删名单时若 <code>seat_chart_count > 0</code> 二次确认级联删除；座位数提示编辑态写「K 空座」、排座态写「已排座 x / N（K 个空座）」。</div>
+      <div class="d-flag dont"><b>禁止</b>把缓存的 <code>seat_count</code> 当真值展示；禁止用装饰性假数据填充空区块。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.11 座位 -->
+  <article class="d-spec" id="c-seat">
+    <div class="d-spec-head"><span class="d-spec-id">09.11</span><h3>座位与画布</h3><p>点击座位切换选中；下方按钮可演示空座、点中、落点三种状态。座位文字只改 <code>textContent</code>，格局与姓名独立。</p><span class="d-spec-src">排座工具页座位 / 画布 / 手动排座样式</span></div>
+    <div class="d-spec-demo">
+      <div class="d-legend"><span><b>①</b> 常态（点击选中）</span><span><b>②</b> 空座（虚线暗底）</span><span><b>③</b> 点中 picked</span><span><b>④</b> 落点 drop-target</span><span><b>⑤</b> 小组框 / 框选</span></div>
+      <div class="d-canvas" id="seatCanvas">
+        <div class="group-frame" style="left:16px;top:20px;width:180px;height:112px"></div>
+        <div class="group-label" style="left:26px;top:9px">第一组</div>
+        <div class="seat" style="left:21px;top:25px">张伟</div>
+        <div class="seat" style="left:77px;top:25px">李思远</div>
+        <div class="seat" style="left:133px;top:25px">王雨桐</div>
+        <div class="seat" style="left:21px;top:81px">陈子墨</div>
+        <div class="seat empty-seat" style="left:77px;top:81px">空座</div>
+        <div class="seat" style="left:133px;top:81px">赵一诺</div>
+        <div class="seat" style="left:245px;top:25px">周予安</div>
+        <div class="seat" style="left:301px;top:25px">吴一诺</div>
+      </div>
+      <div class="d-row" style="margin-top:12px">
+        <button class="btn btn-secondary btn-sm" type="button" id="seatStateEmpty">演示空座</button>
+        <button class="btn btn-secondary btn-sm" type="button" id="seatStatePicked">演示 picked</button>
+        <button class="btn btn-secondary btn-sm" type="button" id="seatStateDrop">演示落点</button>
+        <button class="btn btn-secondary btn-sm" type="button" id="seatStateSwap">演示换座呼吸</button>
+        <button class="btn btn-secondary btn-sm" type="button" id="seatStateDrag">演示拖动源</button>
+        <button class="btn btn-secondary btn-sm" type="button" id="seatStateReset">复位</button>
+        <span class="d-chip">46px 座位 / 56px 网格槽 / <code>PAD=5</code></span>
+      </div>
+      <div class="d-row" style="margin-top:16px;align-items:flex-start">
+        <div class="menu"><div class="menu-item">手动选择名字</div><div class="menu-item">换座</div><div class="menu-item">移出座位</div><div class="menu-item note">拖到空白可取消</div><div class="menu-item danger">删除座位</div></div>
+        <p class="d-caption" style="max-width:420px">右键/长按菜单：<code>radius 8</code> + 青边（零发光），<code>menuIn .15s</code>；危险项红字 + 红淡底。座位移交只搬姓名，格局不变；<code>arrangement.seats</code> 是「座位 id → 姓名」映射，座位 id 变了不会错位。</p>
+      </div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>座位</td><td><code>46×46</code> / <code>--panel-2</code> 底 / <code>1px --accent</code> / <code>radius 6</code>（实测保留，不收敛到 4px）/ 13px / <code>cursor:move</code></td></tr>
+        <tr><td>排座态座位</td><td>view-mode 下 <code>11px / line-height 1.08 / padding 2px / word-break:break-all</code>（46px 方块最多 5 字）；hover 回 <code>--panel-2</code></td></tr>
+        <tr><td>网格</td><td><code>CELL 56px</code>、<code>#2c2d34</code> 1px 双线性渐变背景；<code>PAD=(56-46)/2=5</code></td></tr>
+        <tr><td>空座</td><td>虚线边 <code>#43444c</code> + 底 <code>#202127</code> + 字 <code>#8b8c95</code>（可读性校正：生产实测 <code>#5c5d66</code> 仅 2.46:1，待收敛），文案「空座」（原 <code>－</code>）</td></tr>
+        <tr><td>选中 / 点中</td><td><code>.selected</code> 青底 + 金色 2px outline；<code>.picked</code> 更亮；<code>.hl</code>（小组高亮）<code>!important</code> 青底 + 金边</td></tr>
+        <tr><td>拖动状态族</td><td><code>.dragging</code>（opacity .85 / grabbing）· <code>.drag-source</code>（虚线 + 文字透明，「飞的是名字不是座位」）· <code>.swap-target</code>（swapBreath 1.1s 金色呼吸边）· <code>.just-moved</code>（seatPop .45s 落定）· <code>.seat-flight</code> / <code>.seat-drag-ghost</code>（fixed 克隆副本，z-index 300000+）· <code>.select-box</code> 框选</td></tr>
+        <tr><td>落点</td><td><code>rgba(255,215,0,.2)</code> 底 + 金边 + outline</td></tr>
+        <tr><td>小组框</td><td><code>2px dashed --gray</code> / <code>radius 10</code>（实测）；标签胶囊品牌字</td></tr>
+        <tr><td>选人面板</td><td><code>#namePicker</code> 232px 右挂（<code>top:127px;bottom:46px</code>）/ <code>radius 10</code> / <code>panelIn .18s</code>；搜索框 <code>--panel-2</code> 底</td></tr>
+        <tr><td>画布</td><td><code>cursor:crosshair</code>；排座态 <code>.pannable</code> 变 grab；<code>touch-action:none</code>；空态 <code>::after</code> 显示 <code>data-empty</code> 文案（ZCOOL 18px <code>#55565e</code>）</td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b><code>paintSeat()</code> 是幂等重绘（只碰 textContent 与 has-name），切模式必须 <code>seats.forEach(paintSeat)</code>；<code>has-name</code> 类始终按当前姓名 toggle。</div>
+      <div class="d-flag dont"><b>禁止</b>飞行动画期间整块隐藏座位（会留空洞、像座位丢了），只把原文案设 <code>color:transparent</code>；禁止用 <code>getBoundingClientRect</code> 循环找落点。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.12 Ribbon -->
+  <article class="d-spec" id="c-ribbon">
+    <div class="d-spec-head"><span class="d-spec-id">09.12</span><h3>Ribbon 功能区（完整复刻）</h3><p>点击「排座位 / 格局编辑」切换：显示哪一组只靠 CSS <code>#ribbon[data-mode]</code>，不靠 JS 增删 DOM。</p><span class="d-spec-src">排座工具页 Ribbon 结构与样式</span></div>
+    <div class="d-spec-demo" style="padding:18px">
+      <div class="rb-demo" id="ribbonDemo">
+        <div id="ribbon" data-mode="seat">
+          <div class="rb-tabs">
+            <span class="rb-brand">排座工具页</span>
+            <button class="rb-tab active" type="button" data-rb-tab="seat" aria-selected="true">排座位</button>
+            <button class="rb-tab" type="button" data-rb-tab="layout" aria-selected="false">格局编辑</button>
+            <div class="rb-tabs-right"><span style="font-size:12.5px;color:var(--s-muted)">42 人 / 42 座</span><button class="rb-icon-btn" type="button">刷新</button></div>
+          </div>
+          <div class="rb-body">
+            <div class="rb-group" data-mode="seat"><div class="rb-row">
+              <button class="rb-btn big" type="button"><span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/></svg></span><span class="rb-txt">随机排座</span></button>
+              <button class="rb-btn big" type="button"><span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg></span><span class="rb-txt">清空名字</span></button>
+              <button class="rb-btn big" type="button"><span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/></svg></span><span class="rb-txt">导出图片</span></button>
+            </div><div class="rb-label">排座</div></div>
+            <div class="rb-group" data-mode="layout"><div class="rb-row">
+              <button class="rb-btn big" type="button"><span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="11" height="11" rx="2"/><path d="M19 13v8"/><path d="M15 17h8"/></svg></span><span class="rb-txt">新座位</span></button>
+              <button class="rb-btn big" type="button"><span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></span><span class="rb-txt">一键铺座</span></button>
+            </div><div class="rb-label">座位</div></div>
+            <div class="rb-group"><div class="rb-row">
+              <button class="rb-btn" type="button"><span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 6h12"/><path d="M8 12h12"/><path d="M8 18h12"/></svg></span><span class="rb-txt">手动建组</span></button>
+              <button class="rb-btn" type="button"><span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/></svg></span><span class="rb-txt">小组总览</span></button>
+            </div><div class="rb-label">小组</div></div>
+            <div class="rb-group" data-mode="layout"><div class="rb-row">
+              <button class="rb-btn on" type="button"><span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></span><span class="rb-txt">网格对齐</span></button>
+            </div><div class="rb-label">视图</div></div>
+            <div class="rb-group" data-mode="layout"><div class="rb-row">
+              <button class="rb-btn" type="button"><span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-dasharray="3 2.6"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6"/></svg></span><span class="rb-txt">允许空座</span></button>
+            </div><div class="rb-label">规则</div></div>
+            <span class="rb-spacer"></span>
+            <div class="rb-group" data-mode="layout"><div class="rb-row">
+              <button class="rb-btn primary big" type="button"><span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h7V3"/><rect x="8" y="13" width="8" height="6" rx="1"/></svg></span><span class="rb-txt">保存格局</span></button>
+            </div><div class="rb-label">保存</div></div>
+          </div>
+        </div>
+        <div id="bottomBar"><span>滚轮 = 缩放 · 左键拖动座位 = 换位</span><span style="margin-left:auto">缩放 100%</span></div>
+      </div>
+      <p class="d-caption">组顺序固定：排座 / 座位 / 小组 / 视图 / 规则 /（右）保存。新增功能优先往对应组里加 <code>.rb-btn</code>，别再单开一组。切换用 <code>reapplyKeepNames(layout)</code> 保住已排好的姓名。</p>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>总高</td><td>约 <code>119px</code> = 38 页签 + 78 功能区 + 2px 青底边（+ 52 顶栏为旧版）</td></tr>
+        <tr><td>页签</td><td><code>radius 4</code> / <code>1px rgba(69,243,255,.55)</code> 常驻 / <code>padding:6px 14px</code></td></tr>
+        <tr><td>功能按钮</td><td><code>.rb-btn</code> 无边框、hover 才出底；<code>.big</code> 图标 24px 在上、文字 11.5px 在下</td></tr>
+        <tr><td>主按钮</td><td><code>.primary</code> 青底深字 + 品牌字 13px（保存格局）</td></tr>
+        <tr><td>开关态</td><td><code>.on</code> = 淡青底 + 青边 + 青字</td></tr>
+        <tr><td>状态栏</td><td><code>32px</code> / <code>#1a1b1f</code> / 12.5px 次要文字</td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>切换模式三道防护：座位数校验 → 未保存改动 confirm → 保姓名重绘；返回控制台唯一出口 <code>goConsole()</code>，全文件只允许一处 <code>location.href</code>。</div>
+      <div class="d-flag dont"><b>禁止</b>整块改按钮 <code>textContent</code>（会连 SVG 抹掉）；禁止给功能区按钮加边框；禁止改 ribbon 高度却不同步 <code>#groupPanel/#namePicker top:127px</code> 与 <code>#toast bottom:58px</code>。</div>
+    </div></div>
+    <details class="d-code"><summary>复制「模式 = 选项卡」CSS</summary><button class="d-copy" type="button">复制</button><pre><span class="c">/* 显示哪一组只靠 CSS，JS 只改一个属性 */</span>
+<span class="k">#ribbon[data-mode="seat"] [data-mode="layout"],
+#ribbon[data-mode="layout"] [data-mode="seat"]</span>{display:none <span class="t">!important</span>}
+<span class="c">/* 页签边框常驻，未选中项也要"看得出来能点" */</span>
+<span class="k">.rb-tab</span>{background:rgba(69,243,255,.08);border:1px solid rgba(69,243,255,.55);
+  color:#c9ced6;padding:6px 14px;border-radius:4px;font-family:"ZCOOL KuaiLe"}
+<span class="k">.rb-tab.active</span>{color:var(--panel);background:var(--accent);border-color:var(--accent)}
+<span class="k">.rb-tab:disabled</span>{opacity:.38;cursor:not-allowed}</pre></details>
+  </article>
+
+  <!-- 09.13 图标 -->
+  <article class="d-spec" id="c-icon">
+    <div class="d-spec-head"><span class="d-spec-id">09.13</span><h3>图标系统</h3><p>全部内联 SVG，线性描边，跟随 <code>currentColor</code>。不用图标字体、不用图片、不用 emoji。</p><span class="d-spec-src">排座工具页 / 控制层主界面</span></div>
+    <div class="d-spec-demo">
+      <div class="d-legend"><span><b>①</b> 14px（列表元信息）</span><span><b>②</b> 16px（按钮 / 导航）</span><span><b>③</b> 18px（区块标题）</span><span><b>④</b> 24px（Ribbon 大按钮）</span></div>
+      <div class="d-row" style="gap:26px;align-items:flex-end;color:var(--text)">
+        <div style="text-align:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><div class="d-caption">14</div></div>
+        <div style="text-align:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg><div class="d-caption">16</div></div>
+        <div style="text-align:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg><div class="d-caption">18</div></div>
+        <div style="text-align:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h7V3"/><rect x="8" y="13" width="8" height="6" rx="1"/></svg><div class="d-caption">24</div></div>
+        <div style="border-left:1px solid var(--border);padding-left:26px;color:var(--text-muted);font-size:.8125rem;line-height:1.9;max-width:420px">
+          <b style="color:var(--text)">统一约定：</b><code>viewBox="0 0 24 24"</code>、<code>fill="none"</code>、<code>stroke="currentColor"</code>、<code>stroke-width="1.7"</code>、<code>stroke-linecap/linejoin="round"</code>。控制层卡片里的信息图标用 <code>fill:currentColor</code> 的实心路径（14px）。
+        </div>
+      </div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
+        <tr><td>尺寸阶梯</td><td><code>13 / 14 / 16 / 18 / 20 / 24px</code></td></tr>
+        <tr><td>线宽</td><td><code>1.7</code>（完成/取消按钮 <code>1.9</code>）</td></tr>
+        <tr><td>颜色</td><td><code>currentColor</code>，跟随父级状态自动变色</td></tr>
+        <tr><td>对齐</td><td>与文字 <code>gap:6–8px</code>、<code>flex-shrink:0</code></td></tr>
+      </tbody></table></div></div><div>
+      <div class="d-flag do"><b>应当</b>图标与文字包在同一个按钮里，整体 <code>textContent</code> 不可改；动态文案走 <code>.rb-txt</code>。</div>
+      <div class="d-flag dont"><b>禁止</b>用 emoji 当功能图标；禁止 SVG 自绘插画代替真实图片/标志；禁止图标自带固定 fill 颜色。</div>
+    </div></div>
+  </article>
+
+  <!-- 09.14 双主题 -->
+  <article class="d-spec" id="c-counter">
+    <div class="d-spec-head"><span class="d-spec-id">09.14</span><h3>参考层：浅色主题与成对令牌</h3><p>浅色配色以参考层为基准：底 <code>#f5f5f0</code> / 卡 <code>#ffffff</code> / 主色 <code>#2d5f8a</code> / 危险 <code>#dc3545</code>。<b>目录底部的「切换浅色主题」按钮就是实时标本</b>——整页 14 组标本随 <code>html[data-theme]</code> 一起翻转。</p><span class="d-spec-src">参考层令牌文件 + 本页 <code>css/theme-light.css</code></span></div>
+    <div class="d-spec-demo">
+      <div class="d-callout" style="margin-top:0"><b>怎么读这一章。</b>点下方按钮切换主题：控制层外壳与舞台层标本同时翻到浅色，选择写入 <code>localStorage</code>（键 <code>design-theme</code>），刷新保持。实现只有两层——<b>成对令牌</b>（下表）+ <b>硬编码覆写</b>（<code>theme-light.css</code> 后半段），别的东西一概没有。</div>
+      <div class="d-row" style="margin-bottom:14px"><button class="btn btn-primary btn-sm theme-toggle" type="button">切换浅色主题</button><span class="d-chip">激活 <code>&lt;html data-theme="light"&gt;</code></span><span class="d-chip">加载顺序 <code>…responsive → theme-light</code>（必须最后）</span></div>
+      <div class="d-grid g2">
+        <div class="light-card"><h4>浅色关键值（data-theme="light"）</h4><p>底 <code>#f5f5f0</code> · 卡片 <code>#ffffff</code> · 主色 <code>#2d5f8a</code>（hover <code>#3a72a1</code>）· 文字 <code>#1a1a1a / #5b6470 / #66707a</code> · 危险 <code>#dc3545</code> · 金 <code>#b8860b</code> / 银 <code>#708090</code> / 铜 <code>#8b4513</code>。模态面板 = 白卡 + <code>#d1d5db</code> 边 + 浅投影；遮罩 <code>rgba(15,23,42,.45)</code>。发光 / 霓虹色在浅色下<b>直接删除</b>（新规），不做置透明。</p><div class="d-row" style="margin-top:12px"><button class="btn btn-primary btn-sm" type="button">确认</button><button class="btn btn-secondary btn-sm" type="button" style="border-color:#d1d5db;color:#4b5563">取消</button></div></div>
+        <div class="d-panel" style="background:var(--s-panel-2)"><h4>深色对照（默认）</h4><p class="d-p" style="margin:0">底 <code>#23242a</code> · 卡片 <code>#1c1c1c</code> · 主色 <code>#45f3ff</code> · 金 <code>#ffd700</code> / 银 <code>#c0c0c0</code> / 铜 <code>#cd7f32</code>。</p>
+          <div class="d-row" style="margin-top:12px"><span class="group-chip" style="border-color:rgba(255,215,0,.5);background:rgba(255,215,0,.12);color:#ffd700">冠军</span><span class="group-chip" style="border-color:rgba(192,192,192,.5);background:rgba(192,192,192,.1);color:#c0c0c0">亚军</span><span class="group-chip" style="border-color:rgba(205,127,50,.5);background:rgba(205,127,50,.12);color:#cd7f32">季军</span></div>
+        </div>
+      </div>
+      <div class="d-table-wrap" style="margin-top:16px"><table class="d-table">
+        <thead><tr><th>令牌</th><th>深色（默认）</th><th>浅色（data-theme="light"）</th></tr></thead><tbody>
+          <tr><td><code>--bg</code></td><td><code>#0f1419</code></td><td><code>#f5f5f0</code></td></tr>
+          <tr><td><code>--surface / -2 / -3</code></td><td><code>#161d24 / #1c242d / #232e39</code></td><td><code>#ffffff / #f0f0eb / #e8e8e3</code></td></tr>
+          <tr><td><code>--text / -muted / -faint</code></td><td><code>#e7edf3 / #93a1b0 / #7e8b98</code></td><td><code>#1a1a1a / #5b6470 / #66707a</code>（弱文字已按 4.5:1 校正）</td></tr>
+          <tr><td><code>--accent</code>（主色）</td><td><code>#45f3ff</code> 青</td><td><code>#2d5f8a</code> 钢蓝（<code>#45f3ff</code> 在白底对比度不足，必须换）</td></tr>
+          <tr><td><code>--accent-ink / tint / line</code></td><td><code>#062329</code> / 10% / 42%</td><td><code>#ffffff</code> / 8% / 38%</td></tr>
+          <tr><td><code>--border / --border-strong</code></td><td><code>#29333e / #3b4854</code></td><td><code>rgba(45,95,138,.16) / #d1d5db</code></td></tr>
+          <tr><td><code>--danger / --warning / --success</code></td><td><code>#e5655f / #d9a441 / #46b17b</code></td><td><code>#dc3545 / #8a6d1f / #1f7a4d</code></td></tr>
+          <tr><td><code>--male / --female</code></td><td><code>#5aa9ff / #ff8fbf</code></td><td><code>#2d6fc0 / #bd4b76</code>（加深保对比度，AA ≥4.5）</td></tr>
+          <tr><td>舞台层 <code>--s-bg / --s-panel</code></td><td><code>#23242a / #1c1c1c</code></td><td><code>#eceae4 / #ffffff</code></td></tr>
+          <tr><td>模态面板（2px <code>#666</code> 边）</td><td><code>#1c1c1c</code> 深卡</td><td><code>#ffffff</code> 白卡 + <code>#d1d5db</code> 边 + <code>0 12px 32px rgba(0,0,0,.12)</code></td></tr>
+          <tr><td><code>--overlay</code> 遮罩</td><td><code>rgba(6,9,12,.72)</code></td><td><code>rgba(15,23,42,.45)</code></td></tr>
+          <tr><td>金 / 银 / 铜</td><td><code>#ffd700 / #c0c0c0 / #cd7f32</code></td><td><code>#b8860b / #708090 / #8b4513</code></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="d-spec-meta"><div><div class="d-table-wrap"><table class="d-table">
+      <thead><tr><th>做法</th><th>说明</th></tr></thead><tbody>
+        <tr><td>成对声明</td><td>每个语义令牌在 <code>:root</code> 与 <code>html[data-theme="light"]</code> 各写一份；组件 CSS 只写 <code>var(--x)</code>，不许出现主题条件选择器</td></tr>
+        <tr><td>覆写集中</td><td>历史硬编码深色（模态 <code>#1c1c1c / #666</code>、点名框 <code>#45f3ff</code>、Ribbon 底 <code>#16171b</code> 等）只在 <code>theme-light.css</code> 一个文件里逐条覆写；<b>新代码禁止新增硬编码颜色</b></td></tr>
+        <tr><td>覆盖顺序</td><td><code>tokens → layout → specimens → responsive → theme-light</code>，浅色层必须最后加载</td></tr>
+        <tr><td>keyframes 也走令牌</td><td>动画里的颜色（遮罩 <code>overlayIn/Out</code>、座位落定 <code>seatPop</code>、换座呼吸 <code>swapBreath</code>）全部走 <code>var()</code>，浅色才不会漏</td></tr>
+        <tr><td>持久化</td><td>切换写入 <code>localStorage</code>（键 <code>design-theme</code>）+ <code>html[data-theme]</code> 属性；<b>默认深色，不跟随系统</b></td></tr>
+        <tr><td>前缀化命名</td><td><code>--account-*</code> / <code>--export-*</code> / <code>--poster-*</code> / <code>--btn-*</code>，按组件分组</td></tr>
+      </tbody></table></div>
+      <details class="d-code" style="margin-top:12px"><summary>复制双主题接入模板</summary><button class="d-copy" type="button">复制</button><pre><span class="c">/* ① 令牌层：组件 CSS 只写 var(--x) */</span>
+:root{ <span class="v">--bg</span>:<span class="t">#0f1419</span>; <span class="v">--accent</span>:<span class="t">#45f3ff</span>; }
+html[data-theme="light"]{ <span class="v">--bg</span>:<span class="t">#f5f5f0</span>; <span class="v">--accent</span>:<span class="t">#2d5f8a</span>; }
+
+<span class="c">/* ② keyframes 里的颜色也走令牌 */</span>
+@keyframes overlayIn{from{background-color:<span class="v">var(--overlay-from)</span>}to{background-color:<span class="v">var(--overlay)</span>}}
+
+<span class="c">// ③ 切换与持久化（无框架，放 &lt;/body&gt; 前）</span>
+var KEY=<span class="t">'design-theme'</span>, root=document.documentElement;
+function applyTheme(t){
+  t===<span class="t">'light'</span> ? root.setAttribute(<span class="t">'data-theme'</span>,<span class="t">'light'</span>) : root.removeAttribute(<span class="t">'data-theme'</span>);
+  try{localStorage.setItem(KEY,t);}catch(e){}
+}
+document.addEventListener(<span class="t">'click'</span>,function(e){
+  if(!e.target.closest(<span class="t">'.theme-toggle'</span>)) return;
+  applyTheme(root.getAttribute(<span class="t">'data-theme'</span>)===<span class="t">'light'</span>?<span class="t">'dark'</span>:<span class="t">'light'</span>);
+});
+if(localStorage.getItem(KEY)===<span class="t">'light'</span>) applyTheme(<span class="t">'light'</span>);</pre></details></div><div>
+      <div class="d-flag do"><b>应当</b>切到浅色后从 00 章滚到 15 章逐组目检一遍（无残留深色霓虹、无发光、对比度达标）；改一处颜色时全链路搜「硬编码 RGBA」与「未定义变量」两个维度。</div>
+      <div class="d-flag dont"><b>禁止</b>把浅色主色 <code>#2d5f8a</code> 带回 S / A 层；禁止在组件 CSS 里写 <code>html[data-theme]</code> 条件选择器——浅色覆写只允许出现在 <code>theme-light.css</code> 一个文件里。</div>
+    </div></div>
+  </article>
+</section>
+
+<!-- ================= 10 布局 ================= -->
+<section class="d-section" id="layout">
+  <div class="d-sec-head"><div class="d-sec-no">10</div><div>
+    <h2>布局与响应式</h2>
+    <p>布局模式按页面分工：控制台侧栏 + 主区、点名框居中 + 侧挂面板、排座工具页全屏画布 + 顶栏 Ribbon、门户网格卡片。</p>
+  </div></div>
+
+  <div class="d-grid g2">
+    <div class="d-panel"><h3>四种骨架</h3>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>产品</th><th>骨架</th><th>关键约束</th></tr></thead><tbody>
+          <tr><td>控制层主界面</td><td>240px 固定侧栏 + 主区 <code>28px 32px</code></td><td>侧栏 <code>position:fixed</code>；主区 <code>margin-left:240px</code></td></tr>
+          <tr><td>舞台层点名</td><td><code>.stage</code> 只作定位参照，宽度 = 点名框宽</td><td>筛选面板绝对定位不占位；点名框仍屏幕正中</td></tr>
+          <tr><td>排座工具页</td><td>顶栏 Ribbon（119px）+ 全屏画布 + 32px 状态栏</td><td><code>height:100vh;overflow:hidden</code>；右侧面板互斥</td></tr>
+          <tr><td>门户 index.html</td><td><code>repeat(auto-fit,minmax(300px,1fr))</code> 产品网格</td><td>卡片数变化不用改 CSS；所有工具跳转新标签页</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="d-panel"><h3>断点与适配</h3>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>断点</th><th>规则</th></tr></thead><tbody>
+          <tr><td><code>≤700px</code></td><td>点名框筛选面板落到框下方一列（<code>position:static</code>、<code>width:min(380px,92vw)</code>）；设备码格 44×58 → 40×52 + gap 6</td></tr>
+          <tr><td><code>≤760px</code></td><td>排座工具页选人面板贴底铺开 <code>left/right:10px;max-height:46vh</code>，不遮挡画布</td></tr>
+          <tr><td><code>≤900px</code></td><td>Ribbon 收起品牌字与统计、功能区横向滚动、状态栏字号降到 11.5px</td></tr>
+          <tr><td><code>≤1180px</code></td><td>本规范文档收窄内边距、目录变横向滚动条</td></tr>
+          <tr><td>输入方式</td><td><code>@media (hover:hover) and (pointer:fine)</code> 只显示鼠标提示；<code>(hover:none)</code> 只显示触屏提示</td></tr>
+          <tr><td>触摸目标</td><td>移动端命中区 <b>≥44px</b>；触屏轻点位移阈值 8px（鼠标 4px）才算点击</td></tr>
+        </tbody>
+      </table></div>
+      <div class="d-flag do" style="margin-top:12px"><b>应当</b>优先用容器查询 <code>@container</code> 做组件内部适配；窄屏<b>不隐藏关键功能</b>，只重排。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 11 可访问性 ================= -->
+<section class="d-section" id="a11y">
+  <div class="d-sec-head"><div class="d-sec-no">11</div><div>
+    <h2>可访问性与文案</h2>
+    <p>课堂大屏常常距离远、光线强，对比度与焦点可见性比装饰更重要。</p>
+  </div></div>
+  <div class="d-grid g2">
+    <div class="d-panel"><h3>可访问性底线</h3>
+      <ul class="d-check" style="grid-template-columns:1fr">
+        <li><b>焦点可见</b>：<code>:focus-visible{outline:2px solid var(--accent);outline-offset:2px}</code>；输入框用 3px tint 环</li>
+        <li><b>语义标签</b>：点名框 <code>role="main"</code> + <code>aria-label</code>；姓名 <code>role="status" aria-live="polite" aria-atomic="true"</code></li>
+        <li><b>图标按钮</b>：必须有 <code>title</code> 或 <code>aria-label</code>，不能只有字形</li>
+        <li><b>对比度</b>：正文 <code>#e7edf3 / #0f1419</code>；辅助 <code>#93a1b0</code> 仅用于非关键文字；青底必须配深字</li>
+        <li><b>动效</b>：四页均带 <code>@media (prefers-reduced-motion:reduce)</code> 兜底</li>
+        <li><b>XSS</b>：<code>/callback?error=</code> 不拼 HTML/JS，走 <code>html.escape</code> + <code>textContent</code> 建 DOM</li>
+        <li><b>命中区</b>：移动端 ≥44px；触屏点击位移阈值 8px</li>
+      </ul>
+    </div>
+    <div class="d-panel"><h3>UX 文案规范</h3>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>场景</th><th>正确</th><th>避免</th></tr></thead><tbody>
+          <tr><td>保存成功</td><td>已保存到云端</td><td>操作成功！</td></tr>
+          <tr><td>格局未设定</td><td>还没有设定座位格局 · 「去设定格局」</td><td>错误 400 / 无数据</td></tr>
+          <tr><td>座位数不符</td><td>座位数与名单人数不一致，请先补齐座位</td><td>参数错误</td></tr>
+          <tr><td>空状态</td><td>还没有名单 · 创建第一份名单开始点名</td><td>暂无数据</td></tr>
+          <tr><td>危险确认</td><td>删除「三年二班」，其下 2 个座位表也会一并删除</td><td>确定删除吗？</td></tr>
+          <tr><td>返回提示</td><td>点顶部「排座位」就能开始排座</td><td>保存成功，即将跳转</td></tr>
+        </tbody>
+      </table></div>
+      <p class="d-caption" style="margin-top:12px">三个要求：<b>说清后果</b>、<b>给出下一步动作</b>、<b>不重复用户已经能看到的信息</b>。每个词都要有存在价值。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 12 禁用清单 ================= -->
+<section class="d-section" id="antipattern">
+  <div class="d-sec-head"><div class="d-sec-no">12</div><div>
+    <h2>禁用清单与反模式</h2>
+    <p>左侧是被禁止的"AI 味"做法，右侧是本体系允许的替代。这些是<b>硬性禁止</b>，不是风格偏好。<b>2026-11-14 起：一切发光光晕散色光效全站禁止</b>（因为显得很 AI），本页<b>连反例都不再渲染发光</b>，仅以文字登记；圆角一律按 07 章小圆角执行。</p>
+  </div></div>
+
+  <div class="d-vs">
+    <div class="bad"><h4>✕ 禁止 · 渐变 / 大圆角 / 毛玻璃 / 发光</h4>
+      <div class="slop-gradient slop-pulse">紫蓝渐变 + 24px 大圆角 + 卡通字</div>
+      <div class="slop-glass" style="margin-top:10px">半透明毛玻璃面板 + 24px 大圆角</div>
+      <p>以及<b>一切发光光晕散色光效</b>：彩色 glow <code>box-shadow</code>、发光 <code>text-shadow</code>、模糊光晕块、radial 散色背景、发光边框。按新规<b>连反例都不渲染</b>，仅在此登记。</p>
+    </div>
+    <div class="good"><h4>✓ 应当 · 实色层级 / 小圆角 / 零发光</h4>
+      <div class="d-panel" style="background:var(--surface);padding:14px;border:1px solid var(--border);border-radius:var(--r)">
+        <div style="font-size:.875rem;font-weight:600;margin-bottom:6px">名单管理</div>
+        <div style="color:var(--text-muted);font-size:.8125rem">创建和管理您的云名单</div>
+      </div>
+      <p style="margin-top:10px">纯色底 + 实色面板 + 1px 中性描边 + 8px 小圆角；层级靠 <code>--bg → --surface → --surface-2 → --surface-3</code> 的明度差，<b>不靠发光</b>。</p>
+    </div>
+    <div class="bad"><h4>✕ 禁止 · 渐变按钮 / hover 上浮 / 无限动画</h4>
+      <button class="slop-btn slop-pulse" type="button">立即开始</button>
+      <p style="margin-top:14px">以及 bounce / breathe / twinkle / pulse 常驻循环、随机星点、<code>.bg-glow</code>、发光脉冲动画、ZCOOL 卡通标题字进控制台。</p>
+    </div>
+    <div class="good"><h4>✓ 应当 · 实色按钮 / 状态动效</h4>
+      <button class="btn btn-primary" type="button">创建新名单</button><button class="btn btn-secondary" type="button">取消</button>
+      <p style="margin-top:14px">4px 小圆角；只有状态变化才动：hover 仅变色、按下 <code>scale(.97)</code>、入场 <code>riseIn .45s var(--ease) backwards</code>；点名框抽选态的旋转/呼吸是全站唯一例外（实色渐变 + 中性黑阴影，<b>无发光</b>）。</p>
+    </div>
+  </div>
+
+  <div class="d-table-wrap" style="margin-top:18px"><table class="d-table">
+    <thead><tr><th>禁用项</th><th>为什么</th><th>替代</th></tr></thead>
+    <tbody>
+      <tr><td><b>一切发光光晕散色光效</b>（2026-11-14 新规）</td><td>显得很 AI：彩色 glow <code>box-shadow</code>、发光 <code>text-shadow</code>、模糊光晕块、radial 散色背景、发光边框、<code>.bg-glow</code>、星点闪烁</td><td><b>纯色底 + 实色面板 + 1px 中性描边</b>；只允许无 blur 的实色焦点环与中性黑投影</td></tr>
+      <tr><td>大圆角（容器 &gt;8px / 控件 &gt;4px）</td><td>项目偏好小圆角；大圆角是最明显的 AI 模板感</td><td><code>4 / 8 / 16px</code> 四档，见 07 章</td></tr>
+      <tr><td>随机星点 / JS initStars()</td><td>常驻装饰、分散注意力；控制层主界面已删，恢复会连带抛错中断 <code>loadUser()</code></td><td>无。留白即可</td></tr>
+      <tr><td><code>backdrop-filter</code></td><td>性能与对比度都不可控</td><td>实色面板 <code>--surface</code></td></tr>
+      <tr><td>源码残留发光</td><td>舞台层的性别钮 / 小组项 / 气泡、参考层的选中态仍有彩色 glow 与发光 <code>text-shadow</code>，属历史债务</td><td>直接删除发光声明，只保留实色底与描边；改一处要全链路搜</td></tr>
+      <tr><td>ZCOOL KuaiLe 进控制台</td><td>数据密集界面可读性下降</td><td>Noto Sans SC 400/500/600/700</td></tr>
+      <tr><td>渐变按钮 + hover 上浮</td><td>通用模板感，且上浮会与入场动画 fill-mode 打架</td><td>实色/描边 + 仅变色 + <code>:active scale(.97)</code></td></tr>
+      <tr><td>bounce / breathe / twinkle / pulse</td><td>无限循环装饰 ≠ 表达因果</td><td>riseIn / popIn / tabIn / panelIn 等一次性状态动效</td></tr>
+      <tr><td><code>text-shadow</code> 发光标题</td><td>与"唯一焦点"冲突，且显得很 AI（新规硬性禁止）</td><td>字号 + 字重 + 字距分级</td></tr>
+      <tr><td>大圆角卡片墙 + 左竖条强调</td><td>最常见的 AI 设计模板</td><td>4 / 8px 小圆角 + 发丝线 + 编号 + 数据手册式排版</td></tr>
+      <tr><td>多处硬编码颜色</td><td>参考层浅色模式整片失效的真实事故</td><td>一律 <code>var(--token)</code>，双向校验「定义/引用」</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ================= 13 工程约束 ================= -->
+<section class="d-section" id="engineering">
+  <div class="d-sec-head"><div class="d-sec-no">13</div><div>
+    <h2>工程落地约束</h2>
+    <p>规范再好，也必须能在当前工程结构里落地。以下约束来自真实踩坑记录，改前端前请通读。</p>
+  </div></div>
+
+  <div class="d-grid g2">
+    <div class="d-panel"><h3>架构硬约束</h3>
+      <ul class="d-check" style="grid-template-columns:1fr">
+        <li><b>不能加共享 CSS 文件</b>：<code>factory.py</code> 是 <code>Flask(__name__, static_folder=None)</code>，public 下只有 favicon / logo 两条显式路由</li>
+        <li><b>路由冻结 45 条</b>：新增路由会打破 <code>routes_baseline.py::EXPECTED_RULES</code>，<code>_assert_route_freeze</code> 拒启（exit 2）；加路由必须同步改基线</li>
+        <li><b>样式逐页内联</b>：统一靠复制同一份令牌块；<code>&lt;style&gt;</code> 与正文可改，末尾 JS 段尽量不动</li>
+        <li><b>跳转一律带部署前缀</b>：nginx 只路由带前缀的路径，写根路径必 404</li>
+        <li><b>门户工具跳转新标签页</b>：<code>target="_blank" rel="noopener noreferrer"</code>；站内锚点与 logo 同页</li>
+        <li><b>页脚站点链接</b>：主色带下划线，新窗口打开</li>
+        <li><b>改了 <code>js/script.js</code> 记得刷 <code>index.html</code> 里 <code>script.js?v=</code> 时间戳</b></li>
+      </ul>
+    </div>
+    <div class="d-panel"><h3>改动同步清单</h3>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>改动</th><th>必须同步</th></tr></thead><tbody>
+          <tr><td>新增产品</td><td>门户 head favicon/canonical/description、JSON-LD <code>itemListElement</code>、<code>.products-grid</code> 卡片、<code>.footer-links</code>、title/keywords、<code>sitemap.xml</code>、README 表格</td></tr>
+          <tr><td>改性别字段</td><td>全链路 7 处：console → <code>/api/lists/&lt;id&gt;/items</code> → list_db → cloud-lists → 点名页 → 桌面端脚本 → 手机上传页；<code>parseNameWithGender()</code> 有 <b>5 份副本</b></td></tr>
+          <tr><td>改 Ribbon 高度</td><td><code>#groupPanel</code> / <code>#namePicker</code> <code>top:127px;bottom:46px</code>、<code>#toast bottom:58px</code>、窄屏 <code>namePicker bottom:42px</code></td></tr>
+          <tr><td>加新路由</td><td><code>routes_baseline.py</code> 同步；<code>load_panel()</code> 必须在 <code>_assert_route_freeze</code> 之前调用</td></tr>
+          <tr><td>改座位格局</td><td><code>delete_list_cascade()</code> + 启动对账；<code>normalize_layout()</code> 重校验；<code>verify_seat_count()</code> 不信缓存</td></tr>
+          <tr><td>改颜色令牌</td><td>全库搜硬编码 RGBA；核对未定义变量（声明整体失效）；暗色等价性用脚本逐条比对</td></tr>
+        </tbody>
+      </table></div>
+      <div class="d-callout" style="margin-bottom:0"><b>本页的落地位置。</b><code>design/</code> 是规范文档目录，<b>不进发布目录</b>（发布目录 = 项目交付树），也不注册任何路由。为便于编辑拆成 <code>index.html</code>、<code>css/tokens.css</code>、<code>css/layout.css</code>、<code>css/specimens.css</code>、<code>css/responsive.css</code>、<code>js/main.js</code>；<b>这只是文档自身的工程结构</b>。生产页面照旧逐页内联，从本页 04 章（或直接 <code>css/tokens.css</code>）整块复制对应层级令牌。<br><b>2026-11-14 两条新规（小圆角、零发光）是后续开发约束</b>：现有生产页面中的大圆角与残留发光属<b>待收敛漂移</b>，改动到相关文件时顺手收口，不单独开重构；新页面一律按新规写。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 14 检查清单 ================= -->
+<section class="d-section" id="checklist">
+  <div class="d-sec-head"><div class="d-sec-no">14</div><div>
+    <h2>检查清单与代码速查</h2>
+    <p>新增或改造页面时逐项勾一遍。最后附两份可直接复制的最小骨架。</p>
+  </div></div>
+
+  <div class="d-panel"><h3>上线前自检（含 2026-11-14 小圆角 / 零发光新规）</h3>
+    <ul class="d-check">
+      <li>先定层级：<b>控制层</b>还是<b>舞台层</b>，整块复制对应令牌</li>
+      <li>颜色全部走 <code>var(--token)</code>，无硬编码 RGBA</li>
+      <li>核对「已定义但未使用」「已使用但未定义」两个方向</li>
+      <li>一屏只有一个主按钮、一个当前导航项</li>
+      <li>青色只出现在当前项 / 主操作 / 链接 / 焦点 / 数值标注</li>
+      <li>字体：数据密集界面无 ZCOOL；展示字带备用字与行高</li>
+      <li>入场动画 <code>backwards</code>，无 <code>both/forwards</code></li>
+      <li>长列表 stagger 被 <code>!important</code> 压到前 8 张 40ms</li>
+      <li><code>slideIn/slideOut</code> keyframes 仍在</li>
+      <li>有 <code>prefers-reduced-motion</code> 兜底</li>
+      <li>焦点可见、图标有 <code>aria-label/title</code>、命中区 ≥44px</li>
+      <li><b>零发光</b>：无任何发光光晕散色光效（彩色 glow、<code>text-shadow</code> 发光、模糊光晕、radial 散色背景、毛玻璃）</li>
+      <li>背景为<b>纯色</b>，无 radial 光晕 / 星点 / 渐变按钮 / 无限循环装饰</li>
+      <li><b>小圆角</b>：按钮 / 输入 / 小控件 <code>4px</code>，面板 / 卡片 / 容器 <code>8px</code>，模态框 <code>16px</code></li>
+      <li>无 <code>7 / 10 / 12 / 14px</code> 等历史大圆角；筛选面板 12px 仅登记为偏差，不得复用</li>
+      <li>新增条件进 <code>.filter-panel</code>，不进点名框</li>
+      <li>跳转带部署前缀；工具跳转新标签页</li>
+      <li><b>双主题</b>：切到浅色逐组目检——无残留深色霓虹、无发光、对比度达标；硬编码颜色新增数为 0</li>
+      <li>新路由同步 <code>routes_baseline.py</code>（45 + 30 两组分别全等）</li>
+      <li>改性别 / Ribbon 高度 / 座位格局走对应同步清单</li>
+      <li>原生 <code>alert/confirm/prompt</code> 已全部替换</li>
+      <li>页脚与 favicon / canonical / JSON-LD / sitemap 同步</li>
+    </ul>
+  </div>
+
+  <div class="d-grid g2" style="margin-top:18px">
+    <div class="d-panel"><h3>最小页面骨架（控制层）</h3>
+      <details class="d-code" open><summary>复制骨架</summary><button class="d-copy" type="button">复制</button><pre><span class="t">&lt;!DOCTYPE html&gt;</span>
+<span class="t">&lt;html lang="zh-CN"&gt;</span>
+<span class="t">&lt;head&gt;</span>
+  <span class="t">&lt;meta charset="UTF-8"&gt;</span>
+  <span class="t">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
+  <span class="t">&lt;link rel="icon" href="/&lt;部署前缀&gt;/favicon.ico"&gt;</span>
+  <span class="t">&lt;link href="…/Noto+Sans+SC:wght@400;500;700" rel="stylesheet"&gt;</span>
+  <span class="t">&lt;style&gt;</span>
+    <span class="c">/* ① 整块粘贴 04 章「控制层令牌块」（或 design/css/tokens.css） */</span>
+    <span class="c">/* ② 组件样式（本页 09 章各标本同源） */</span>
+    <span class="c">/* ③ 动效层（本页 08.1），放在 &lt;/style&gt; 前 */</span>
+  <span class="t">&lt;/style&gt;</span>
+<span class="t">&lt;/head&gt;</span>
+<span class="t">&lt;body&gt;</span>
+  <span class="c">&lt;!-- 侧栏 240px + 主区 28px 32px；纯色底、零发光、小圆角 4/8/16 --&gt;</span>
+<span class="t">&lt;/body&gt;</span>
+<span class="t">&lt;/html&gt;</span></pre></details>
+    </div>
+    <div class="d-panel"><h3>规范真源索引</h3>
+      <div class="d-table-wrap"><table class="d-table">
+        <thead><tr><th>要找什么</th><th>去哪</th></tr></thead><tbody>
+          <tr><td>设计系统 / 禁用清单 / 动效三坑</td><td>内部真源备忘（UI-DETAIL）</td></tr>
+          <tr><td>控制层令牌与组件</td><td>控制层主界面 <code>&lt;style&gt;</code>（项目仓库）</td></tr>
+          <tr><td>点名框 / 浮动钮 / 设置面板</td><td>舞台层点名页 <code>&lt;style&gt;</code> 与结构区（项目仓库）</td></tr>
+          <tr><td>舞台层令牌 / Ribbon / 座位</td><td>排座工具页样式文件组（拆分式 CSS）</td></tr>
+          <tr><td>双主题令牌成对写法</td><td>参考层令牌文件</td></tr>
+          <tr><td>门户 SEO / 扫描线 / 产品网格</td><td><code>index.html</code></td></tr>
+          <tr><td>改版前后对照</td><td><code>.workbuddy/design/前端改版预览.html</code></td></tr>
+          <tr><td>本页 · 规范正文与标本结构</td><td><code>design/index.html</code></td></tr>
+          <tr><td>本页 · 令牌 / 外壳 / 标本 / 响应式</td><td><code>design/css/tokens.css</code> · <code>layout.css</code> · <code>specimens.css</code> · <code>responsive.css</code></td></tr>
+          <tr><td>本页 · 交互脚本</td><td><code>design/js/main.js</code></td></tr>
+        </tbody>
+      </table></div>
+      <p class="d-caption" style="margin-top:12px">本页与真源冲突时，以真源 + 生产代码为准，并同步修订本页。<b>不要把本页当成第二套样式真源</b>——它是真源的可读投影。</p>
+    </div>
+  </div>
+</section>
+
+<footer class="d-footer">
+  <div>前端设计风格体系 v1.0 · 2026-11-14<br>基准：点名框（S） / 舞台层其它 · 排座工具页 · 控制层（A） / 参考层（B）<br>源码：<code>index.html</code> + <code>css/</code> × 5 + <code>js/main.js</code></div>
+  <div>© 2026 前端设计风格体系 · 规范文档，仅供内部查阅与复用。</div>
+</footer>
+
+</div>
+</main>
+
+<script src="js/main.js"></script>
+</body>
+</html>

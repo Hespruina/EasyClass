@@ -1,0 +1,151 @@
+/* 前端设计风格体系 — 浅色主题成对令牌层
+ * 加载顺序：tokens → layout → specimens → responsive → theme-light（最后加载，覆盖才生效）。
+ * 激活方式：<html data-theme="light">；由 js/main.js 的主题切换逻辑写入，并持久化到 localStorage。
+ * 方法论：参考层「成对令牌」——每个语义令牌在 :root 与 [data-theme="light"] 各写一份，
+ *         组件 CSS 只写 var(--x)；硬编码深色值在下方逐条覆写，禁止新增硬编码。
+ * 浅色调色板来源：参考层浅色模式（底 #f5f5f0 / 卡 #ffffff / 主色 #2d5f8a / 文字 #1a1a1a / 危险 #dc3545）。
+ */
+
+/* ============ 1 · 控制层（文档外壳）令牌 ============ */
+html[data-theme="light"]{
+  --bg:#f5f5f0;
+  --surface:#ffffff;
+  --surface-2:#f0f0eb;
+  --surface-3:#e8e8e3;
+  --border:rgba(45,95,138,.16);
+  --border-strong:#d1d5db;
+  --text:#1a1a1a;
+  --text-muted:#5b6470;
+  --text-faint:#66707a;  /* 校正：原 #8a94a0 对 #f5f5f0 仅 2.81，现 4.61 */
+  --accent:#2d5f8a;
+  --accent-ink:#ffffff;
+  --accent-tint:rgba(45,95,138,.08);
+  --accent-line:rgba(45,95,138,.38);
+  --success:#1f7a4d;      --success-tint:rgba(31,122,77,.10);
+  --warning:#8a6d1f;      --warning-tint:rgba(184,134,11,.10);
+  --danger:#dc3545;       --danger-tint:rgba(220,53,69,.08);
+  --male:#2d6fc0;
+  --female:#bd4b76;  /* 校正：原 #c95c8e 对白底仅 3.89，现 4.74 */
+  --shadow:0 12px 32px rgba(0,0,0,.10);
+
+  /* ---- 舞台层令牌（浅色对）---- */
+  --s-bg:#eceae4;
+  --s-panel:#ffffff;
+  --s-panel-2:#f3f4f0;
+  --s-line:#d9dcd4;
+  --s-accent:#2d5f8a;
+  --s-accent-hi:#3a72a1;
+  --s-accent-lo:#4a86b5;
+  --s-muted:#5b6470;  /* 校正：原 #6b7280 对座位底 #f3f4f0 仅 4.38，现 5.43 */
+  --s-gray:#b6bcc4;
+  --s-danger:#dc3545;
+  --s-warn:#b8860b;
+  --s-male:#2d6fc0;
+  --s-female:#bd4b76;
+
+  /* 遮罩（浅色对） */
+  --overlay:rgba(15,23,42,.45);
+  --overlay-from:rgba(15,23,42,0);
+}
+
+/* ============ 2 · 外壳硬编码覆写 ============ */
+html[data-theme="light"] ::selection{background:rgba(45,95,138,.20);color:#1a1a1a}
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover{background:#b8c0c9}
+html[data-theme="light"] .d-hero::before{
+  background-image:linear-gradient(to right,rgba(45,95,138,.16) 1px,transparent 1px),linear-gradient(to bottom,rgba(45,95,138,.16) 1px,transparent 1px);
+}
+html[data-theme="light"] .d-spec-demo{
+  background-image:linear-gradient(to right,rgba(45,95,138,.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(45,95,138,.08) 1px,transparent 1px);
+}
+html[data-theme="light"] .d-code pre{background:#f3f4f0;border-color:var(--border);color:#2f3b46}
+html[data-theme="light"] .d-code pre .c{color:#66707a}
+html[data-theme="light"] .d-code pre .v{color:#1e6e4e}
+html[data-theme="light"] .d-code pre .t{color:#8a6d1f}
+html[data-theme="light"] .d-vs .bad{background:#f7f0ee}
+html[data-theme="light"] .d-flag.do{color:#1e6e46}
+html[data-theme="light"] .d-flag.dont{color:#a13a34}
+
+/* ============ 3 · 标本硬编码覆写（浅色对） ============ */
+/* 模态家族：白卡 + 浅灰边（对应深色 #1c1c1c / #666） */
+html[data-theme="light"] .edit-names-panel,
+html[data-theme="light"] .notice-card{background:#ffffff;border-color:#d1d5db;box-shadow:0 12px 32px rgba(0,0,0,.12)}
+html[data-theme="light"] .edit-names-close{color:#9aa3ad}
+html[data-theme="light"] .edit-names-close:hover{background:rgba(45,95,138,.08)}
+html[data-theme="light"] .edit-names-body,
+html[data-theme="light"] .notice-card p{color:#374151}
+html[data-theme="light"] .dialog-btn-confirm,
+html[data-theme="light"] .notice-btn.primary{color:#ffffff}
+html[data-theme="light"] .dialog-btn-secondary,
+html[data-theme="light"] .notice-btn.ghost{background:#4b5563;color:#ffffff}
+html[data-theme="light"] .dialog-btn-secondary:hover,
+html[data-theme="light"] .notice-btn.ghost:hover{background:#3d4756}
+html[data-theme="light"] .modal-overlay{background:var(--overlay)}
+
+/* 按钮与圆钮 */
+html[data-theme="light"] .btn-primary:hover{background:#3a72a1;border-color:#3a72a1}
+html[data-theme="light"] .settings-button,
+html[data-theme="light"] .input-name-list-button,
+html[data-theme="light"] .home-button{background:#2d5f8a;color:#ffffff}
+html[data-theme="light"] .settings-button:hover,
+html[data-theme="light"] .input-name-list-button:hover,
+html[data-theme="light"] .home-button:hover{background:#3a72a1}
+html[data-theme="light"] .tooltip-bubble{background:#2d5f8a;color:#ffffff}
+html[data-theme="light"] .tooltip-bubble::after{border-bottom-color:#2d5f8a}
+html[data-theme="light"] .toast{background:rgba(255,255,255,.97)}
+html[data-theme="light"] .toast .toast-spin,
+html[data-theme="light"] .spinner{border-color:rgba(45,95,138,.25);border-top-color:var(--s-accent)}
+
+/* 点名框复刻 */
+html[data-theme="light"] .dianmingkuang{background:#ffffff}
+html[data-theme="light"] .dianmingkuang::after{background:rgba(0,0,0,.04)}
+html[data-theme="light"] .neirongquyu{background:#f0f0eb}
+html[data-theme="light"] .dianmingkuang h1,
+html[data-theme="light"] .xingmingxianshi,
+html[data-theme="light"] .filter-panel-title{color:#2d5f8a}
+html[data-theme="light"] .xingmingxianshi{background:rgba(0,0,0,.04)}
+html[data-theme="light"] .anniu{background:#2d5f8a;color:#ffffff}
+html[data-theme="light"] .anniu:hover{background:#3a72a1}
+html[data-theme="light"] .anniu:active{background:#4a86b5}
+
+/* 筛选面板与选择控件 */
+html[data-theme="light"] .filter-panel{background:#ffffff;border-color:rgba(45,95,138,.25)}
+html[data-theme="light"] .filter-section+.filter-section{border-top-color:rgba(0,0,0,.08)}
+html[data-theme="light"] .filter-section-title{color:#5b6470}
+html[data-theme="light"] .gender-filter-btn{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.18)}
+html[data-theme="light"] .gender-filter-btn:hover{border-color:#2d5f8a;color:#2d5f8a}
+html[data-theme="light"] .gender-filter-btn.active[data-gender="all"]{background:rgba(45,95,138,.12);border-color:#2d5f8a;color:#2d5f8a}
+html[data-theme="light"] .gender-filter-btn.active[data-gender="male"]{background:rgba(45,111,192,.12);border-color:#2d6fc0;color:#2d6fc0}
+html[data-theme="light"] .gender-filter-btn.active[data-gender="female"]{background:rgba(201,92,142,.12);border-color:#c95c8e;color:#c95c8e}
+html[data-theme="light"] .group-pick-btn{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.22);color:#5b6470}
+html[data-theme="light"] .group-pick-btn:hover{border-color:#2d5f8a;color:#2d5f8a}
+html[data-theme="light"] .group-cancel-btn{background:rgba(220,53,69,.08);border-color:rgba(220,53,69,.4);color:#dc3545}
+html[data-theme="light"] .group-cancel-btn:disabled{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.14);color:#9aa3ad}
+html[data-theme="light"] .group-chip{border-color:rgba(45,95,138,.45);background:rgba(45,95,138,.08)}
+html[data-theme="light"] .group-chip.muted{border-color:rgba(0,0,0,.22);background:rgba(0,0,0,.03);color:#6b7280}
+html[data-theme="light"] .slider{background-color:#cdd4db}
+html[data-theme="light"] .fanyebeikaiguan input:checked+.slider{background-color:#2d5f8a}
+
+/* Ribbon 复刻 */
+html[data-theme="light"] .rb-demo .rb-tabs{background:#ecebe6}
+html[data-theme="light"] .rb-demo #bottomBar{background:#f0efe9}
+html[data-theme="light"] .rb-demo .rb-tab{background:rgba(45,95,138,.06);border-color:rgba(45,95,138,.45)}
+html[data-theme="light"] .rb-demo .rb-tab:hover{background:rgba(45,95,138,.12)}
+html[data-theme="light"] .rb-demo .rb-btn:hover{background:rgba(45,95,138,.08);border-color:rgba(45,95,138,.34)}
+html[data-theme="light"] .rb-demo .rb-btn.on{background:rgba(45,95,138,.14)}
+html[data-theme="light"] .rb-demo .rb-icon-btn:hover{background:rgba(45,95,138,.08)}
+html[data-theme="light"] .rb-demo .rb-label{color:#8a8f96}
+
+/* 座位与菜单 */
+html[data-theme="light"] .seat.empty-seat{color:#5d6670;border-color:#c4cad2;background:#e4e6ea} /* 校正：原 #9aa3ad = 2.05，现 4.67 */
+html[data-theme="light"] .seat:hover{background:rgba(45,95,138,.12)}
+html[data-theme="light"] .seat.selected{background:rgba(45,95,138,.20)}
+html[data-theme="light"] .seat.picked{background:rgba(45,95,138,.28)}
+html[data-theme="light"] .seat.drop-target{background:rgba(184,134,11,.18)}
+html[data-theme="light"] .menu-item:hover{background:rgba(45,95,138,.10)}
+html[data-theme="light"] .menu-item.danger:hover{background:rgba(220,53,69,.12)}
+html[data-theme="light"] .seat.hl{background:rgba(45,95,138,.28)!important}
+html[data-theme="light"] .seat.drag-source{background:rgba(45,95,138,.06)!important}
+html[data-theme="light"] .select-box{background:rgba(45,95,138,.10)}
+html[data-theme="light"] .seat-drag-ghost{background:rgba(255,255,255,.97);box-shadow:0 10px 24px rgba(0,0,0,.18)}
+html[data-theme="light"] .seat-flight{box-shadow:0 10px 26px rgba(0,0,0,.18)}
+html[data-theme="light"]{--swap-ring:rgba(184,134,11,.45);--swap-ring-0:rgba(184,134,11,0);--seat-pop-1:rgba(45,95,138,.30);--seat-pop-2:rgba(45,95,138,.18)}

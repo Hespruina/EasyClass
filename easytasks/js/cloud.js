@@ -145,7 +145,10 @@ const CloudSync = (function () {
     }
     function getTask(id) { return api('api/tasks/' + id); }
     function updateTask(id, payload) {
-        return api('api/tasks/' + id, { method: 'PUT', body: payload || {} });
+        const body = Object.assign({}, payload || {});
+        // 带上自己的 WS 连接 id：服务端广播跳过本机，彻底不回声
+        if (connId) body.conn_id = connId;
+        return api('api/tasks/' + id, { method: 'PUT', body: body });
     }
     function renameTask(id, name) {
         return updateTask(id, { name: name });

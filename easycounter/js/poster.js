@@ -76,8 +76,10 @@ posterRankColorValue.textContent = currentPosterConfig.rankColor;
 posterScoreColor.value = currentPosterConfig.scoreColor;
 posterScoreColorValue.textContent = currentPosterConfig.scoreColor;
 
-// 同步自定义主题下拉菜单的选中状态
-updateCustomThemeSelectDisplay();
+// 重建并同步自定义主题下拉菜单：populateThemeSelect 末尾会调
+// updateCustomThemeSelectDisplay。不能只同步选中态——从任务列表「导出结果」
+// 进入时不经过 initMainAppUI，下拉选项从未填充，会得到空面板。
+populateThemeSelect();
 
 showPosterLoading();
 // 生成初始海报

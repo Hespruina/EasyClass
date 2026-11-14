@@ -700,6 +700,64 @@
             gap: 10px;
         }
 
+        /* EasyCore 易核：横向通栏卡片（独占一整行） */
+        .product-feature {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            padding: 28px 32px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+            margin-bottom: 24px;
+        }
+
+        .product-feature:hover {
+            border-color: var(--border-color-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .product-feature .product-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        .product-feature .feature-body {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px 32px;
+        }
+
+        .product-feature .feature-text {
+            flex: 1 1 320px;
+            min-width: 0;
+        }
+
+        .product-feature .product-name {
+            font-size: 22px;
+        }
+
+        .product-feature .product-desc {
+            margin-bottom: 0;
+        }
+
+        .product-feature .product-tags {
+            margin-bottom: 0;
+        }
+
+        .product-feature .product-link {
+            flex-shrink: 0;
+        }
+
         .footer {
             background: var(--footer-bg);
             border-top: 1px solid var(--border-color);
@@ -781,6 +839,18 @@
 
             .products-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .product-feature {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+
+            .product-feature .feature-body {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
             }
 
             .footer-inner {
@@ -885,13 +955,15 @@
             <h2 class="section-title">实用工具</h2>
             <p class="section-subtitle">在线工具-无需安装-即开即用</p>
         </div>
-        <div class="products-grid">
-            <a href="easycore/" class="product-card" target="_blank" rel="noopener noreferrer">
-                <div class="product-icon"><img src="easycore/logo.png" alt="EasyCore"></div>
-                <h3 class="product-name">EasyCore 易核</h3>
-                <p class="product-desc">
-                    EasyCore是EasyClass的核心账户系统，提供统一的用户认证、数据管理和云端同步服务。支持多设备登录、名单云存储、历史记录同步等功能。
-                </p>
+        <a href="easycore/" class="product-feature" target="_blank" rel="noopener noreferrer">
+            <div class="product-icon"><img src="easycore/logo.png" alt="EasyCore"></div>
+            <div class="feature-body">
+                <div class="feature-text">
+                    <h3 class="product-name">EasyCore 易核</h3>
+                    <p class="product-desc">
+                        EasyCore是EasyClass的核心账户系统，提供统一的用户认证、数据管理和云端同步服务。支持多设备登录、名单云存储、历史记录同步等功能。
+                    </p>
+                </div>
                 <div class="product-tags">
                     <span class="product-tag">账户系统</span>
                     <span class="product-tag">云端同步</span>
@@ -899,7 +971,9 @@
                     <span class="product-tag">多设备支持</span>
                 </div>
                 <span class="product-link">进入Dashboard →</span>
-            </a>
+            </div>
+        </a>
+        <div class="products-grid">
             <a href="randamer/" class="product-card" target="_blank" rel="noopener noreferrer">
                 <div class="product-icon"><img src="randamer/logo.png" alt="易点名"></div>
                 <h3 class="product-name">易点名</h3>

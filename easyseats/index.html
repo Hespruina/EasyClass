@@ -52,118 +52,178 @@
     touch-action: none;
   }
 
-  /* ============ 顶栏（三区布局：左信息 / 中操作 / 右提交） ============ */
-  #topbar {
+  /* ============ Office 风格功能区（Ribbon） ============ */
+  #ribbon {
     position: relative;
     flex: 0 0 auto;
-    min-height: 52px;
     background: var(--panel);
-    color: var(--accent);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 15px;
     border-bottom: 2px solid var(--accent);
     z-index: 10;
-    padding: 6px 16px;
   }
-  .tb-zone { display: flex; align-items: center; gap: 10px; }
-  .tb-left { flex: 1 1 auto; min-width: 0; }
-  .tb-center { flex: 0 0 auto; }
-  .tb-right { flex: 1 1 auto; justify-content: flex-end; }
 
-  /* 开关（对齐 randamer 的 slider 配色） */
-  .switch-wrap {
+  /* ---- 选项卡栏 ---- */
+  .rb-tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 12px;
+    background: #16171b;
+    border-bottom: 1px solid var(--line);
+  }
+  .rb-brand {
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-size: 15px;
+    color: var(--accent);
+    letter-spacing: .5px;
+    margin-right: 12px;
+    white-space: nowrap;
+  }
+  /* 选项卡 = 按钮：边框常驻显示，未选中的那个也要看得出来能点
+     （只靠 hover 才出现底色的话，未选中项看着像一行纯文字） */
+  .rb-tab {
+    background: rgba(69,243,255,.08);
+    border: 1px solid rgba(69,243,255,.55);
+    outline: none;
+    font: inherit;
+    font-family: "ZCOOL KuaiLe", sans-serif;
+    font-size: 14px;
+    color: #c9ced6;
+    padding: 6px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color .18s, background .18s, border-color .18s;
+  }
+  .rb-tab:hover {
+    color: var(--accent);
+    background: rgba(69,243,255,.16);
+    border-color: var(--accent);
+  }
+  .rb-tab.active {
+    color: var(--panel);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .rb-tab.active:hover { background: var(--accent-hi); border-color: var(--accent-hi); color: var(--panel); }
+  .rb-tab:disabled { opacity: .38; cursor: not-allowed; }
+  .rb-tab:disabled:hover {
+    background: rgba(69,243,255,.08);
+    border-color: rgba(69,243,255,.55);
+    color: #c9ced6;
+  }
+
+  /* 选项卡右侧：座位表选择 / 统计 / 图标按钮 */
+  .rb-tabs-right {
+    margin-left: auto;
     display: flex;
     align-items: center;
     gap: 8px;
-    cursor: pointer;
+    min-width: 0;
+  }
+
+  .rb-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: 1px solid var(--gray);
+    border-radius: 5px;
+    color: #d7d8dd;
+    font: inherit;
+    font-size: 12.5px;
     padding: 4px 10px;
-    border-radius: 6px;
-    transition: background .3s;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .rb-icon-btn svg { width: 15px; height: 15px; display: block; }
+  .rb-icon-btn:hover { color: var(--accent); border-color: var(--accent); background: rgba(69,243,255,.10); }
+
+  /* ---- 功能区（Ribbon 主体） ---- */
+  .rb-body {
+    display: flex;
+    align-items: stretch;
+    height: 78px;
+    padding: 4px 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+  .rb-body::-webkit-scrollbar { height: 5px; }
+  .rb-body::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+
+  .rb-group {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2px 9px 0;
+  }
+  .rb-row { display: flex; align-items: flex-start; gap: 4px; }
+  .rb-label {
+    font-size: 11px;
+    color: #6f7078;
+    text-align: center;
+    padding: 1px 0 2px;
     white-space: nowrap;
   }
-  .switch-wrap:hover { background: rgba(69,243,255,.10); }
+  .rb-spacer { flex: 1 1 auto; min-width: 10px; }
 
-  .switch {
-    position: relative;
-    width: 42px;
-    height: 22px;
-    background: var(--gray);
-    border-radius: 11px;
-    transition: background .3s;
-    flex-shrink: 0;
+  /* 图标 + 文字的功能按钮（小号：横排；.big：图标在上、文字在下） */
+  .rb-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    color: #d7d8dd;
+    font: inherit;
+    font-size: 12.5px;
+    padding: 5px 9px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, border-color .15s, color .15s;
   }
-  .switch::after {
-    content: '';
-    position: absolute;
-    width: 18px; height: 18px;
-    left: 2px; top: 2px;
-    background: #fff;
-    border-radius: 50%;
-    transition: transform .3s;
-  }
-  .switch.on { background: var(--accent); }
-  .switch.on::after { transform: translateX(20px); }
+  .rb-btn:hover { background: rgba(69,243,255,.10); border-color: rgba(69,243,255,.34); color: var(--accent); }
+  .rb-btn:active { background: rgba(69,243,255,.22); }
+  .rb-btn.on { background: rgba(69,243,255,.16); border-color: var(--accent); color: var(--accent); }
+  .rb-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .rb-btn:disabled:hover { background: transparent; border-color: transparent; color: #d7d8dd; }
 
-  /* 主操作按钮（randamer 的 .anniu：青底深字 + 4px 圆角） */
-  .tb-main-btn {
+  .rb-btn.big {
+    flex-direction: column;
+    gap: 3px;
+    min-width: 60px;
+    padding: 3px 10px 2px;
+    font-size: 11.5px;
+  }
+  .rb-btn.big .rb-ico svg { width: 24px; height: 24px; }
+  .rb-ico { display: flex; align-items: center; justify-content: center; }
+  .rb-ico svg { width: 16px; height: 16px; display: block; }
+
+  .rb-btn.primary {
     background: var(--accent);
     color: var(--panel);
-    border: none;
-    outline: none;
-    font: inherit;
+    border-color: var(--accent);
     font-family: "ZCOOL KuaiLe", sans-serif;
-    font-size: 14px;
-    padding: 6px 18px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background .3s, transform .3s;
-    white-space: nowrap;
+    font-size: 13px;
   }
-  .tb-main-btn:hover { background: var(--accent-hi); }
-  .tb-main-btn:active { background: var(--accent-lo); transform: scale(.95); }
-  .tb-main-btn.active { background: var(--warn); color: var(--panel); transform: none; }
-  .tb-main-btn.active:hover { background: var(--warn); }
+  .rb-btn.primary:hover { background: var(--accent-hi); border-color: var(--accent-hi); color: var(--panel); }
+  .rb-btn.primary:disabled { background: rgba(69,243,255,.30); border-color: transparent; color: rgba(28,28,28,.75); }
 
-  /* 次级按钮（描边风格） */
-  .tb-btn {
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    outline: none;
-    font: inherit;
-    font-family: "ZCOOL KuaiLe", sans-serif;
-    font-size: 14px;
-    padding: 5px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background .3s, color .3s;
-    white-space: nowrap;
-  }
-  .tb-btn:hover { background: rgba(69,243,255,.14); }
-  .tb-btn.on { background: var(--accent); color: var(--panel); }
-  .tb-btn.neutral { color: #fff; border-color: var(--gray); }
-  .tb-btn.neutral:hover { background: rgba(255,255,255,.12); }
-  .tb-btn:disabled { opacity: .45; cursor: not-allowed; }
-  .tb-btn:disabled:hover { background: transparent; }
-
-  #zoomHint { color: var(--muted); font-size: 13px; white-space: nowrap; }
-  .chart-label {
-    color: #e6e6e6;
-    font-family: "ZCOOL KuaiLe", sans-serif;
-    font-size: 15px;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    max-width: 40vw;
-  }
-  .tb-hint { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  #zoomHint { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+  .tb-hint { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
   .tb-hint.ok { color: var(--accent); }
   .tb-hint.bad { color: var(--warn); }
   .tb-hint b { color: inherit; font-weight: 600; }
-  /* 窄屏靠这两条把次要字省掉，避免顶栏挤在一起 */
-  .only-narrow { display: none; }
 
-  /* 座位表下拉（排座模式）。
+  /* 拖拽新建座位的「新座位」块 */
+  #seatSource { cursor: grab; }
+  #seatSource:active { cursor: grabbing; transform: scale(.95); }
+
+  /* 座位表下拉（选项卡右侧）。
      min-width:0 是关键：select 作为 flex 项默认 min-width:auto，会按最长选项撑开，
      窄屏上直接顶到旁边的按钮上（实测 430px 下与「随机排座」重叠）。 */
   #chartSelect {
@@ -172,41 +232,25 @@
     background: var(--panel-2);
     color: var(--accent);
     border: 1px solid var(--accent);
-    border-radius: 4px;
-    padding: 6px 30px 6px 12px;
+    border-radius: 5px;
+    padding: 4px 26px 4px 10px;
     font: inherit;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
-    max-width: 42vw;
+    max-width: 38vw;
     background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
                       linear-gradient(135deg, var(--accent) 50%, transparent 50%);
-    background-position: calc(100% - 17px) center, calc(100% - 11px) center;
+    background-position: calc(100% - 15px) center, calc(100% - 10px) center;
     background-size: 6px 6px, 6px 6px; background-repeat: no-repeat;
   }
   #chartSelect option { background: var(--panel); color: var(--accent); }
 
-  #manualActions { display: none; gap: 8px; }
-  #manualActions button { border: none; outline: none; font: inherit; font-family: "ZCOOL KuaiLe", sans-serif;
-    font-size: 14px; padding: 6px 16px; border-radius: 4px; cursor: pointer; transition: background .3s; }
-  #finishBtn { background: var(--accent); color: var(--panel); }
-  #finishBtn:hover { background: var(--accent-hi); }
-  #cancelBtn { background: var(--gray); color: #fff; }
-  #cancelBtn:hover { background: #757575; }
+  /* 手动建组过程中出现的「完成 / 取消」 */
+  #manualActions { display: none; gap: 4px; }
 
-  /* 手动排座：进入该模式后顶栏换成「清空名字 / 完成」 */
-  #manualSeatActions { display: none; gap: 8px; }
-  #manualSeatActions button { border: none; outline: none; font: inherit; font-family: "ZCOOL KuaiLe", sans-serif;
-    font-size: 14px; padding: 6px 16px; border-radius: 4px; cursor: pointer; transition: background .3s; white-space: nowrap; }
-  #clearNamesBtn { background: var(--gray); color: #fff; }
-  #clearNamesBtn:hover { background: #757575; }
-  #finishManualBtn { background: var(--accent); color: var(--panel); }
-  #finishManualBtn:hover { background: var(--accent-hi); }
-  #saveBtn { background: var(--accent); color: var(--panel); border: none; outline: none; font: inherit;
-    font-family: "ZCOOL KuaiLe", sans-serif; font-size: 14px; padding: 6px 16px; border-radius: 4px;
-    cursor: pointer; transition: background .3s, opacity .3s; white-space: nowrap; }
-  #saveBtn:hover { background: var(--accent-hi); }
-  #saveBtn:disabled { opacity: .45; cursor: not-allowed; }
-  #saveBtn:disabled:hover { background: var(--accent); }
+  /* 模式开关：只显示当前选项卡的功能组 / 按钮 */
+  #ribbon[data-mode="seat"] [data-mode="layout"],
+  #ribbon[data-mode="layout"] [data-mode="seat"] { display: none !important; }
 
   /* ============ 画布 ============ */
   #canvas {
@@ -271,7 +315,15 @@
   /* 排座模式：座位显示姓名，字号自适应 46px 方块（最多 5 个字） */
   #canvas.view-mode .seat { cursor: default; font-size: 11px; line-height: 1.08; padding: 2px; text-align: center; word-break: break-all; }
   #canvas.view-mode .seat:hover { background: var(--panel-2); }
-  #canvas.view-mode .seat:not(.has-name) { color: #55565e; font-size: 13px; }
+  /* 空座（允许空座时多出来的座位 / 还没排人的座位）：虚线 + 更暗，和"有人"的实线座位区分 */
+  #canvas.view-mode .seat:not(.has-name) {
+    color: #5c5d66;
+    font-size: 11px;
+    border-style: dashed;
+    border-color: #43444c;
+    background: #202127;
+  }
+  #canvas.view-mode .seat:not(.has-name):hover { background: #26272e; }
   .seat.hl { background: rgba(69,243,255,.3) !important; border-color: var(--warn) !important; }
 
   .ghost {
@@ -318,74 +370,54 @@
     font-weight: 400;
   }
 
-  /* ============ 底栏 ============ */
+  /* ============ 底部状态栏（操作提示 + 缩放比例） ============ */
   #bottomBar {
     flex: 0 0 auto;
-    height: 118px;
-    border-top: 2px solid var(--accent);
+    min-height: 32px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: var(--panel);
+    gap: 14px;
+    padding: 0 14px;
+    background: #1a1b1f;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+    color: var(--muted);
     position: relative;
     z-index: 20;
   }
-  #seatSource {
-    width: 56px; height: 56px;
-    background: var(--panel-2);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 15px;
-    border-radius: 6px;
-    cursor: grab;
-    user-select: none;
-    transition: transform .2s, background .2s;
-  }
-  #seatSource:hover { background: rgba(69,243,255,.14); transform: translateY(-2px); }
-  #seatSource:active { cursor: grabbing; transform: scale(.96); }
-  #seatSource.hidden { display: none; }
-
-  /* 操作提示：鼠标一行 + 触屏一行 */
   #opHint {
-    position: absolute; left: 20px; top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.7;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
     pointer-events: none;
     user-select: none;
   }
+  #opHint > div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #opHint b {
     color: var(--accent);
     font-weight: 400;
     font-family: "ZCOOL KuaiLe", sans-serif;
   }
-  #opHint.center { position: static; transform: none; left: auto; top: auto; text-align: center; }
-  /* 窄屏（手机 / 竖屏平板）：底栏改竖排 —— 提示在上、座位源块在下，避免文字压到源块 */
-  @media (max-width: 860px) {
-    #bottomBar { flex-direction: column; height: 138px; gap: 10px; }
-    #bottomBar.view-mode { height: 104px; }
-    #opHint {
-      position: static; left: auto; top: auto; transform: none;
-      order: -1;
-      width: 100%;          /* 显式占满，避免 flex 项按 max-content 撑出屏幕而不换行 */
-      font-size: 11px;
-      line-height: 1.55;
-      text-align: center;
-      text-wrap: balance;   /* 换行时两行长度尽量均匀，别把"缩放"两个字甩到下一行 */
-      padding: 0 12px;
-    }
-    #opHint .mouse-only { display: none; }
-    /* 顶栏在窄屏收起次要信息，保证主要按钮可点 */
-    #zoomHint, .tb-hint { display: none; }
-    .chart-label { max-width: 30vw; }
-    #chartSelect { max-width: 34vw; font-size: 13px; }
-    .only-wide { display: none; }
-    .only-narrow { display: inline; }
-    .tb-main-btn, .tb-btn, #saveBtn { font-size: 13px; padding: 5px 10px; }
-    .tb-zone { gap: 6px; }
-    .switch-wrap span { display: none; }
+
+  /* 鼠标设备只显示鼠标提示，触屏设备只显示触屏提示 */
+  @media (hover: hover) and (pointer: fine) { #opHintTouch { display: none; } }
+  @media (hover: none) { #opHintMouse { display: none; } }
+
+  /* 窄屏：收起品牌字与统计，功能区自动横向滚动 */
+  @media (max-width: 900px) {
+    .rb-brand { display: none; }
+    .rb-tab { font-size: 13px; padding: 6px 12px; }
+    .rb-body { height: 72px; padding: 4px 6px; }
+    .rb-btn.big { min-width: 52px; font-size: 11px; padding: 3px 7px 2px; }
+    .rb-btn.big .rb-ico svg { width: 21px; height: 21px; }
+    .rb-btn { font-size: 12px; padding: 5px 7px; }
+    .tb-hint, .rb-icon-btn span { display: none; }
+    .rb-icon-btn { padding: 5px 7px; }
+    #chartSelect { max-width: 40vw; }
+    #bottomBar { font-size: 11.5px; gap: 8px; padding: 0 10px; }
   }
 
   /* ============ 菜单 ============ */
@@ -418,7 +450,7 @@
   /* ============ 小组总览面板 ============ */
   #groupPanel {
     position: fixed;
-    top: 60px; right: 12px; bottom: 130px;
+    top: 127px; right: 12px; bottom: 46px;
     width: 264px;
     background: var(--panel);
     border: 1px solid var(--accent);
@@ -494,7 +526,7 @@
   /* ============ Toast ============ */
   #toast {
     position: fixed;
-    left: 50%; bottom: 140px;
+    left: 50%; bottom: 58px;
     transform: translate(-50%, 20px);
     background: rgba(28,28,28,.96);
     border: 1px solid var(--accent);
@@ -564,10 +596,45 @@
     text-align: center; word-break: break-all;
   }
 
+  /* ============ 拖动学生换座（排座模式） ============ */
+  /* 有人的座位可以拖着换位：光标提示「可抓」 */
+  #canvas.manual-seating .seat.has-name { cursor: grab; }
+  /* 拖动中：源座位变成虚线空洞，跟 animateSeatFlight 一样「飞的是名字，不是座位」 */
+  #canvas.manual-seating .seat.drag-source {
+    background: rgba(69,243,255,.05) !important;
+    border-style: dashed !important;
+    color: transparent !important;
+  }
+  /* 光标下的落点：空座 / 有人的座位都算，统一高亮 */
+  #canvas.manual-seating .seat.drop-target {
+    background: rgba(255,215,0,.2) !important;
+    border-color: var(--warn) !important;
+    outline: 2px solid var(--warn); outline-offset: 2px;
+    z-index: 9;
+  }
+  /* 跟着光标的「学生」影子 */
+  .seat-drag-ghost {
+    position: fixed; left: 0; top: 0;
+    transform: translate(-50%, -50%);
+    min-width: 46px; min-height: 46px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 2px 4px;
+    background: rgba(40,41,45,.97);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    color: var(--accent);
+    font-size: 11px; line-height: 1.08;
+    text-align: center; word-break: break-all;
+    box-shadow: 0 10px 24px rgba(0,0,0,.62);
+    pointer-events: none;
+    z-index: 300001;
+  }
+  body.dragging-seat, body.dragging-seat * { cursor: grabbing !important; }
+
   /* 手动选人面板 */
   #namePicker {
     position: fixed;
-    right: 22px; top: 74px; bottom: 96px;
+    right: 22px; top: 127px; bottom: 46px;
     width: 232px;
     background: var(--panel);
     border: 1px solid var(--accent-lo);
@@ -627,45 +694,131 @@
   @media (max-width: 760px) {
     #namePicker {
       left: 10px; right: 10px; top: auto;
-      bottom: 92px; width: auto; max-height: 46vh;
+      bottom: 42px; width: auto; max-height: 46vh;
     }
   }
 </style>
 </head>
 <body>
 
-<div id="topbar">
-  <div class="tb-zone tb-left">
-    <span id="zoomHint">缩放 100%</span>
-    <span id="chartLabel" class="chart-label" style="display:none"></span>
-    <select id="chartSelect" style="display:none"></select>
-    <button id="reloadBtn" class="tb-btn" style="display:none">刷新</button>
-  </div>
+<div id="ribbon" data-mode="seat">
+  <!-- ===== 选项卡 ===== -->
+  <div class="rb-tabs">
+    <span class="rb-brand">易排座</span>
+    <button class="rb-tab active" id="tabSeat" type="button">排座位</button>
+    <button class="rb-tab" id="tabLayout" type="button">格局编辑</button>
 
-  <div class="tb-zone tb-center">
-    <div class="switch-wrap" id="gridSwitchWrap">
-      <div class="switch on" id="gridSwitch"></div>
-      <span>网格对齐</span>
-    </div>
-    <button id="manualGroupBtn" class="tb-main-btn">手动建组</button>
-    <button id="fillSeatsBtn" class="tb-btn" style="display:none">一键铺座</button>
-    <button id="arrangeBtn" class="tb-main-btn" style="display:none">随机排座<span class="only-wide"> ▾</span></button>
-    <button id="manualSeatBtn" class="tb-main-btn" style="display:none">手动排座</button>
-    <div id="manualSeatActions">
-      <button id="clearNamesBtn">清空名字</button>
-      <button id="finishManualBtn">✓ 完成</button>
-    </div>
-    <button id="groupOverviewBtn" class="tb-btn">小组<span class="only-wide">总览</span></button>
-    <div id="manualActions">
-      <button id="finishBtn">✓ 完成</button>
-      <button id="cancelBtn">✕ 取消</button>
+    <div class="rb-tabs-right">
+      <span id="seatCountHint" class="tb-hint"></span>
+      <select id="chartSelect" style="display:none"></select>
+      <button id="reloadBtn" class="rb-icon-btn" type="button" style="display:none" title="重新加载当前座位表">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11a8.5 8.5 0 1 0-2.4 6.1"/><path d="M20.5 4v7h-7"/></svg>
+        <span>刷新</span>
+      </button>
+      <button id="backBtn" class="rb-icon-btn" type="button" style="display:none" title="返回 EasyCore 控制台">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H12"/></svg>
+        <span>返回控制台</span>
+      </button>
     </div>
   </div>
 
-  <div class="tb-zone tb-right">
-    <span id="seatCountHint" class="tb-hint"></span>
-    <button id="saveBtn" style="display:none">保存<span class="only-wide">并返回</span></button>
-    <button id="backBtn" class="tb-btn neutral" style="display:none"><span class="only-wide">返回控制台</span><span class="only-narrow">控制台</span></button>
+  <!-- ===== 功能区 ===== -->
+  <div class="rb-body">
+
+    <!-- 排座 -->
+    <div class="rb-group" data-mode="seat">
+      <div class="rb-row">
+        <button id="arrangeBtn" class="rb-btn big" type="button" style="display:none" title="全班随机 / 组内随机">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="m4 4 5 5"/></svg></span>
+          <span class="rb-txt">随机排座</span>
+        </button>
+        <button id="clearNamesBtn" class="rb-btn big" type="button" title="清空所有座位上的名字">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20H5l-1.8-1.8a2 2 0 0 1 0-2.8l9.6-9.6a2 2 0 0 1 2.8 0l3.6 3.6a2 2 0 0 1 0 2.8L13 20"/><path d="M9 20h11"/><path d="m11 8.5 5.5 5.5"/></svg></span>
+          <span class="rb-txt">清空名字</span>
+        </button>
+        <button id="exportBtn" class="rb-btn big" type="button" title="导出 A4 座位表图片">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></span>
+          <span class="rb-txt">导出图片</span>
+        </button>
+      </div>
+      <div class="rb-label">排座</div>
+    </div>
+
+    <!-- 座位 -->
+    <div class="rb-group" data-mode="layout">
+      <div class="rb-row">
+        <button id="seatSource" class="rb-btn big" type="button" title="按住拖到画布上，放一个新座位">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="11" height="11" rx="2"/><path d="M19 13v8"/><path d="M15 17h8"/></svg></span>
+          <span class="rb-txt">新座位</span>
+        </button>
+        <button id="fillSeatsBtn" class="rb-btn big" type="button" title="按 6 列网格把座位补齐到名单人数">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></span>
+          <span class="rb-txt">一键铺座</span>
+        </button>
+      </div>
+      <div class="rb-label">座位</div>
+    </div>
+
+    <!-- 小组 -->
+    <div class="rb-group">
+      <div class="rb-row">
+        <button id="manualGroupBtn" class="rb-btn" data-mode="layout" type="button">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><path d="M17.5 14v7"/><path d="M14 17.5h7"/></svg></span>
+          <span class="rb-txt">手动建组</span>
+        </button>
+        <div id="manualActions" data-mode="layout">
+          <button id="finishBtn" class="rb-btn" type="button">
+            <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg></span>
+            <span class="rb-txt">完成</span>
+          </button>
+          <button id="cancelBtn" class="rb-btn" type="button">
+            <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12"/><path d="m18 6-12 12"/></svg></span>
+            <span class="rb-txt">取消</span>
+          </button>
+        </div>
+        <button id="groupOverviewBtn" class="rb-btn" type="button" title="查看小组名单与人数">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12"/><path d="M8 12h12"/><path d="M8 18h12"/><circle cx="4" cy="6" r="1.1"/><circle cx="4" cy="12" r="1.1"/><circle cx="4" cy="18" r="1.1"/></svg></span>
+          <span class="rb-txt">小组总览</span>
+        </button>
+      </div>
+      <div class="rb-label">小组</div>
+    </div>
+
+    <!-- 视图 -->
+    <div class="rb-group" data-mode="layout">
+      <div class="rb-row">
+        <button id="gridSwitchWrap" class="rb-btn on" type="button" title="拖动座位时吸附到网格">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span>
+          <span class="rb-txt">网格对齐</span>
+        </button>
+      </div>
+      <div class="rb-label">视图</div>
+    </div>
+
+    <!-- 规则 -->
+    <div class="rb-group" data-mode="layout">
+      <div class="rb-row">
+        <button id="allowEmptyBtn" class="rb-btn" type="button" title="允许座位数多于名单人数，多出来的座位留空">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/><path d="M9 12h6"/></svg></span>
+          <span class="rb-txt">允许空座</span>
+        </button>
+      </div>
+      <div class="rb-label">规则</div>
+    </div>
+
+    <span class="rb-spacer"></span>
+
+    <!-- 保存 -->
+    <div class="rb-group" data-mode="layout">
+      <div class="rb-row">
+        <button id="saveBtn" class="rb-btn primary big" type="button">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v6h7V3"/><rect x="8" y="13" width="8" height="6" rx="1"/></svg></span>
+          <span class="rb-txt">保存格局</span>
+        </button>
+      </div>
+      <div class="rb-label">保存</div>
+    </div>
+
   </div>
 </div>
 
@@ -677,8 +830,8 @@
       <h3 id="noticeTitle">还没有设定座位格局</h3>
       <p id="noticeText"></p>
       <div class="notice-actions">
-        <button id="noticeGoBtn" class="tb-main-btn">去 EasyCore 设定座位格局</button>
-        <button id="noticeReloadBtn" class="tb-btn">重新加载</button>
+        <button id="noticeGoBtn" class="rb-btn primary" type="button">去 EasyCore 设定座位格局</button>
+        <button id="noticeReloadBtn" class="rb-icon-btn" type="button">重新加载</button>
       </div>
     </div>
   </div>
@@ -705,11 +858,11 @@
 </aside>
 
 <div id="bottomBar">
-  <div id="seatSource">座位</div>
   <div id="opHint">
     <div class="mouse-only" id="opHintMouse"></div>
     <div id="opHintTouch"></div>
   </div>
+  <span id="zoomHint">缩放 100%</span>
 </div>
 
 <script>
@@ -730,13 +883,15 @@
   // EasyCore 云端接口（同源，Cookie 直接带上）
   const API_BASE = '/easycore/api';
   const CONSOLE_URL = '/easycore/?tab=seats';
-  // 保存按钮文案分宽窄两版（窄屏只留「保存」），恢复时用同一份 HTML
-  const SAVE_LABEL = '保存<span class="only-wide">并返回</span>';
+  // 保存按钮的原始内容（SVG + 文案）在 DOM 就绪后抓取，保存失败 / 完成时用它还原
+  let SAVE_LABEL = '';
 
   /* ==================== 模式 ==================== */
   const params = new URLSearchParams(window.location.search);
-  // 编辑模式：?mode=edit_cloud_seats_set&cloud_seats_id=X（用 id 而非一次性 code，长时间编排不会超时）
-  const EDIT_MODE = params.get('mode') === 'edit_cloud_seats_set';
+  // 当前选项卡。带 ?mode=edit_cloud_seats_set&cloud_seats_id=X 进来停在「格局编辑」，
+  // 其余情况（排座位入口）直接进入「排座位」，并且默认就是手动排座。
+  // 用 id 而非一次性 code，长时间编排不会超时。
+  let editMode = params.get('mode') === 'edit_cloud_seats_set';
   const initChartId = parseInt(params.get('cloud_seats_id') || '0', 10) || 0;
 
   /* ==================== DOM ==================== */
@@ -745,19 +900,22 @@
   const bottomBar   = document.getElementById('bottomBar');
   const seatSource  = document.getElementById('seatSource');
   const zoomHint    = document.getElementById('zoomHint');
-  const gridSwitch  = document.getElementById('gridSwitch');
+  const ribbon      = document.getElementById('ribbon');
+  const tabSeat     = document.getElementById('tabSeat');
+  const tabLayout   = document.getElementById('tabLayout');
   const gridSwitchWrap = document.getElementById('gridSwitchWrap');
   const manualGroupBtn = document.getElementById('manualGroupBtn');
   const manualActions  = document.getElementById('manualActions');
   const finishBtn   = document.getElementById('finishBtn');
   const cancelBtn   = document.getElementById('cancelBtn');
   const fillSeatsBtn = document.getElementById('fillSeatsBtn');
+  const allowEmptyBtn = document.getElementById('allowEmptyBtn');
   const saveBtn     = document.getElementById('saveBtn');
+  SAVE_LABEL = saveBtn.innerHTML;
   const backBtn     = document.getElementById('backBtn');
   const arrangeBtn  = document.getElementById('arrangeBtn');
   const reloadBtn   = document.getElementById('reloadBtn');
   const chartSelect = document.getElementById('chartSelect');
-  const chartLabel  = document.getElementById('chartLabel');
   const seatCountHint = document.getElementById('seatCountHint');
   const groupOverviewBtn = document.getElementById('groupOverviewBtn');
   const groupPanel  = document.getElementById('groupPanel');
@@ -772,10 +930,8 @@
   const loadingEl   = document.getElementById('loading');
   const loadingText = document.getElementById('loadingText');
   const toastEl     = document.getElementById('toast');
-  const manualSeatBtn  = document.getElementById('manualSeatBtn');
-  const manualSeatActions = document.getElementById('manualSeatActions');
   const clearNamesBtn  = document.getElementById('clearNamesBtn');
-  const finishManualBtn = document.getElementById('finishManualBtn');
+  const exportBtn      = document.getElementById('exportBtn');
   const namePicker  = document.getElementById('namePicker');
   const namePickerClose = document.getElementById('namePickerClose');
   const npTitle     = document.getElementById('npTitle');
@@ -812,10 +968,21 @@
   let offsetY = 0;
 
   // 云端数据
-  let chart = null;               // 当前座位表（含 list_name / list_item_count / has_layout 等）
+  let chart = null;               // 当前座位表（含 list_name / list_item_count / has_layout / allow_empty 等）
   let chartList = [];             // 排座模式的座位表列表
   let listItems = [];             // 绑定名单的名单项 [{name, gender}]
   let cloudLoaded = false;        // 是否已成功加载一个「可用于操作」的座位表
+
+  /* ---------- 「允许空座」规则 ---------- */
+
+  // 缺省按「允许」处理，和后端 seats_db.seats_fit() 的默认值保持一致
+  function allowEmptySeats() { return !chart || chart.allow_empty !== false; }
+
+  // 座位数是否满足名单人数（与后端 seats_db.seats_fit 同一条规则）
+  function seatsFitFor(allowEmpty, seatN, itemN) {
+    return allowEmpty ? seatN >= itemN : seatN === itemN;
+  }
+  function seatsFit(seatN, itemN) { return seatsFitFor(allowEmptySeats(), seatN, itemN); }
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -909,10 +1076,12 @@
    *  缩放交互
    * ================================================================ */
 
+  // 滚轮直接缩放：不用按 Ctrl（触控板双指滑动 / 捏合同样走这里）
   canvas.addEventListener('wheel', e => {
-    if (!e.ctrlKey) return;
     e.preventDefault();
-    const factor = Math.exp(-e.deltaY * 0.0015);
+    // deltaMode: 1 = 按行（Firefox 等），2 = 按页；统一折算成像素，避免灵敏度差几十倍
+    const unit = e.deltaMode === 1 ? 16 : (e.deltaMode === 2 ? canvas.clientHeight : 1);
+    const factor = Math.exp(-e.deltaY * unit * 0.0015);
     zoomAt(e.clientX, e.clientY, scale * factor);
   }, { passive: false });
 
@@ -985,7 +1154,7 @@
     e.preventDefault();
     closeMenu();
 
-    if (EDIT_MODE) {
+    if (editMode) {
       marquee = createMarquee(t.clientX, t.clientY);
     } else {
       startTouchPan(t.clientX, t.clientY);
@@ -1110,18 +1279,18 @@
     return null;
   }
 
-  // 座位显示内容：编辑模式固定"座位"，排座模式显示姓名
+  // 座位显示内容：编辑模式固定"座位"，排座模式显示姓名，没名字就是「空座」
   function seatLabelText(seat) {
-    if (EDIT_MODE) return '座位';
+    if (editMode) return '座位';
     const name = nameBySeatId.get(seat.id);
-    return name ? name : '－';
+    return name ? name : '空座';
   }
 
   function paintSeat(seat) {
     seat.el.textContent = seatLabelText(seat);
-    if (!EDIT_MODE) {
-      seat.el.classList.toggle('has-name', !!nameBySeatId.get(seat.id));
-    }
+    // has-name 与模式无关，永远按当前姓名刷：只在排座态维护的话，
+    // 在格局编辑态新增 / 改动的座位会带着过期的类回到排座态（光标、空座样式都不对）
+    seat.el.classList.toggle('has-name', !!nameBySeatId.get(seat.id));
   }
 
   // 按最终世界坐标落一个座位（col / row 为网格号，非吸附时为 null）
@@ -1214,22 +1383,29 @@
   function updateEmpty() {
     // 排座模式下有提示卡兜底，不再显示"从下方拖拽"的空状态文案
     canvas.classList.toggle('empty',
-      EDIT_MODE && seats.length === 0 && !notice.classList.contains('show'));
+      editMode && seats.length === 0 && !notice.classList.contains('show'));
   }
 
   function updateSeatCountHint() {
-    if (!EDIT_MODE) {
+    if (!editMode) {
       const arranged = seats.filter(s => nameBySeatId.get(s.id)).length;
-      seatCountHint.textContent = '已排座 ' + arranged + ' / ' + seats.length;
-      seatCountHint.className = 'tb-hint' + (seats.length && arranged === seats.length ? ' ok' : '');
+      const empty = seats.length - arranged;
+      seatCountHint.textContent = '已排座 ' + arranged + ' / ' + seats.length
+        + (empty > 0 ? '（' + empty + ' 个空座）' : '');
+      seatCountHint.className = 'tb-hint' + (seats.length && empty === 0 ? ' ok' : '');
+      syncTabState();
       return;
     }
     const need = listItems.length;
     const have = seats.length;
-    seatCountHint.innerHTML = '座位 <b>' + have + '</b> / 名单 <b>' + need + '</b>' +
-      (have === need && need > 0 ? ' ✓' : '');
-    seatCountHint.className = 'tb-hint' + (have === need && need > 0 ? ' ok' : (have ? ' bad' : ''));
-    saveBtn.disabled = !(have === need && need > 0);
+    const extra = have - need;
+    const ok = need > 0 && seatsFit(have, need);
+    seatCountHint.innerHTML = '座位 <b>' + have + '</b> / 名单 <b>' + need + '</b>'
+      + (extra > 0 ? '（' + extra + ' 空座）' : '')
+      + (ok ? ' ✓' : '');
+    seatCountHint.className = 'tb-hint' + (ok ? ' ok' : (have ? ' bad' : ''));
+    saveBtn.disabled = !ok;
+    syncTabState();
   }
 
   /* ================================================================
@@ -1237,19 +1413,35 @@
    * ================================================================ */
 
   function onSeatMouseDown(e, seat) {
-    if (!EDIT_MODE) {
-      // 排座模式：座位固定不动（布局只能在编辑模式里改）。
-      // 手动排座下，单击（没有拖动）座位 = 打开该座位的操作菜单；
-      // 这里不 stopPropagation，画布照常可以拖动平移。
+    if (!editMode) {
+      // 排座模式：座位本身固定不动（布局只能在编辑模式里改）。
+      // · 单击（没有拖动）座位 = 打开该座位的操作菜单
+      // · 按住「有人的座位」拖动 = 把这位同学拖到别的座位（互换 / 移进空座）
+      // · 拖动空座位仍然让给画布平移（不 stopPropagation）
       if (!manualSeating || e.button !== 0) return;
+
+      let canDrag = canDragSeat(seat);
+      if (canDrag) { e.preventDefault(); e.stopPropagation(); }   // 拖学生时不触发画布平移
+
       const sx = e.clientX, sy = e.clientY;
-      let moved = false;
+      let moved = false, dragging = false;
+
       function onTapMove(ev) {
-        if (Math.hypot(ev.clientX - sx, ev.clientY - sy) > 4) moved = true;
+        if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 4) moved = true;
+        if (!moved) return;
+        if (!dragging) {
+          if (!canDrag) return;
+          dragging = beginSeatDrag(seat, ev.clientX, ev.clientY);
+          if (!dragging) canDrag = false;
+        }
+        if (!dragging) return;
+        ev.preventDefault();
+        updateSeatDrag(ev.clientX, ev.clientY);
       }
       function onTapUp() {
         document.removeEventListener('mousemove', onTapMove);
         document.removeEventListener('mouseup', onTapUp);
+        if (dragging) { endSeatDrag(true); return; }
         if (!moved) onSeatTap(seat);
       }
       document.addEventListener('mousemove', onTapMove);
@@ -1350,8 +1542,9 @@
    *  座位拖拽（触屏）—— 仅编辑模式
    * ================================================================ */
   function onSeatTouchStart(e, seat) {
-    if (!EDIT_MODE) {
-      // 手动排座：轻点座位 = 打开该座位的操作菜单。
+    if (!editMode) {
+      // 手动排座：轻点座位 = 打开该座位的操作菜单；
+      // 按住「有人的座位」单指拖动 = 拖学生去换座（和鼠标一致）。
       // 首指 preventDefault 吃掉浏览器合成的 mouse 事件，一次触摸只走一套逻辑；
       // 双指落下时这里不接管，交给画布的双指手势（不 stopPropagation）。
       if (!manualSeating || e.touches.length !== 1) return;
@@ -1359,7 +1552,8 @@
 
       const t0 = e.changedTouches[0];
       const sx = t0.clientX, sy = t0.clientY;
-      let moved = false, done = false;
+      let moved = false, done = false, dragging = false;
+      let canDrag = canDragSeat(seat);
 
       function detach() {
         document.removeEventListener('touchmove', onTapMove);
@@ -1367,17 +1561,32 @@
         document.removeEventListener('touchcancel', onTapEnd);
       }
       function onTapMove(ev) {
-        if (ev.touches.length !== 1) { done = true; detach(); return; }   // 变双指 → 放弃这次点击
+        if (ev.touches.length !== 1) {          // 变双指 → 放弃这次点击 / 拖拽
+          done = true;
+          detach();
+          if (dragging) endSeatDrag(false);
+          return;
+        }
         const t = ev.changedTouches[0];
-        if (t && Math.hypot(t.clientX - sx, t.clientY - sy) > 8) moved = true;
+        if (!t) return;
+        if (!moved && Math.hypot(t.clientX - sx, t.clientY - sy) > 8) moved = true;
+        if (!moved) return;
+        if (!dragging) {
+          if (!canDrag) return;
+          dragging = beginSeatDrag(seat, t.clientX, t.clientY);
+          if (!dragging) { canDrag = false; return; }
+        }
+        ev.preventDefault();
+        updateSeatDrag(t.clientX, t.clientY);
       }
       function onTapEnd() {
         if (done) return;
         done = true;
         detach();
+        if (dragging) { endSeatDrag(true); return; }
         if (!moved) onSeatTap(seat);
       }
-      document.addEventListener('touchmove', onTapMove, { passive: true });
+      document.addEventListener('touchmove', onTapMove, { passive: false });
       document.addEventListener('touchend', onTapEnd);
       document.addEventListener('touchcancel', onTapEnd);
       return;
@@ -1495,7 +1704,7 @@
    * ================================================================ */
 
   seatSource.addEventListener('mousedown', e => {
-    if (!EDIT_MODE) return;
+    if (!editMode) return;
     if (e.button !== 0) return;
     e.preventDefault();
 
@@ -1530,7 +1739,7 @@
   });
 
   seatSource.addEventListener('touchstart', e => {
-    if (!EDIT_MODE) return;
+    if (!editMode) return;
     if (e.touches.length !== 1) return;
     e.preventDefault();
 
@@ -1698,7 +1907,7 @@
 
     if (!rows.length) {
       groupPanelBody.innerHTML = '<div class="gp-empty">还没有小组。<br>'
-        + (EDIT_MODE
+        + (editMode
             ? '编辑模式下：框选若干座位 → 点「设为小组」，或点「手动建组」逐个选中后点「完成」。'
             : '请到 EasyCore 控制台点这个座位表的「编辑」来建立小组。')
         + '</div>';
@@ -1711,7 +1920,7 @@
         + '<span class="gp-dot" style="background:' + g.color + '"></span>'
         + '<span class="gp-name" data-role="name" title="点击高亮该组座位">' + escapeHtml(g.name) + '</span>'
         + '<span class="gp-count">' + members.length + ' 人</span>'
-        + (EDIT_MODE
+        + (editMode
             ? '<span class="gp-acts">'
               + '<button data-act="rename">改名</button>'
               + '<button data-act="del" class="del">删除</button>'
@@ -1723,7 +1932,7 @@
       html += '<div class="gp-row" data-gid="0"><span class="gp-dot" style="background:#555"></span>'
         + '<span class="gp-name">未分组</span><span class="gp-count">' + ungrouped + ' 人</span></div>';
     }
-    if (EDIT_MODE) {
+    if (editMode) {
       html += '<div class="gp-empty">点组名可高亮该组座位；点「改名」可快速修改组名。</div>';
     }
     groupPanelBody.innerHTML = html;
@@ -1950,7 +2159,7 @@
 
   canvas.addEventListener('mousedown', e => {
     // ---- 排座模式：任何按键都只做平移（布局只能在编辑模式里改） ----
-    if (!EDIT_MODE) {
+    if (!editMode) {
       if (e.button !== 0 && e.button !== 1) return;
       const t = e.target;
       const onSeat = t instanceof Element && t.classList.contains('seat');
@@ -2039,6 +2248,12 @@
    *  手动建组模式
    * ================================================================ */
 
+  // 功能区按钮的图标在 .rb-ico 里，只能换 .rb-txt 这段文字
+  function setManualGroupLabel(text) {
+    const t = manualGroupBtn.querySelector('.rb-txt');
+    if (t) t.textContent = text;
+  }
+
   function toggleManualSelect(seat) {
     if (manualSelected.has(seat.id)) {
       manualSelected.delete(seat.id);
@@ -2053,8 +2268,8 @@
     manualGrouping = true;
     manualSelected.clear();
     seats.forEach(s => s.el.classList.remove('selected'));
-    manualGroupBtn.classList.add('active');
-    manualGroupBtn.textContent = '选择中…';
+    manualGroupBtn.classList.add('on');
+    setManualGroupLabel('选择中…');
     manualActions.style.display = 'flex';
   }
 
@@ -2062,8 +2277,8 @@
     manualGrouping = false;
     manualSelected.clear();
     seats.forEach(s => s.el.classList.remove('selected'));
-    manualGroupBtn.classList.remove('active');
-    manualGroupBtn.textContent = '手动建组';
+    manualGroupBtn.classList.remove('on');
+    setManualGroupLabel('手动建组');
     manualActions.style.display = 'none';
   }
 
@@ -2086,7 +2301,7 @@
 
   function setGridAlign(on) {
     gridAlign = on;
-    gridSwitch.classList.toggle('on', on);
+    gridSwitchWrap.classList.toggle('on', on);
     canvas.classList.toggle('grid-bg', on);
 
     if (on) {
@@ -2108,8 +2323,49 @@
   }
 
   gridSwitchWrap.addEventListener('click', () => {
-    if (!EDIT_MODE) return;
+    if (!editMode) return;
     setGridAlign(!gridAlign);
+  });
+
+  /* ================================================================
+   *  「允许空座」开关（与 EasyCore 控制台同一个字段 seat_charts.allow_empty）
+   *  开启：座位数可以多于名单人数，多出来的座位排座后显示为「空座」
+   *  关闭：座位数必须正好等于名单人数（旧规则）
+   * ================================================================ */
+
+  function refreshAllowEmptyBtn() {
+    const on = allowEmptySeats();
+    allowEmptyBtn.classList.toggle('on', on);
+    const t = allowEmptyBtn.querySelector('.rb-txt');
+    if (t) t.textContent = on ? '允许空座' : '仅满座';
+    allowEmptyBtn.title = on
+      ? '当前允许座位数多于名单人数（多出来的算空座），点击改为「仅满座」'
+      : '当前要求座位数正好等于名单人数，点击改为「允许空座」';
+    allowEmptyBtn.disabled = !chart;
+  }
+
+  allowEmptyBtn.addEventListener('click', async () => {
+    if (!chart) { toast('请先选择一个座位表', true); return; }
+    const next = !allowEmptySeats();
+    allowEmptyBtn.disabled = true;
+    try {
+      const data = await apiPut('/seat-charts/' + chart.chart_id, { allow_empty: next });
+      chart.allow_empty = (data && data.seat_chart) ? (data.seat_chart.allow_empty !== false) : next;
+      const item = chartList.find(c => c.chart_id === chart.chart_id);
+      if (item) item.allow_empty = chart.allow_empty;
+      renderChartSelect(chart.chart_id);
+      toast(next ? '已允许空座：座位数可以多于名单人数'
+                 : '已改为「仅满座」：座位数必须正好等于名单人数');
+      if (!next && seats.length !== listItems.length) {
+        toast('当前座位 ' + seats.length + ' / 名单 ' + listItems.length
+              + '，需要删掉多余的座位才能保存格局', true);
+      }
+    } catch (err) {
+      toast(err.message || '切换失败', true);
+    } finally {
+      refreshAllowEmptyBtn();
+      updateSeatCountHint();
+    }
   });
 
   /* ================================================================
@@ -2120,14 +2376,15 @@
   const FILL_COLS = 6;
 
   function fillSeatsToMatchList() {
-    if (!EDIT_MODE) return;
+    if (!editMode) return;
     const need = listItems.length;
     if (!need) { toast('绑定的名单里还没有学生', true); return; }
-    if (seats.length > need) {
-      toast('现有座位（' + seats.length + '）已多于名单人数（' + need + '），请先删掉多余的座位', true);
+    if (seats.length >= need) {
+      toast(seats.length === need
+        ? '座位数量已经和名单人数一致'
+        : '现有座位（' + seats.length + '）已不少于名单人数（' + need + '），无需再铺');
       return;
     }
-    if (seats.length === need) { toast('座位数量已经和名单人数一致', true); return; }
 
     let placed = 0;
     let row = 0, col = 0;
@@ -2164,9 +2421,9 @@
     return res.json();
   }
 
-  async function apiPost(path, body) {
+  async function apiSend(method, path, body) {
     const res = await fetch(API_BASE + path, {
-      method: 'POST',
+      method: method,
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -2182,6 +2439,9 @@
     }
     return res.json();
   }
+
+  function apiPost(path, body) { return apiSend('POST', path, body); }
+  function apiPut(path, body) { return apiSend('PUT', path, body); }
 
   function showLoading(text) {
     loadingText.textContent = text || '加载中…';
@@ -2209,10 +2469,12 @@
     toastEl.classList.add('busy', 'show');
   }
 
-  function showNotice(title, text, showGo) {
+  function showNotice(title, text, showGo, goLabel) {
     noticeTitle.textContent = title;
     noticeText.innerHTML = text;
     noticeGoBtn.style.display = showGo ? '' : 'none';
+    // 有座位表就能原地切到「格局编辑」，没座位表才需要回控制台
+    if (showGo) noticeGoBtn.textContent = goLabel || (chart ? '切到「格局编辑」摆座位' : '去 EasyCore 设定座位格局');
     notice.classList.add('show');
     updateEmpty();
   }
@@ -2239,7 +2501,7 @@
   // 把云端 layout 还原到画布
   function applyLayout(layout) {
     clearLayout();
-    if (!layout) return;
+    if (!layout) { markLayoutSaved(); return; }
 
     const rawGroups = layout.groups || [];
     rawGroups.forEach(g => {
@@ -2262,7 +2524,7 @@
 
     // 网格对齐状态：对齐时按格子重新吸附（线上保存时坐标本就是吸附值，这里幂等）
     gridAlign = !!layout.gridAlign;
-    gridSwitch.classList.toggle('on', gridAlign);
+    gridSwitchWrap.classList.toggle('on', gridAlign);
     canvas.classList.toggle('grid-bg', gridAlign);
     if (gridAlign) {
       seats.forEach(s => {
@@ -2291,6 +2553,7 @@
     } else {
       fitToContent(true);
     }
+    markLayoutSaved();
   }
 
   function collectLayout() {
@@ -2338,8 +2601,8 @@
     }
     chartSelect.disabled = false;
     chartSelect.innerHTML = chartList.map(c => {
-      const state = !c.has_layout ? '未设定格局'
-        : ((c.seat_count || 0) !== (c.list_item_count || 0) ? '格局待更新' : '已就绪');
+      const fits = seatsFitFor(c.allow_empty !== false, c.seat_count || 0, c.list_item_count || 0);
+      const state = !c.has_layout ? '未设定格局' : (fits ? '已就绪' : '格局待更新');
       return '<option value="' + c.chart_id + '"' + (c.chart_id === selectedId ? ' selected' : '') + '>'
         + escapeHtml(c.name) + '｜' + escapeHtml(c.list_name || '名单已失效') + '（' + state + '）</option>';
     }).join('');
@@ -2356,7 +2619,7 @@
   }
 
   async function loadChart(chartId) {
-    setManualSeating(false);   // 换表 / 重新加载时退出手动排座，避免带着旧选中态
+    clearSeatingSelection();   // 换表 / 重新加载时清掉旧的选中态（模式本身不变）
     // URL 同步：直接分享 / 刷新都能回到同一个座位表
     const url = new URL(window.location.href);
     url.searchParams.set('cloud_seats_id', String(chartId));
@@ -2367,11 +2630,14 @@
       const data = await apiGet('/seat-charts/' + chartId);
       chart = data.seat_chart;
       listItems = data.items || [];
-      return presentChart();
+      const ok = presentChart();
+      applyModeUI();
+      return ok;
     } catch (err) {
       clearLayout();
       showNotice('加载失败', escapeHtml(err.message || '请稍后重试'), false);
       cloudLoaded = false;
+      applyModeUI();
       return false;
     } finally {
       hideLoading();
@@ -2385,25 +2651,26 @@
 
     // 名单为空 / 格局未设定 / 格局与名单人数不一致 —— 都要请老师回控制台设定
     if (!chart.has_layout) {
-      if (EDIT_MODE) {
+      if (editMode) {
         // 编辑模式本来就是来「设格局」的：直接给空画布开编，不能拦在这里
         applyLayout(null);
         hideNotice();
         cloudLoaded = true;
-        toast('这个座位表还没有格局：请摆放正好 ' + needed + ' 个座位后保存'
+        toast('这个座位表还没有格局：请摆放'
+              + (allowEmptySeats() ? '至少 ' : '正好 ') + needed + ' 个座位后保存'
               + (needed ? '（可用「一键铺座」快速铺满）' : ''));
         return true;
       }
       clearLayout();
       showNotice('还没有设定座位格局',
         '座位表「<b>' + escapeHtml(chart.name) + '</b>」绑定的名单有 <b>' + needed + '</b> 人，但还没有摆放座位。'
-        + '<br>请到 EasyCore 控制台点该座位表的「编辑」，摆好 <b>' + needed + '</b> 个座位后再回来排座。',
+        + '<br>点下面的按钮切到「格局编辑」，摆好 <b>' + needed + '</b> 个座位并保存，就能回来排座。',
         true);
       cloudLoaded = false;
       return false;
     }
-    if (have !== needed) {
-      if (EDIT_MODE) {
+    if (!seatsFit(have, needed)) {
+      if (editMode) {
         // 编辑模式：允许继续编辑参数好把座位数改对
         applyLayout(chart.layout);
         hideNotice();
@@ -2415,7 +2682,8 @@
       showNotice('座位格局与名单人数不一致',
         '座位表「<b>' + escapeHtml(chart.name) + '</b>」摆了 <b>' + have + '</b> 个座位，'
         + '但名单现在有 <b>' + needed + '</b> 人。'
-        + '<br>请到 EasyCore 控制台点该座位表的「编辑」重新调整座位数量。',
+        + (allowEmptySeats() ? '<br>点下面的按钮切到「格局编辑」，把座位补到不少于名单人数并保存。'
+                             : '<br>该座位表设为「仅满座」，点下面的按钮切到「格局编辑」把座位数调成一致并保存。'),
         true);
       cloudLoaded = false;
       return false;
@@ -2620,10 +2888,20 @@
 
   /* ---------- 换座飞行动画 ---------- */
   // 克隆座位块 → 按屏幕坐标走弧线 → 真实座位在飞行期间隐藏，落地后再改数据
+  // 飞行期间 seatFlying = true：这段时间不接受新的换座 / 拖拽，避免动画叠在一起
   async function animateSeatFlight(flights) {
     const usable = flights.filter(f => f.from && f.to && f.from.el.getBoundingClientRect().width > 0);
     if (!usable.length) return;
 
+    seatFlying = true;
+    try {
+      await runSeatFlight(usable);
+    } finally {
+      seatFlying = false;
+    }
+  }
+
+  async function runSeatFlight(usable) {
     const DUR = 460;
     const ghosts = [];
     usable.forEach(f => {
@@ -2636,7 +2914,7 @@
 
       const g = f.from.el.cloneNode(true);
       g.classList.add('seat-flight');
-      g.classList.remove('picked', 'swap-target', 'just-moved', 'hl', 'selected');
+      g.classList.remove('picked', 'swap-target', 'just-moved', 'hl', 'selected', 'drag-source', 'drop-target');
       g.textContent = f.name;
       g.style.left = r.left + 'px';
       g.style.top  = r.top + 'px';
@@ -2783,6 +3061,95 @@
     await saveArrangement('已交换 ' + nameA + ' 与 ' + nameB);
   }
 
+  /* ---------- 拖动学生换座（排座模式） ----------
+   * 排座位下按住一个有人的座位拖到另一个座位松手：
+   *   目标有人 → 两人互换；目标空座 → 直接搬过去（「空座」是允许空座模式下的常态）
+   * 只拖「名字」，座位格局不动；拖到空白处松手 = 取消。
+   * 状态放在 dragSwap 里，鼠标与触屏共用同一套。
+   * ------------------------------------------------------------ */
+  let dragSwap = null;   // { from, ghost, target }
+
+  // 光标下的座位：用世界坐标算，不走 getBoundingClientRect（拖动时每帧都查，避免反复触发重排）
+  function seatAtPoint(cx, cy) {
+    const r = canvas.getBoundingClientRect();
+    const wx = (cx - r.left - offsetX) / scale;
+    const wy = (cy - r.top  - offsetY) / scale;
+    for (let i = seats.length - 1; i >= 0; i--) {
+      const s = seats[i];
+      if (wx >= s.x && wx <= s.x + SEAT && wy >= s.y && wy <= s.y + SEAT) return s;
+    }
+    return null;
+  }
+
+  function moveDragGhost(cx, cy) {
+    if (!dragSwap || !dragSwap.ghost) return;
+    dragSwap.ghost.style.left = cx + 'px';
+    dragSwap.ghost.style.top  = cy + 'px';
+  }
+
+  // 能不能从这个座位拖起来：有名字、没有正在飞的动画、没有已待定的换座
+  function canDragSeat(seat) {
+    return !!seat && manualSeating && !seatFlying && !swapSourceSeat && !!seatNameOf(seat);
+  }
+
+  // 拆掉拖动中的视觉（影子 / 源座位虚线 / 落点高亮），返回被拆掉的拖动状态
+  function resetDragDom() {
+    if (!dragSwap) return null;
+    const d = dragSwap;
+    dragSwap = null;
+    document.body.classList.remove('dragging-seat');
+    if (d.from) d.from.el.classList.remove('drag-source');
+    if (d.ghost) d.ghost.remove();
+    if (d.target) d.target.el.classList.remove('drop-target');
+    return d;
+  }
+
+  function beginSeatDrag(seat, cx, cy) {
+    if (!canDragSeat(seat)) return false;
+    resetDragDom();          // 兜底：上一次松手落在窗口外没收到 mouseup
+    cancelSwap(true);
+    closeMenu();
+    closeNamePicker();
+    setPickedSeat(seat);
+
+    const g = document.createElement('div');
+    g.className = 'seat-drag-ghost';
+    g.textContent = seatNameOf(seat);
+    // 跟随画布缩放：影子和屏幕上的座位一样大
+    const k = clamp(scale, 0.6, 2);
+    g.style.transform = 'translate(-50%, -50%) scale(' + k + ')';
+    document.body.appendChild(g);
+
+    dragSwap = { from: seat, ghost: g, target: null };
+    seat.el.classList.add('drag-source');
+    document.body.classList.add('dragging-seat');
+    moveDragGhost(cx, cy);
+    return true;
+  }
+
+  function updateSeatDrag(cx, cy) {
+    if (!dragSwap) return;
+    moveDragGhost(cx, cy);
+    const over = seatAtPoint(cx, cy);
+    const target = (over && over !== dragSwap.from) ? over : null;
+    if (target === dragSwap.target) return;
+    if (dragSwap.target) dragSwap.target.el.classList.remove('drop-target');
+    dragSwap.target = target;
+    if (target) target.el.classList.add('drop-target');
+  }
+
+  async function endSeatDrag(commit) {
+    const d = resetDragDom();
+    if (!d) return;
+    setPickedSeat(null);
+
+    if (!commit) return;
+    if (!d.target) { toast('拖到另一个座位上松手才能换座'); return; }
+
+    swapSourceSeat = d.from;      // 复用现有换座逻辑（目标为空座时走「移过去」分支）
+    await finishSwap(d.target);
+  }
+
   // 单击某个座位：换座中 → 完成换座；否则弹出该座位的操作菜单
   function onSeatTap(seat) {
     if (seatFlying) return;
@@ -2820,38 +3187,403 @@
     await saveArrangement('已清空所有名字');
   }
 
-  /* ---------- 模式开关 ---------- */
-  function setManualSeating(on) {
-    if (EDIT_MODE) return;
-    const next = !!on;
-    if (next === manualSeating) return;
+  /* ================================================================
+   *  导出 A4 座位表图片（手动排座模式）
+   *  纯 Canvas 绘制，不依赖任何外部库：
+   *    · 纯白背景 + 浅灰描边座位 + 深色姓名，打印 / 投屏都清晰
+   *    · 按 A4 纸张比例（210×297mm）出图，根据座位整体形状自动选横版 / 竖版
+   *    · 内容整体居中缩放，姓名自动折行缩放字号
+   * ================================================================ */
 
-    manualSeating = next;
+  const A4_SHORT = 1240;                                  // A4 短边像素（≈150dpi）
+  const A4_LONG  = Math.round(A4_SHORT * 297 / 210);      // A4 长边像素
+  const EXPORT_FONT = '"Noto Sans SC","PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif';
+
+  // 圆角矩形路径（兼容不支持 ctx.roundRect 的浏览器）
+  function roundRectPath(ctx, x, y, w, h, r) {
+    const rr = Math.max(0, Math.min(r, w / 2, h / 2));
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y,     x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x,     y + h, rr);
+    ctx.arcTo(x,     y + h, x,     y,     rr);
+    ctx.arcTo(x,     y,     x + w, y,     rr);
+    ctx.closePath();
+  }
+
+  // 在座位方块里绘制姓名：按宽度折行，放不下就逐步缩字号
+  function drawSeatName(ctx, text, cx, cy, boxW, boxH) {
+    const maxW = boxW * 0.84;
+    const maxH = boxH * 0.84;
+
+    let fs = Math.max(6, boxW * 0.26);
+    let lines = [text];
+
+    for (;;) {
+      const perLine = Math.max(1, Math.floor(maxW / (fs * 1.04)));
+      lines = [];
+      for (let i = 0; i < text.length; i += perLine) {
+        lines.push(text.slice(i, i + perLine));
+      }
+      if (lines.length * fs * 1.16 <= maxH + 0.5 || fs <= 6) break;
+      fs *= 0.9;
+    }
+
+    const lineH = fs * 1.16;
+    const startY = cy - (lines.length * lineH) / 2 + lineH / 2;
+
+    ctx.save();
+    ctx.font = '600 ' + fs.toFixed(2) + 'px ' + EXPORT_FONT;
+    ctx.fillStyle = '#1b1f24';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    lines.forEach((ln, i) => ctx.fillText(ln, cx, startY + i * lineH));
+    ctx.restore();
+  }
+
+  // 计算某个纸张方向下的版面参数与缩放比
+  function exportMetrics(portrait, bw, bh) {
+    const W = portrait ? A4_SHORT : A4_LONG;
+    const H = portrait ? A4_LONG  : A4_SHORT;
+
+    const margin = Math.round(W * 0.055);           // 页面四周留白
+    const titleH = Math.round(Math.min(H * 0.11, 150)); // 顶部标题区高度
+
+    const contentX = margin;
+    const contentY = margin + titleH;
+    const contentW = W - margin * 2;
+    const contentH = H - contentY - margin;
+
+    const PAD = 30;                                  // 内容与版心边界的最小间距
+    let k = Math.min((contentW - PAD * 2) / bw, (contentH - PAD * 2) / bh);
+    k = clamp(k, 0.15, 3.2);
+
+    return { W, H, margin, titleH, contentX, contentY, contentW, contentH, k };
+  }
+
+  // 把当前座位表画到一张离屏 canvas 上，返回该 canvas
+  function renderSeatChartCanvas() {
+    // ---- 1. 座位整体包围盒 ----
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    seats.forEach(s => {
+      minX = Math.min(minX, s.x);
+      minY = Math.min(minY, s.y);
+      maxX = Math.max(maxX, s.x + SEAT);
+      maxY = Math.max(maxY, s.y + SEAT);
+    });
+    const bw = Math.max(1, maxX - minX);
+    const bh = Math.max(1, maxY - minY);
+
+    // ---- 2. 选 A4 横版 / 竖版：内容明显横向铺开时用横版，否则竖版 ----
+    const landscape = bw > bh * 1.25;
+    const M = exportMetrics(!landscape, bw, bh);
+
+    const cv = document.createElement('canvas');
+    cv.width = M.W;
+    cv.height = M.H;
+    const ctx = cv.getContext('2d');
+
+    // 纯白底
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, M.W, M.H);
+
+    // ---- 3. 坐标换算（内容在版心内居中） ----
+    const drawW = bw * M.k;
+    const drawH = bh * M.k;
+    const originX = M.contentX + (M.contentW - drawW) / 2 - minX * M.k;
+    const originY = M.contentY + (M.contentH - drawH) / 2 - minY * M.k;
+    const tx = x => originX + x * M.k;
+    const ty = y => originY + y * M.k;
+    const seatSize = SEAT * M.k;
+
+    // ---- 4. 小组虚线框（画在座位下层，浅色不抢眼） ----
+    groups.forEach(g => {
+      const members = seats.filter(s => s.groupId === g.id);
+      if (!members.length) return;
+
+      let gx1 = Infinity, gy1 = Infinity, gx2 = -Infinity, gy2 = -Infinity;
+      members.forEach(s => {
+        gx1 = Math.min(gx1, tx(s.x));
+        gy1 = Math.min(gy1, ty(s.y));
+        gx2 = Math.max(gx2, tx(s.x) + seatSize);
+        gy2 = Math.max(gy2, ty(s.y) + seatSize);
+      });
+
+      const p = Math.max(5, seatSize * 0.16);
+      const x = gx1 - p, y = gy1 - p, w = gx2 - gx1 + p * 2, h = gy2 - gy1 + p * 2;
+
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = g.color;
+      ctx.lineWidth = Math.max(1.5, seatSize * 0.028);
+      ctx.setLineDash([Math.max(5, seatSize * 0.13), Math.max(4, seatSize * 0.09)]);
+      roundRectPath(ctx, x, y, w, h, Math.max(6, seatSize * 0.14));
+      ctx.stroke();
+      ctx.restore();
+
+      // 组名标签：贴在框的左上角
+      const fs = Math.max(10, seatSize * 0.2);
+      ctx.save();
+      ctx.font = '600 ' + fs.toFixed(2) + 'px ' + EXPORT_FONT;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      const tw = ctx.measureText(g.name).width;
+      const lw = tw + fs * 1.3;
+      const lh = fs * 1.75;
+      ctx.fillStyle = g.color;
+      roundRectPath(ctx, x, y - lh / 2, lw, lh, lh / 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(g.name, x + fs * 0.65, y + 1);
+      ctx.restore();
+    });
+
+    // ---- 5. 座位与姓名 ----
+    const radius = Math.max(3, seatSize * 0.12);
+
+    seats.forEach(s => {
+      const x = tx(s.x), y = ty(s.y);
+      const name = nameBySeatId.get(s.id) || '';
+
+      ctx.save();
+      roundRectPath(ctx, x, y, seatSize, seatSize, radius);
+      if (name) {
+        // 有人的座位：白底 + 实线描边
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.lineWidth = Math.max(1.2, seatSize * 0.028);
+        ctx.strokeStyle = '#c3c8d0';
+        ctx.stroke();
+      } else {
+        // 空座：极浅灰底 + 虚线描边
+        ctx.fillStyle = '#f6f7f9';
+        ctx.fill();
+        ctx.lineWidth = Math.max(1, seatSize * 0.022);
+        ctx.strokeStyle = '#e4e7ec';
+        ctx.setLineDash([Math.max(4, seatSize * 0.08), Math.max(3, seatSize * 0.06)]);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      if (name) {
+        drawSeatName(ctx, name, x + seatSize / 2, y + seatSize / 2, seatSize, seatSize);
+      } else {
+        // 空座中央一条短横线
+        const half = seatSize * 0.13;
+        ctx.save();
+        ctx.strokeStyle = '#d8dce2';
+        ctx.lineWidth = Math.max(1.4, seatSize * 0.035);
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x + seatSize / 2 - half, y + seatSize / 2);
+        ctx.lineTo(x + seatSize / 2 + half, y + seatSize / 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    });
+
+    // ---- 6. 页眉标题 / 页脚 ----
+    const title = (chart && chart.name) ? chart.name : '座位表';
+    const now = new Date();
+    const arranged = seats.filter(s => nameBySeatId.get(s.id)).length;
+    const emptyCount = seats.length - arranged;
+    const subtitle = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日'
+      + ' · 共 ' + seats.length + ' 个座位 · 已排座 ' + arranged + ' 人'
+      + (emptyCount > 0 ? ' · 空座 ' + emptyCount + ' 个' : '');
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const tSize = Math.max(26, Math.min(44, M.W * 0.03));
+    ctx.fillStyle = '#15181c';
+    ctx.font = '600 ' + tSize.toFixed(2) + 'px ' + EXPORT_FONT;
+    ctx.fillText(title, M.W / 2, M.margin + tSize * 0.85, M.W - M.margin * 2);
+
+    const sSize = Math.max(16, Math.min(23, M.W * 0.016));
+    ctx.fillStyle = '#8d939c';
+    ctx.font = '400 ' + sSize.toFixed(2) + 'px ' + EXPORT_FONT;
+    ctx.fillText(subtitle, M.W / 2, M.margin + tSize * 0.85 + sSize * 2.1, M.W - M.margin * 2);
+
+    // 标题下的细分割线
+    ctx.strokeStyle = '#edeff2';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(M.margin, M.contentY - 16);
+    ctx.lineTo(M.W - M.margin, M.contentY - 16);
+    ctx.stroke();
+
+    // 页脚
+    ctx.fillStyle = '#c9ced5';
+    ctx.font = '400 17px ' + EXPORT_FONT;
+    ctx.fillText('易排座 · easyclass.zhrhello.top', M.W / 2, M.H - M.margin * 0.55);
+    ctx.restore();
+
+    return cv;
+  }
+
+  function safeFileName(name) {
+    return String(name).replace(/[\\/:*?"<>|\r\n\t]+/g, '_').slice(0, 80);
+  }
+
+  async function exportSeatImage() {
+    if (!seats.length) { toast('当前没有座位可以导出', true); return; }
+    if (seatFlying) { toast('正在换座动画中，请稍后再导出', true); return; }
+
+    const oldLabel = exportBtn.innerHTML;
+    exportBtn.disabled = true;
+    exportBtn.textContent = '生成中…';
+
+    try {
+      // 等中文字体就绪（最多等 800ms），否则可能用默认字体绘制
+      await Promise.race([
+        (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve(),
+        new Promise(r => setTimeout(r, 800))
+      ]);
+
+      const cv = renderSeatChartCanvas();
+      const blob = await new Promise(resolve => cv.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('图片生成失败，请重试');
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = safeFileName(((chart && chart.name) ? chart.name : '座位表') + '-座位表.png');
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      toast('已导出 A4 座位表图片');
+    } catch (err) {
+      toast((err && err.message) ? err.message : '导出失败，请重试', true);
+    } finally {
+      exportBtn.disabled = false;
+      exportBtn.innerHTML = oldLabel;
+    }
+  }
+
+  /* ================================================================
+   *  模式：排座位 ⇄ 格局编辑
+   *  · 进「排座位」= 直接就是手动排座（点座位选名字 / 换座），不用再点一次开关
+   *  · 「格局编辑」负责摆座位、分组、吸附，两者用顶部选项卡切换
+   * ================================================================ */
+
+  let savedLayoutSignature = '';   // 已加载 / 已保存的格局指纹，用来判断有没有未保存的改动
+  let bootToastShown = false;      // 「已进入手动排座」只提示一次
+
+  // 格局指纹：只比座位、分组、吸附，不含缩放平移（否则拖一下画布就算被改过）
+  function layoutSignature() {
+    const l = collectLayout();
+    return JSON.stringify({ g: l.gridAlign, gr: l.groups, s: l.seats });
+  }
+
+  function markLayoutSaved() { savedLayoutSignature = layoutSignature(); }
+
+  function layoutDirty() { return layoutSignature() !== savedLayoutSignature; }
+
+  // 切模式时保留已排好的姓名（座位 id 来自 layout，映射关系不变）
+  function reapplyKeepNames(layout) {
+    const keepNames = nameBySeatId;
+    applyLayout(layout);
+    nameBySeatId = keepNames;
+    seats.forEach(paintSeat);
+    updateSeatCountHint();
+  }
+
+  // 收起排座态的临时选中态 / 菜单 / 选人面板
+  function clearSeatingSelection() {
+    if (dragSwap) endSeatDrag(false);   // 拖动中途被打断（切模式 / 换表）：影子要收掉
     cancelSwap(true);
+    clearSwapHint();
     closeNamePicker();
     closeMenu();
     setPickedSeat(null);
-    canvas.classList.toggle('manual-seating', manualSeating);
-    applyModeUI();
-
-    if (manualSeating) toast('手动排座：点座位可以「手动选择名字」或「与其他同学换座」');
   }
 
-  manualSeatBtn.addEventListener('click', () => {
-    if (!cloudLoaded || !chart) { toast('请先选择一个已就绪的座位表', true); return; }
-    if (!seats.length) { toast('这个座位表还没有座位', true); return; }
-    setManualSeating(true);
-  });
-  finishManualBtn.addEventListener('click', () => {
-    setManualSeating(false);
-    toast('已退出手动排座');
-  });
+  // 选项卡可用状态：座位坐得下名单人数才允许排座（允许空座时座位可以多于人数）
+  function syncTabState() {
+    const hasChart = !!chart;
+    tabLayout.disabled = !hasChart;
+    tabSeat.disabled = !hasChart || !listItems.length || !seatsFit(seats.length, listItems.length);
+  }
+
+  // 刷新 / 分享时停在同一个选项卡
+  function syncUrlMode() {
+    const url = new URL(window.location.href);
+    if (editMode) url.searchParams.set('mode', 'edit_cloud_seats_set');
+    else url.searchParams.delete('mode');
+    history.replaceState(null, '', url.toString());
+  }
+
+  // 返回 false 表示这次切换没做成（界面已复位到原模式）
+  function switchMode(nextEdit, opts) {
+    const silent = !!(opts && opts.silent);
+    if (!!nextEdit === editMode) { applyModeUI(); return true; }
+
+    if (nextEdit) {
+      // ---- 切到格局编辑 ----
+      clearSeatingSelection();
+      closeGroupPanel();
+      editMode = true;
+
+      if (!chart) { applyModeUI(); return true; }
+
+      // 格局还没设定 / 人数不一致也要能进来摆座位，不能把人拦在提示页
+      reapplyKeepNames(chart.has_layout ? chart.layout : null);
+      hideNotice();
+      cloudLoaded = true;
+      applyModeUI();
+      syncUrlMode();
+
+      if (!chart.has_layout) {
+        toast('请摆放' + (allowEmptySeats() ? '至少 ' : '正好 ') + listItems.length
+              + ' 个座位，点「保存格局」后即可排座');
+      } else if (!seatsFit(seats.length, listItems.length)) {
+        toast('座位 ' + seats.length + ' / 名单 ' + listItems.length + '，'
+              + (allowEmptySeats() ? '座位不够，需要补座位' : '该表设为「仅满座」，数量必须一致'), true);
+      } else if (!silent) {
+        toast('已进入格局编辑：拖动座位调整位置，改完点「保存格局」');
+      }
+      return true;
+    }
+
+    // ---- 切到排座位 ----
+    if (!chart) { toast('请先选择一个座位表', true); applyModeUI(); return false; }
+    if (!listItems.length) { toast('这个座位表绑定的名单里还没有学生', true); applyModeUI(); return false; }
+    if (!seats.length || !seatsFit(seats.length, listItems.length)) {
+      toast('座位 ' + seats.length + ' / 名单 ' + listItems.length + '，'
+            + (allowEmptySeats() ? '座位不够，先去「格局编辑」补座位'
+                                 : '该表设为「仅满座」，先去「格局编辑」调成一致'), true);
+      applyModeUI();
+      return false;
+    }
+    if (layoutDirty()) {
+      const ok = window.confirm('格局还有未保存的改动。\n\n切到「排座位」会丢弃这些改动，要保留请先点「保存格局」。\n\n确定继续吗？');
+      if (!ok) { applyModeUI(); return false; }
+      reapplyKeepNames(chart.layout);
+    }
+
+    if (manualGrouping) endManualGrouping();
+    clearSeatingSelection();
+    editMode = false;
+    hideNotice();
+    cloudLoaded = true;
+    applyModeUI();
+    syncUrlMode();
+    if (!silent) toast('已切到手动排座：点座位可以选名字，或与同学换座');
+    return true;
+  }
+
+  tabSeat.addEventListener('click', () => { if (!tabSeat.disabled) switchMode(false); });
+  tabLayout.addEventListener('click', () => { if (!tabLayout.disabled) switchMode(true); });
+
   clearNamesBtn.addEventListener('click', clearAllNames);
+  exportBtn.addEventListener('click', exportSeatImage);
 
   reloadBtn.addEventListener('click', () => {
     if (chart) reloadChart(chart.chart_id);
-    else if (EDIT_MODE) initEditMode();
-    else initViewMode();
+    else boot();
   });
 
   chartSelect.addEventListener('change', () => {
@@ -2866,80 +3598,110 @@
   }
 
   /* ================================================================
-   *  编辑模式：加载 / 保存
+   *  格局编辑：保存（留在原地，方便直接切去排座位）
    * ================================================================ */
-
-  async function initEditMode() {
-    if (!initChartId) {
-      showLoading('加载座位表…');
-      try {
-        const pick = await loadChartList(0);
-        hideLoading();
-        if (!pick) {
-          showNotice('没有可编辑的座位表',
-            '请先到 EasyCore 控制台的「座位表」页创建一个座位表，再点「编辑」进入这里。', true);
-          return;
-        }
-        // 没带 id 时退化为「编辑第一个座位表」，并同步 URL
-        const url = new URL(window.location.href);
-        url.searchParams.set('cloud_seats_id', String(pick));
-        history.replaceState(null, '', url.toString());
-        await loadChartForEdit(pick);
-      } catch (err) {
-        hideLoading();
-        showNotice('加载失败', escapeHtml(err.message || '请稍后重试'), true);
-      }
-      return;
-    }
-    await loadChartForEdit(initChartId);
-  }
-
-  async function loadChartForEdit(chartId) {
-    showLoading('加载座位表…');
-    try {
-      const data = await apiGet('/seat-charts/' + chartId);
-      chart = data.seat_chart;
-      listItems = data.items || [];
-      chartLabel.textContent = '编辑：' + chart.name;
-      chartLabel.style.display = '';
-      const url = new URL(window.location.href);
-      url.searchParams.set('cloud_seats_id', String(chartId));
-      history.replaceState(null, '', url.toString());
-      presentChart();
-    } catch (err) {
-      showNotice('加载失败', escapeHtml(err.message || '请稍后重试'), true);
-    } finally {
-      hideLoading();
-    }
-  }
 
   saveBtn.addEventListener('click', async () => {
     if (!chart) { toast('没有可保存的座位表', true); return; }
-    if (seats.length !== listItems.length) {
-      toast('座位数量（' + seats.length + '）必须等于名单人数（' + listItems.length + '）', true);
+    if (!seatsFit(seats.length, listItems.length)) {
+      toast(allowEmptySeats()
+        ? '座位数量（' + seats.length + '）不能少于名单人数（' + listItems.length + '）'
+        : '该座位表设为「仅满座」，座位数量（' + seats.length + '）必须等于名单人数（' + listItems.length + '）',
+        true);
       return;
     }
     if (!seats.length) { toast('请先摆放座位', true); return; }
 
     saveBtn.disabled = true;
     saveBtn.textContent = '保存中…';
-    busyToast('正在保存修改…');
+    busyToast('正在保存格局…');
     try {
-      await apiPost('/seat-charts/' + chart.chart_id + '/layout', { layout: collectLayout() });
-      toast('已保存，正在返回控制台…');
-      setTimeout(() => { window.location.href = CONSOLE_URL; }, 600);
+      const layout = collectLayout();
+      await apiPost('/seat-charts/' + chart.chart_id + '/layout', { layout: layout });
+      chart.layout = layout;
+      chart.has_layout = true;
+      chart.seat_count = seats.length;
+      markLayoutSaved();
+      toast(seatsFit(seats.length, listItems.length)
+        ? '格局已保存，点顶部「排座位」就能开始排座'
+        : '已保存');
     } catch (err) {
-      saveBtn.disabled = false;
-      saveBtn.innerHTML = SAVE_LABEL;
       toast(err.message || '保存失败，请重试', true);
       if (err.payload && err.payload.list_item_count !== undefined) {
         listItems = listItems.slice(0, err.payload.list_item_count);
-        updateSeatCountHint();
       }
+    } finally {
+      saveBtn.innerHTML = SAVE_LABEL;
+      updateSeatCountHint();
     }
   });
 
-  backBtn.addEventListener('click', () => { window.location.href = CONSOLE_URL; });
+  /* ================================================================
+   *  返回控制台：任何情况下都先保存一次再走
+   *  · 格局编辑：把当前格局存回云端（不满足保存条件 / 保存失败时明确告知，由用户决定走不走）
+   *  · 排座位：把当前排座结果再写一次（正常每次改动都已即时保存，这里只是兜底）
+   * ================================================================ */
+
+  let leavingForConsole = false;   // 防止连点 / 保存途中重复触发
+
+  // 返回 true = 可以离开，false = 用户选择留下
+  async function saveBeforeLeave() {
+    if (!chart || !cloudLoaded) return true;   // 提示页 / 没加载成功：没有可保存的内容
+
+    if (editMode) {
+      if (!seats.length) return true;          // 空画布没有格局可存
+      if (!seatsFit(seats.length, listItems.length)) {
+        return window.confirm('当前格局不满足保存条件（座位 ' + seats.length
+          + ' / 名单 ' + listItems.length + '），无法保存。\n\n仍要返回控制台吗？'
+          + '未保存的格局改动会丢失。');
+      }
+      showLoading('正在保存格局…');
+      try {
+        const layout = collectLayout();
+        await apiPost('/seat-charts/' + chart.chart_id + '/layout', { layout: layout });
+        chart.layout = layout;
+        chart.has_layout = true;
+        chart.seat_count = seats.length;
+        markLayoutSaved();
+        return true;
+      } catch (err) {
+        hideLoading();
+        return window.confirm('格局保存失败：' + ((err && err.message) || '网络异常')
+          + '\n\n仍要返回控制台吗？未保存的格局改动会丢失。');
+      }
+    }
+
+    showLoading('正在保存排座结果…');
+    try {
+      await apiPost('/seat-charts/' + chart.chart_id + '/arrangement',
+                    { arrangement: collectArrangement() });
+      return true;
+    } catch (err) {
+      hideLoading();
+      return window.confirm('排座结果保存失败：' + ((err && err.message) || '网络异常')
+        + '\n\n仍要返回控制台吗？');
+    }
+  }
+
+  async function goConsole() {
+    if (leavingForConsole) return;
+    leavingForConsole = true;
+    backBtn.disabled = true;
+    let ok = true;
+    try {
+      ok = await saveBeforeLeave();
+    } catch (err) {
+      ok = window.confirm('离开前保存失败：' + ((err && err.message) || '未知错误')
+        + '\n\n仍要返回控制台吗？');
+    } finally {
+      hideLoading();
+      leavingForConsole = false;
+      backBtn.disabled = false;
+    }
+    if (ok) window.location.href = CONSOLE_URL;
+  }
+
+  backBtn.addEventListener('click', goConsole);
 
   /* ================================================================
    *  模式初始化
@@ -2951,82 +3713,90 @@
     return div.innerHTML.replace(/'/g, '&#39;');
   }
 
+  // 当前模式的界面状态：选项卡、画布语义、状态栏提示
   function applyModeUI() {
-    if (EDIT_MODE) {
-      document.title = '易排座 · 编辑座位格局';
-      canvas.dataset.empty = '从下方拖拽「座位」到此处开始编排';
-      gridSwitchWrap.style.display = '';
-      manualGroupBtn.style.display = '';
-      fillSeatsBtn.style.display = '';
-      manualActions.style.display = 'none';
-      // 手动排座只在排座模式提供（编辑模式专注摆座位与分组）
-      manualSeatBtn.style.display = 'none';
-      manualSeatActions.style.display = 'none';
-      saveBtn.style.display = '';
-      seatSource.classList.remove('hidden');
-      bottomBar.classList.remove('view-mode');
-      arrangeBtn.style.display = 'none';
-      reloadBtn.style.display = 'none';
-      chartSelect.style.display = 'none';
-      // 编辑模式：随机排座菜单不需要
-      canvas.classList.remove('view-mode', 'pannable');
-      opHintMouse.innerHTML = '鼠标：左键框选 = 建组 / 批量删除 / 批量建座；右键点空白 = 建座，点座位 = 删除；Ctrl + 拖动 = 平移画布';
-      opHintTouch.innerHTML = '触屏：单指拖座位 = 移动；单指从空白拖 = 框选；双指拖动 = 平移；双指捏合 = 缩放';
-      seatCountHint.style.display = '';
+    const isLayout = editMode;
+    manualSeating = !isLayout;
+
+    ribbon.dataset.mode = isLayout ? 'layout' : 'seat';
+    tabSeat.classList.toggle('active', !isLayout);
+    tabLayout.classList.toggle('active', isLayout);
+    syncTabState();
+
+    canvas.classList.toggle('view-mode', !isLayout);
+    canvas.classList.toggle('pannable', !isLayout);
+    canvas.classList.toggle('manual-seating', !isLayout);
+    bottomBar.classList.toggle('view-mode', !isLayout);
+
+    const hasChart = !!chart;
+    reloadBtn.style.display = hasChart ? '' : 'none';
+    backBtn.style.display = '';
+    chartSelect.style.display = chartList.length ? '' : 'none';
+    arrangeBtn.style.display = (!isLayout && hasChart) ? '' : 'none';
+    seatCountHint.style.display = '';
+    refreshAllowEmptyBtn();
+
+    document.title = isLayout ? '易排座 · 格局编辑' : '易排座 · 手动排座';
+
+    if (isLayout) {
+      canvas.dataset.empty = '从「新座位」拖到画布，或点「一键铺座」按名单人数铺满';
+      opHintMouse.innerHTML = '鼠标：<b>右键</b>空白 = 建座，<b>右键</b>座位 = 删除；<b>左键框选</b> = 建组 / 批量操作；<b>Ctrl+拖动</b> = 平移画布；<b>滚轮</b> = 缩放';
+      opHintTouch.innerHTML = '触屏：单指拖座位 = 移动；空白单指拖 = 框选；双指拖动 = 平移，双指捏合 = 缩放';
+      clearSeatingSelection();
     } else {
-      document.title = manualSeating ? '易排座 · 手动排座' : '易排座 · 随机排座';
       canvas.dataset.empty = '该座位表还没有设定座位格局';
-      gridSwitchWrap.style.display = 'none';   // 布局只能在控制台点「编辑」时修改
-      manualGroupBtn.style.display = 'none';
-      manualActions.style.display = 'none';
-      saveBtn.style.display = 'none';
-      seatSource.classList.add('hidden');
-      bottomBar.classList.add('view-mode');
-      // 手动排座：顶栏换成「清空名字 / 完成」，随机排座先收起来避免误触
-      arrangeBtn.style.display = manualSeating ? 'none' : '';
-      manualSeatBtn.style.display = manualSeating ? 'none' : '';
-      manualSeatActions.style.display = manualSeating ? 'flex' : 'none';
-      reloadBtn.style.display = '';
-      chartSelect.style.display = '';
-      backBtn.style.display = '';
-      canvas.classList.add('view-mode', 'pannable');
-      if (manualSeating) {
-        opHintMouse.innerHTML = '手动排座：点座位 = 选名字 / 换座；拖动空白处 = 平移画布；Ctrl + 滚轮 = 缩放';
-        opHintTouch.innerHTML = '手动排座：轻点座位 = 选名字 / 换座；单指拖空白 = 平移；双指捏合 = 缩放';
-      } else {
-        opHintMouse.innerHTML = '鼠标：拖动空白处 = 平移画布；Ctrl + 滚轮 = 缩放；（布局不可改动，需调整请到 EasyCore 点「编辑」）';
-        opHintTouch.innerHTML = '触屏：单指拖动 = 平移画布；双指拖动 = 平移；双指捏合 = 缩放';
-      }
-      seatCountHint.style.display = '';
+      opHintMouse.innerHTML = '鼠标：<b>点座位</b> = 选名字 / 换座；<b>拖动座位</b> = 互换（拖到空座 = 移过去）；拖动空白 = 平移；<b>滚轮</b> = 缩放';
+      opHintTouch.innerHTML = '触屏：<b>轻点座位</b> = 选名字 / 换座；<b>单指拖座位</b> = 互换；单指拖空白 = 平移；双指捏合 = 缩放';
     }
+
+    // 换模式必须重画所有座位文字：格局编辑态显示「座位」，排座态显示姓名 / 空座。
+    // 少了这一句就会出现「切到格局编辑再切回来，座位上的名字全没了」的假象 ——
+    // 数据一直在 nameBySeatId 里，只是文字没跟着模式刷新。
+    seats.forEach(paintSeat);
+
+    renderGroupPanel();   // 面板里的「改名 / 删除」按钮跟着模式走
+    updateEmpty();
+    updateSeatCountHint();
   }
 
-  // 排座模式的入口：先拉座位表列表，再加载选中的那个
-  async function initViewMode() {
+  // 统一入口：拉座位表列表 → 加载 → 按 editMode 组装界面
+  async function boot() {
     showLoading('加载座位表…');
     try {
       const pick = await loadChartList(initChartId);
       hideLoading();
       if (!pick) {
         chart = null;
+        chartList = [];
         clearLayout();
+        applyModeUI();
         showNotice('还没有座位表',
-          '请先到 EasyCore 控制台的「座位表」页创建一个座位表（创建时需要选择它使用的名单），'
-          + '再点该座位表的「编辑」把座位格局摆好，然后回到这里随机排座。', true);
+          '请先到 EasyCore 控制台的「座位表」页创建一个座位表（创建时要选择它使用的名单），'
+          + '再点该座位表的「编辑」进来摆座位。', true, '返回控制台');
         return;
       }
       await loadChart(pick);
+      applyModeUI();
+      if (!editMode && cloudLoaded && !bootToastShown) {
+        bootToastShown = true;
+        toast('已在手动排座模式：点座位可以选择名字，或与其他同学换座');
+      }
     } catch (err) {
       hideLoading();
+      applyModeUI();
       showNotice('加载失败', escapeHtml(err.message || '请稍后重试'), false);
     }
   }
 
-  noticeGoBtn.addEventListener('click', () => { window.location.href = CONSOLE_URL; });
+  noticeGoBtn.addEventListener('click', () => {
+    hideNotice();
+    if (chart) switchMode(true);                       // 有座位表：原地切到格局编辑
+    else goConsole();                                  // 没有座位表：走同一条「先保存再返回」的出口
+  });
   noticeReloadBtn.addEventListener('click', () => {
+    hideNotice();
     if (chart) reloadChart(chart.chart_id);
-    else if (EDIT_MODE) initEditMode();
-    else initViewMode();
+    else boot();
   });
 
   /* ================================================================
@@ -3041,7 +3811,7 @@
    *  初始化
    * ================================================================ */
 
-  if (!EDIT_MODE) {
+  if (!editMode) {
     // 排座模式：空白处单指/拖动平移，需要抓手光标
     canvas.classList.add('view-mode', 'pannable');
   }
@@ -3052,8 +3822,7 @@
   updateSeatCountHint();
   renderGroupPanel();
 
-  if (EDIT_MODE) initEditMode();
-  else initViewMode();
+  boot();
 
 })();
 </script>

@@ -220,24 +220,47 @@ async function createTaskFromNames(names) {
 
 // ==================== 进入 / 返回 ====================
 
-async function enterTask(id) {
-    let task;
-    try {
-        const data = await CloudSync.getTask(id);
-        task = data.task;
-    } catch (e) {
-        showCustomAlert('打开计票失败：' + e.message);
-        return;
+let taskLoading = false;       // 进入计票期间的防重复点击锁
+
+function showTaskLoading(show, taskName) {
+    const overlay = document.getElementById('taskLoadingOverlay');
+    if (!overlay) return;
+    const text = document.getElementById('taskLoadingText');
+    if (text) {
+        text.textContent = taskName
+            ? '正在加载「' + taskName + '」…'
+            : '正在加载计票数据…';
     }
-    currentTaskId = Number(task.id);
-    CloudSync.resetRevision(task.revision || 0);
-    CloudSync.acceptTask(task, true);
-    const label = document.getElementById('countingTaskName');
-    if (label) label.textContent = task.name || '未命名计票';
-    document.getElementById('taskListScreen').classList.add('hidden');
-    mainApp.classList.add('visible');
-    CloudSync.connect(currentTaskId);
-    initMainApp();                 // 保留原有的操作方式检测 + 主界面初始化流程
+    overlay.classList.toggle('show', !!show);
+}
+
+async function enterTask(id) {
+    if (taskLoading) return;   // 加载期间忽略重复点击
+    taskLoading = true;
+    const known = taskListCache.find(function (t) { return Number(t.id) === Number(id); });
+    showTaskLoading(true, known ? (known.name || '未命名计票') : '');
+    try {
+        let task;
+        try {
+            const data = await CloudSync.getTask(id);
+            task = data.task;
+        } catch (e) {
+            showCustomAlert('打开计票失败：' + e.message);
+            return;
+        }
+        currentTaskId = Number(task.id);
+        CloudSync.resetRevision(task.revision || 0);
+        CloudSync.acceptTask(task, true);
+        const label = document.getElementById('countingTaskName');
+        if (label) label.textContent = task.name || '未命名计票';
+        document.getElementById('taskListScreen').classList.add('hidden');
+        mainApp.classList.add('visible');
+        CloudSync.connect(currentTaskId);
+        initMainApp();                 // 操作方式自动检测（无弹窗），直接初始化主界面
+    } finally {
+        showTaskLoading(false);
+        taskLoading = false;
+    }
 }
 
 function backToTaskList() {
@@ -316,6 +339,15 @@ function deleteTaskFromList(task) {
 }
 
 // ==================== 云端回调 ====================
+
+// 服务端轻量通知（votes_changed）：某任务的已投票数变了，卡片就地更新，
+// 不再整列表重拉。只可能在任务列表页收到（进计票页后订阅的是 state）。
+function onCloudVotesChanged(taskId, totalVotes) {
+    if (taskId === undefined || taskId === null) return;
+    const num = document.querySelector(
+        '.task-card[data-id="' + taskId + '"] .task-votes b');
+    if (num) num.textContent = Number(totalVotes) || 0;
+}
 
 function onCloudTaskUpdated(task) {
     if (!currentTaskId || Number(task.id) !== Number(currentTaskId)) return;

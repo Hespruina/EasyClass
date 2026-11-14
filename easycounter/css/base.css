@@ -42,7 +42,7 @@ background: var(--card-bg);
 border-radius: 16px;
 padding: 40px;
 border: 1px solid var(--primary-border);
-box-shadow: 0 0 30px var(--primary-glow);
+box-shadow: 0 0 30px var(--edit-names-panel-shadow);
 }
 .name-input-title {
 font-family: 'ZCOOL KuaiLe', cursive;
@@ -62,7 +62,7 @@ width: 100%;
 height: 300px;
 background: var(--input-bg);
 border: 1px solid var(--primary-border-strong);
-border-radius: 8px;
+border-radius: 4px;
 padding: 15px;
 color: var(--text-main);
 font-size: 16px;
@@ -73,7 +73,7 @@ margin-bottom: 20px;
 .name-textarea:focus {
 outline: none;
 border-color: var(--primary);
-box-shadow: 0 0 10px var(--primary-border);
+box-shadow: var(--input-focus-ring);
 }
 .name-textarea::placeholder {
 color: var(--text-dim);
@@ -81,21 +81,51 @@ color: var(--text-dim);
 .upload-btn {
 width: 100%;
 padding: 15px;
-background: linear-gradient(135deg, var(--primary-border), var(--primary-dim));
+background: var(--action-btn-bg);
 border: 1px solid var(--primary-border-highlight);
-border-radius: 8px;
+border-radius: 4px;
 color: var(--primary);
 font-size: 18px;
 font-weight: bold;
 cursor: pointer;
-transition: all 0.3s;
+transition: background 0.2s, transform 0.12s;
 font-family: 'ZCOOL KuaiLe', cursive;
 }
 .upload-btn:hover {
-background: linear-gradient(135deg, var(--primary-border-strong), var(--primary-border));
-box-shadow: 0 0 20px var(--primary-glow-hover);
+background: var(--action-btn-hover-bg);
+}
+.upload-btn:active {
+transform: scale(.97);
 }
 .upload-btn:disabled {
 opacity: 0.5;
 cursor: not-allowed;
+}
+/* 动效兜底：仅关闭入场/过渡动画，保留 spinner 等状态反馈 */
+@media (prefers-reduced-motion: reduce) {
+.name-input-container,
+.upload-btn,
+.task-card,
+.task-modal-panel,
+.vote-card,
+.rank-item,
+.edit-name-card,
+.settings-fullscreen-container,
+.letter-search-panel,
+.export-panel,
+.poster-edit-container,
+.export-option,
+.account-logged-in,
+.cloud-list-item {
+animation: none !important;
+}
+.upload-btn,
+.action-btn-inline,
+.finish-btn,
+.task-start-btn,
+.task-action-btn,
+.cloud-list-item,
+.export-option {
+transition: none !important;
+}
 }

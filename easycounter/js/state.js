@@ -1,8 +1,9 @@
 // 应用状态（计票数据是云端快照在内存里的投影，浏览器不落盘）
+// touchMode 初始值按设备主指针类型自动判定，运行中再根据实际输入自动切换
 let appState = {
     votes: {},
     totalVotes: 0,
-    touchMode: Storage.get('touchMode', 'mouse'),
+    touchMode: (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ? 'touch' : 'mouse',
     searchMode: Storage.get('searchMode', 'permanent'), // 'permanent' 或 'modal'
     namesData: [], // 从云端快照获取的排序后数据
     groupedByLetter: {},
@@ -10,10 +11,6 @@ let appState = {
 };
 // 当前打开的计票任务 id；null = 停在任务列表页（键盘快捷键 / 写操作都要判它）
 let currentTaskId = null;
-let sessionState = {
-    suppressMismatchPrompt: false,
-    modalJustOpened: false
-};
 let activeTouches = new Map();
 let lastRankOrder = [];
 let rankItemMap = new Map();
@@ -29,8 +26,6 @@ const settingsBtn = document.getElementById('settingsBtn');
 const settingsModal = document.getElementById('settingsModal');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 const resetDataBtn = document.getElementById('resetDataBtn');
-const modeMouseBtn = document.getElementById('modeMouse');
-const modeTouchBtn = document.getElementById('modeTouch');
 const searchPermanentBtn = document.getElementById('searchPermanent');
 const searchModalBtn = document.getElementById('searchModal');
 const themeSystemBtn = document.getElementById('themeSystem');
@@ -41,15 +36,6 @@ const letterSearchModal = document.getElementById('letterSearchModal');
 const letterGrid = document.getElementById('letterGrid');
 const quickSearchContainer = document.getElementById('quickSearchContainer');
 const quickSearchGrid = document.getElementById('quickSearchGrid');
-const inputModeModal = document.getElementById('inputModeModal');
-const selectTouchMode = document.getElementById('selectTouchMode');
-const selectMouseMode = document.getElementById('selectMouseMode');
-const confirmInputModeBtn = document.getElementById('confirmInputModeBtn');
-const modeMismatchModal = document.getElementById('modeMismatchModal');
-const modeMismatchText = document.getElementById('modeMismatchText');
-const keepCurrentModeBtn = document.getElementById('keepCurrentModeBtn');
-const switchModeBtn = document.getElementById('switchModeBtn');
-const suppressMismatchPromptCheckbox = document.getElementById('suppressMismatchPrompt');
 const editNamesBtn = document.getElementById('editNamesBtn');
 const editNamesModal = document.getElementById('editNamesModal');
 const editNamesCardsContainer = document.getElementById('editNamesCardsContainer');

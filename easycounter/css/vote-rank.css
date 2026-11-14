@@ -1,20 +1,22 @@
 /* 完成计票按钮 */
 .finish-btn {
 padding: 8px 16px;
-background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
-border: 1px solid rgba(255, 215, 0, 0.4);
-border-radius: 8px;
+background: var(--finish-btn-bg);
+border: 1px solid var(--finish-btn-border);
+border-radius: 4px;
 color: var(--gold);
 font-size: 14px;
 font-weight: bold;
 cursor: pointer;
-transition: all 0.3s;
+transition: background 0.2s, transform 0.12s;
 font-family: 'Noto Sans SC', sans-serif;
 white-space: nowrap;
 }
 .finish-btn:hover {
-background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.2));
-box-shadow: var(--finish-btn-shadow);
+background: var(--finish-btn-hover-bg);
+}
+.finish-btn:active {
+transform: scale(.97);
 }
 .workspace {
 flex: 1;
@@ -25,7 +27,6 @@ position: relative;
 }
 .rank-panel {
 background: var(--rank-panel-bg);
-backdrop-filter: blur(10px);
 border-right: 1px solid var(--primary-border);
 position: relative;
 flex-shrink: 0;
@@ -49,7 +50,6 @@ flex-shrink: 0;
 font-family: 'ZCOOL KuaiLe', cursive;
 color: var(--gold);
 font-size: clamp(16px, 2vw, 20px);
-text-shadow: var(--rank-header-text-shadow);
 }
 .rank-list {
 flex: 1;
@@ -80,11 +80,10 @@ transition: all 0.3s;
 .rank-item.highlighted {
 background: var(--highlight);
 border-left-color: var(--primary);
-box-shadow: var(--rank-item-highlight-shadow);
 }
-.rank-item.top-1 { background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent); border-left-color: var(--gold); box-shadow: var(--rank-item-top1-shadow); }
-.rank-item.top-2 { background: linear-gradient(90deg, rgba(192, 192, 192, 0.1), transparent); border-left-color: var(--silver); }
-.rank-item.top-3 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.1), transparent); border-left-color: var(--bronze); }
+.rank-item.top-1 { background: var(--rank-item-top1-bg); border-left-color: var(--gold); }
+.rank-item.top-2 { background: var(--rank-item-top2-bg); border-left-color: var(--silver); }
+.rank-item.top-3 { background: var(--rank-item-top3-bg); border-left-color: var(--bronze); }
 .rank-num { font-size: clamp(14px, 1.5vw, 18px); font-weight: bold; width: 25px; text-align: center; color: var(--text-dim); font-family: 'ZCOOL KuaiLe', cursive; flex-shrink: 0; }
 .top-1 .rank-num { color: var(--gold); }
 .top-2 .rank-num { color: var(--silver); }
@@ -135,7 +134,7 @@ touch-action: pan-y;
 .vote-card {
 background: var(--vote-card-bg);
 border: 1px solid var(--vote-card-border);
-border-radius: 12px;
+border-radius: 8px;
 position: relative;
 display: flex;
 flex-direction: column;
@@ -143,8 +142,7 @@ align-items: center;
 justify-content: space-between;
 padding: 8px;
 cursor: pointer;
-transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s, box-shadow 0.2s, background 0.3s;
-box-shadow: 0 4px 6px var(--vote-card-shadow);
+transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s, background 0.2s;
 overflow: hidden;
 touch-action: pan-y;
 aspect-ratio: 3 / 4;
@@ -153,7 +151,6 @@ min-height: 120px;
 .vote-card.highlighted {
 background: var(--vote-card-highlight-bg);
 border-color: var(--vote-card-highlight-border);
-box-shadow: 0 0 20px var(--vote-card-highlight-shadow);
 animation: highlight-pulse 0.6s ease-in-out;
 }
 @keyframes highlight-pulse {
@@ -162,19 +159,18 @@ animation: highlight-pulse 0.6s ease-in-out;
 }
 .vote-card::before {
 content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
-background: var(--primary); opacity: 0.4; transition: opacity 0.1s, box-shadow 0.1s;
+background: var(--primary); opacity: 0.4; transition: opacity 0.1s;
 }
 .vote-card.is-pressed {
 transform: scale(0.96);
 border-color: var(--vote-card-pressed-border);
-box-shadow: 0 0 20px var(--vote-card-pressed-glow);
 background: var(--vote-card-pressed-bg);
 }
-.vote-card.is-pressed::before { opacity: 1; box-shadow: var(--vote-card-pressed-before-shadow); }
+.vote-card.is-pressed::before { opacity: 1; }
 .student-name {
 color: var(--primary);
 padding: 6px 4px;
-border-radius: 6px;
+border-radius: 4px;
 font-size: clamp(14px, 1.8vw, 18px);
 font-weight: 800;
 width: 100%;
@@ -226,7 +222,7 @@ width: clamp(24px, 4vw, 40px);
 height: clamp(24px, 4vw, 40px);
 background: var(--minus-btn-bg);
 border: 2px solid var(--minus-btn-border);
-border-radius: 8px;
+border-radius: 4px;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -244,5 +240,4 @@ background: var(--minus-btn-pressed-bg);
 color: var(--text-main);
 border-color: var(--minus-btn-color);
 transform: scale(0.9);
-box-shadow: var(--minus-btn-pressed-shadow);
 }

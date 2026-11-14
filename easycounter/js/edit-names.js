@@ -444,7 +444,7 @@ async function fetchExistingListsForOverwrite() {
         `).join('');
         
     } catch (error) {
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);">加载失败：' + escapeHtml(error.message) + '</div>';
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--minus-btn-color);">加载失败：' + escapeHtml(error.message) + '</div>';
     }
 }
 
@@ -614,7 +614,7 @@ const changesHTML = generateChangeTagsHTML(changes.removed, changes.added);
 
 // 显示确认弹窗，包含更改内容
 const confirmMessage = `修改名单将重置所有票数，是否继续？<br/>
-<div style="font-size: 13px; color: #888; margin: 10px 0;">共 ${changes.removed.length + changes.added.length} 处更改：</div>
+<div style="font-size: 13px; color: #8f8f8f; margin: 10px 0;">共 ${changes.removed.length + changes.added.length} 处更改：</div>
 ${changesHTML}`;
 
 showCustomConfirm(confirmMessage, async (confirmed) => {
@@ -660,13 +660,11 @@ function updateBatchModeUI() {
 if (batchSelectMode) {
 batchOperations.style.display = 'flex';
 singleOperations.style.display = 'none';
-batchSelectBtn.style.background = 'rgba(255, 215, 0, 0.2)';
-batchSelectBtn.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+batchSelectBtn.classList.add('is-active');
 } else {
 batchOperations.style.display = 'none';
 singleOperations.style.display = 'flex';
-batchSelectBtn.style.background = '';
-batchSelectBtn.style.borderColor = '';
+batchSelectBtn.classList.remove('is-active');
 // 清除所有选中状态
 selectedCards.forEach(card => {
 card.classList.remove('selected');

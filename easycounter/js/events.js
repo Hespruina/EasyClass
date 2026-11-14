@@ -187,17 +187,11 @@ if (e.target === letterSearchModal) {
 closeLetterSearch();
 }
 });
-modeMouseBtn.addEventListener('click', () => setTouchMode('mouse'));
-modeTouchBtn.addEventListener('click', () => setTouchMode('touch'));
 searchPermanentBtn.addEventListener('click', () => setSearchMode('permanent'));
 searchModalBtn.addEventListener('click', () => setSearchMode('modal'));
 themeSystemBtn.addEventListener('click', () => setThemeOption('system'));
 themeLightBtn.addEventListener('click', () => setThemeOption('light'));
 themeDarkBtn.addEventListener('click', () => setThemeOption('dark'));
-// 操作方式选择事件
-
-keepCurrentModeBtn.addEventListener('click', closeModeMismatchPrompt);
-switchModeBtn.addEventListener('click', switchModeAndClose);
 // 编辑名单事件
 editNamesBtn.addEventListener('click', openEditNamesModal);
 saveNamesBtn.addEventListener('click', saveEditedNames);
@@ -245,16 +239,6 @@ if (e.target === editNamesModal) {
 closeEditNamesModal();
 }
 });
-inputModeModal.addEventListener('click', (e) => {
-if (e.target === inputModeModal) {
-// 点击背景不关闭，必须选择一种方式
-}
-});
-modeMismatchModal.addEventListener('click', (e) => {
-if (e.target === modeMismatchModal && !sessionState.modalJustOpened) {
-closeModeMismatchPrompt();
-}
-});
 window.addEventListener('touchmove', handleTouchMove, {passive: false});
 document.addEventListener('contextmenu', e => {
     // 不禁用输入框的右键菜单
@@ -285,10 +269,8 @@ closeEditNamesModal();
 closeLetterSearch();
 } else if (settingsModal.classList.contains('show')) {
 closeSettings();
-} else if (modeMismatchModal.classList.contains('show')) {
-closeModeMismatchPrompt();
 }
-// 操作方式选择弹窗不能用 ESC 关闭
+// 操作方式检测已改为全自动，无需弹窗交互
 }
 // 键盘快速搜索：按下 A-Z 字母键触发搜索（只在计票页生效）
 const key = e.key.toUpperCase();
@@ -300,8 +282,6 @@ const hasAnyModal = createTaskModal.classList.contains('show')
 || editNamesModal.classList.contains('show')
 || letterSearchModal.classList.contains('show')
 || settingsModal.classList.contains('show')
-|| modeMismatchModal.classList.contains('show')
-|| inputModeModal.classList.contains('show')
 || customAlertModal.classList.contains('show')
 || duplicateHandleModal.classList.contains('show')
 || customConfirmModal.classList.contains('show');

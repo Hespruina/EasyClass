@@ -15,7 +15,7 @@ display: flex;
 align-items: center;
 justify-content: space-between;
 padding: 0 20px;
-background: linear-gradient(90deg, var(--header-bg-start), var(--header-bg-end), var(--header-bg-start));
+background: var(--header-bg);
 border-bottom: 1px solid var(--primary-border);
 z-index: 100;
 flex-shrink: 0;

@@ -45,7 +45,6 @@
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/vote-rank.css">
 <link rel="stylesheet" href="css/search.css">
-<link rel="stylesheet" href="css/mode-detection.css">
 <link rel="stylesheet" href="css/buttons.css">
 <link rel="stylesheet" href="css/poster.css">
 <link rel="stylesheet" href="css/export.css">
@@ -65,15 +64,17 @@ font-size: 14px;
 font-weight: 600;
 padding: 7px 14px;
 border: 1px solid var(--primary-border-strong);
-border-radius: 20px;
+border-radius: 999px;
 background: var(--primary-dim);
-transition: all 0.3s;
+transition: background 0.2s, color 0.2s, transform 0.12s;
 white-space: nowrap;
 }
 .home-link:hover {
 background: var(--primary);
-color: #000;
-box-shadow: 0 0 15px var(--primary-glow);
+color: var(--btn-confirm-color);
+}
+.home-link:active {
+transform: scale(.97);
 }
 /* 所有页面的返回按钮统一在左上角（原来是 right:16px） */
 .home-link-corner {
@@ -184,23 +185,12 @@ z-index: 1001;
 <div class="settings-fullscreen-body">
 <div class="settings-tab-content active" id="settingsTab">
 <div class="setting-item">
-<label class="setting-label">操作模式</label>
-<div class="toggle-group">
-<div class="toggle-option" data-mode="mouse" id="modeMouse">鼠标操作 (标准)</div>
-<div class="toggle-option" data-mode="touch" id="modeTouch">触屏操作 (大屏)</div>
-</div>
-<div style="font-size: 12px; color: #666; margin-top: 8px;">
-鼠标：点击加分，支持右键菜单禁用<br>
-触屏：按压即计分，支持多人同时极速操作
-</div>
-</div>
-<div class="setting-item">
 <label class="setting-label">快速查找</label>
 <div class="toggle-group">
 <div class="toggle-option" data-search="permanent" id="searchPermanent">常驻显示</div>
 <div class="toggle-option" data-search="modal" id="searchModal">弹窗模式</div>
 </div>
-<div style="font-size: 12px; color: #666; margin-top: 8px;">
+<div style="font-size: 12px; color: var(--text-dim); margin-top: 8px;">
 常驻：搜索框固定在排名面板下方<br>
 弹窗：点击搜索按钮弹出字母面板
 </div>
@@ -219,7 +209,7 @@ z-index: 1001;
 <div class="btn-group">
 <button class="action-btn btn-reset" id="resetDataBtn">清空所有票数</button>
 </div>
-<div class="data-info" style="color: #4caf50;">✓ 设置已自动保存</div>
+<div class="data-info">✓ 设置已自动保存</div>
 </div>
 <div class="settings-tab-content" id="accountTab">
 <div class="account-section" id="accountSection">
@@ -265,38 +255,6 @@ z-index: 1001;
 </div>
 </div>
 </div>
-<!-- 操作方式确认弹窗 -->
-<div class="modal-overlay" id="inputModeModal">
-<div class="prompt-panel" style="max-width: 400px;">
-<div class="prompt-title">确认操作方式</div>
-<div class="prompt-text" style="margin-bottom: 20px;">
-请点击下方圆球<br/>系统将自动检测您的操作方式
-</div>
-<div style="display: flex; justify-content: center; align-items: center; margin: 30px 0;">
-<div class="mode-ball-large" id="detectModeBall"></div>
-</div>
-<div class="prompt-text" style="font-size: 13px; color: #888;">
-点击后自动识别：触屏 / 鼠标
-</div>
-</div>
-</div>
-<!-- 操作方式不匹配提醒弹窗 -->
-<div class="modal-overlay" id="modeMismatchModal">
-<div class="prompt-panel">
-<div class="prompt-title">操作方式提示</div>
-<div class="prompt-text" id="modeMismatchText">
-检测到您使用了不同的操作方式，是否切换到更适合的模式？
-</div>
-<div class="checkbox-group">
-<input type="checkbox" id="suppressMismatchPrompt">
-<label for="suppressMismatchPrompt">本次不再提示</label>
-</div>
-<div class="btn-group">
-<button class="action-btn btn-secondary" id="keepCurrentModeBtn">保持当前</button>
-<button class="action-btn btn-confirm" id="switchModeBtn">切换模式</button>
-</div>
-</div>
-</div>
 <!-- 编辑名单弹窗 -->
 <div class="modal-overlay" id="editNamesModal">
 <div class="edit-names-panel">
@@ -323,14 +281,14 @@ z-index: 1001;
 <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
 <span>多选</span>
 </button>
-<button class="action-btn-inline" id="clearAllNamesBtn" style="width: auto; padding: 10px 20px; background: rgba(255, 107, 107, 0.1); border-color: rgba(255, 107, 107, 0.4); color: #ff6b6b;">
+<button class="action-btn-inline" id="clearAllNamesBtn" style="width: auto; padding: 10px 20px; background: var(--btn-reset-bg); border-color: var(--btn-reset-border); color: var(--btn-reset-color);">
 <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
 <span>清空名单</span>
 </button>
 </div>
 <div class="edit-names-footer-right">
 <div id="batchOperations" style="display: none; gap: 10px;">
-<button class="action-btn-inline" id="batchDeleteBtn" style="width: auto; padding: 10px 20px; background: rgba(255, 107, 107, 0.2); border-color: rgba(255, 107, 107, 0.5); color: #ff6b6b;">
+<button class="action-btn-inline" id="batchDeleteBtn" style="width: auto; padding: 10px 20px; background: var(--btn-reset-hover-bg); border-color: var(--btn-reset-hover-border); color: var(--btn-reset-color);">
 <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
 <span>批量删除</span>
 </button>
@@ -339,7 +297,7 @@ z-index: 1001;
 <div id="singleOperations" style="display: flex; gap: 12px;">
 <button class="action-btn btn-secondary" id="cancelEditNamesBtn">取消</button>
 <button class="action-btn btn-confirm" id="saveNamesBtn">保存</button>
-<button class="action-btn btn-cloud-save hidden" id="saveCloudNamesBtn" style="background: rgba(76, 175, 80, 0.2); border-color: rgba(76, 175, 80, 0.5); color: #4caf50;">
+<button class="action-btn btn-cloud-save hidden" id="saveCloudNamesBtn" style="background: var(--name-change-tag-add-bg); border-color: var(--name-change-tag-add-border); color: var(--name-change-tag-add-color);">
                             <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px; fill: currentColor;"><path d="M544 864V672h128L512 480 352 672h128v192H320v-1.6c-5.376.32-10.496 1.6-16 1.6A240 240 0 0 1 64 624c0-123.136 93.12-223.488 212.608-237.248A239.808 239.808 0 0 1 512 192a239.872 239.872 0 0 1 235.456 194.752c119.488 13.76 212.48 114.112 212.48 237.248a240 240 0 0 1-240 240c-5.376 0-10.56-1.28-16-1.6v1.6H544z"></path></svg>
                             <span>保存到云端</span>
                         </button>
@@ -593,6 +551,14 @@ z-index: 1001;
 <button type="button" class="action-btn btn-secondary" id="cancelEditTaskBtn">取消</button>
 <button type="button" class="action-btn btn-confirm" id="confirmEditTaskBtn">保存</button>
 </div>
+</div>
+</div>
+
+<!-- 进入计票加载遮罩（点击任务卡后、数据加载完成前显示） -->
+<div class="task-loading-overlay" id="taskLoadingOverlay">
+<div class="task-loading-panel">
+<div class="task-loading-spinner"></div>
+<div class="task-loading-text" id="taskLoadingText">正在加载计票数据…</div>
 </div>
 </div>
 

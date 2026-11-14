@@ -13,14 +13,14 @@ width: 100%;
 padding: 10px;
 background: var(--action-btn-bg);
 border: 1px solid var(--action-btn-border);
-border-radius: 8px;
+border-radius: 4px;
 color: var(--primary);
 display: flex;
 align-items: center;
 justify-content: center;
 gap: 8px;
 cursor: pointer;
-transition: all 0.3s;
+transition: background 0.2s, border-color 0.2s, transform 0.12s;
 font-family: 'Noto Sans SC', sans-serif;
 font-size: 14px;
 }
@@ -33,7 +33,9 @@ transition: transform 0.3s;
 .action-btn-inline:hover {
 background: var(--action-btn-hover-bg);
 border-color: var(--action-btn-hover-border);
-box-shadow: var(--action-btn-hover-shadow);
+}
+.action-btn-inline:active {
+transform: scale(.97);
 }
 #settingsBtn:active svg {
 transform: rotate(90deg);

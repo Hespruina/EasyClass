@@ -63,15 +63,14 @@ width: 100%;
 .edit-name-card {
 background: var(--edit-name-card-bg);
 border: 1px solid var(--edit-name-card-border);
-border-radius: 12px;
+border-radius: 8px;
 position: relative;
 display: flex;
 flex-direction: column;
 align-items: center;
 justify-content: center;
 padding: 12px 8px;
-transition: all 0.2s;
-box-shadow: 0 4px 6px var(--edit-name-card-shadow);
+transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 overflow: hidden;
 min-width: 90px;
 min-height: 90px;
@@ -82,19 +81,15 @@ box-shadow: var(--edit-name-card-hover-shadow);
 }
 .edit-name-card.selected {
 border-color: var(--edit-name-card-selected-border);
-box-shadow: 0 0 20px var(--edit-name-card-selected-shadow);
 background: var(--edit-name-card-selected-bg);
-animation: selected-glow 1.5s ease-in-out infinite alternate;
-}
-@keyframes selected-glow {
-from {
-box-shadow: var(--edit-name-card-selected-shadow-glow);
-}
-to {
-box-shadow: 0 0 30px var(--edit-name-card-selected-shadow);
-}
 }
 .edit-name-card.selected .edit-name-display {
+color: var(--gold);
+}
+/* 多选模式下的「多选」按钮按下态（替代旧内联金色，双主题走令牌） */
+.action-btn-inline.is-active {
+background: var(--edit-name-card-selected-bg);
+border-color: var(--edit-name-card-selected-border);
 color: var(--gold);
 }
 .edit-name-card.selected .edit-name-edit-btn,
@@ -105,7 +100,7 @@ pointer-events: none;
 .edit-name-card-input {
 background: var(--edit-name-card-input-bg);
 border: 2px dashed var(--edit-name-card-input-border);
-border-radius: 8px;
+border-radius: 4px;
 padding: 10px;
 color: var(--text-main);
 font-size: 16px;
@@ -119,7 +114,7 @@ margin-bottom: 8px;
 .edit-name-card-input:focus {
 outline: none;
 border-color: var(--primary);
-box-shadow: var(--input-focus-shadow);
+box-shadow: var(--input-focus-ring);
 }
 .edit-name-card-input::placeholder {
 color: var(--text-dim);
@@ -135,34 +130,31 @@ flex: 1;
 padding: 8px;
 border-radius: 8px;
 font-size: 14px;
-font-weight: bold;
+font-weight: 600;
 cursor: pointer;
-transition: all 0.2s;
+transition: background 0.2s, color 0.2s;
 border: none;
 font-family: 'Noto Sans SC', sans-serif;
 }
 .edit-name-confirm-btn {
 background: var(--edit-name-confirm-bg);
-color: var(--primary);
-border: 1px solid var(--edit-name-confirm-border);
+color: var(--edit-name-confirm-color);
 }
 .edit-name-confirm-btn:hover {
 background: var(--edit-name-confirm-hover-bg);
-box-shadow: var(--edit-name-edit-btn-shadow);
 }
 .edit-name-cancel-btn {
 background: var(--btn-secondary-bg);
-color: var(--text-dim);
-border: 1px solid var(--btn-secondary-border);
+color: var(--btn-secondary-color);
 }
 .edit-name-cancel-btn:hover {
 background: var(--btn-secondary-hover-bg);
-color: var(--text-main);
+color: var(--btn-secondary-color);
 }
 .edit-name-display {
 color: var(--primary);
 padding: 2px;
-border-radius: 6px;
+border-radius: 4px;
 font-size: clamp(13px, 1.5vw, 16px);
 font-weight: 800;
 width: 100%;
@@ -183,7 +175,7 @@ width: 28px;
 height: 28px;
 background: var(--edit-name-edit-btn-bg);
 border: 2px solid var(--edit-name-edit-btn-border);
-border-radius: 6px;
+border-radius: 4px;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -191,14 +183,13 @@ font-size: 14px;
 font-weight: bold;
 color: var(--gold);
 cursor: pointer;
-transition: all 0.2s;
+transition: background 0.2s, border-color 0.2s;
 flex-shrink: 0;
 padding: 0;
 }
 .edit-name-edit-btn:hover {
 background: var(--edit-name-edit-btn-hover-bg);
 border-color: var(--gold);
-box-shadow: var(--edit-name-edit-btn-shadow);
 }
 .edit-name-edit-btn svg {
 width: 14px;
@@ -210,7 +201,7 @@ width: 28px;
 height: 28px;
 background: var(--edit-name-delete-btn-bg);
 border: 2px solid var(--edit-name-delete-btn-border);
-border-radius: 6px;
+border-radius: 4px;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -218,14 +209,13 @@ font-size: 14px;
 font-weight: bold;
 color: var(--minus-btn-color);
 cursor: pointer;
-transition: all 0.2s;
+transition: background 0.2s, border-color 0.2s;
 flex-shrink: 0;
 padding: 0;
 }
 .edit-name-delete-btn:hover {
 background: var(--edit-name-delete-btn-hover-bg);
 border-color: var(--minus-btn-color);
-box-shadow: var(--edit-name-delete-btn-shadow);
 }
 .edit-name-delete-btn svg {
 width: 14px;
@@ -291,9 +281,9 @@ justify-content: center;
 .save-cloud-option {
 padding: 15px;
 border: 2px solid var(--primary-border);
-border-radius: 12px;
+border-radius: 8px;
 cursor: pointer;
-transition: all 0.3s ease;
+transition: border-color 0.2s, background 0.2s;
 background: var(--card-bg);
 }
 .save-cloud-option:hover {
@@ -310,7 +300,6 @@ background: var(--primary-dim);
 .save-cloud-option-new.selected {
 border-color: var(--primary);
 background: var(--primary-dim);
-box-shadow: 0 0 15px var(--primary-glow);
 }
 .save-cloud-option-overwrite {
 border-color: rgba(255, 193, 7, 0.2);
@@ -322,7 +311,6 @@ background: rgba(255, 193, 7, 0.05);
 .save-cloud-option-overwrite.selected {
 border-color: var(--gold);
 background: rgba(255, 193, 7, 0.08);
-box-shadow: 0 0 15px rgba(255, 193, 7, 0.15);
 }
 .save-cloud-option-title {
 color: var(--primary);
@@ -342,15 +330,15 @@ width: 100%;
 padding: 10px;
 background: var(--input-bg);
 border: 1px solid var(--input-border);
-border-radius: 8px;
+border-radius: 4px;
 color: var(--text-main);
 font-size: 14px;
 outline: none;
-transition: all 0.3s;
+transition: border-color 0.2s, box-shadow 0.2s;
 }
 .save-cloud-input:focus {
 border-color: var(--input-focus-border);
-box-shadow: 0 0 10px var(--input-focus-glow);
+box-shadow: var(--input-focus-ring);
 }
 .save-cloud-input::placeholder {
 color: var(--text-dim);

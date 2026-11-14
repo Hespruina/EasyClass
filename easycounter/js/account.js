@@ -210,14 +210,14 @@ async function fetchAndRenderCloudLists() {
         
         // 检查返回结果是否有效
         if (!result) {
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">加载失败：无返回数据</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--minus-btn-color);">加载失败：无返回数据</div>';
             return;
         }
         
         // 如果API明确返回了success: false
         if (result.success === false) {
             const errorMsg = result.error || '加载失败';
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">加载失败：' + escapeHtml(errorMsg) + '</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--minus-btn-color);">加载失败：' + escapeHtml(errorMsg) + '</div>';
             return;
         }
         
@@ -227,14 +227,14 @@ async function fetchAndRenderCloudLists() {
         
         if (!Array.isArray(lists)) {
             console.error('lists 不是数组:', lists);
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">数据格式错误</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--minus-btn-color);">数据格式错误</div>';
             return;
         }
         
         renderCloudLists(lists);
     } catch (error) {
         console.error('获取并渲染云名单失败:', error);
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">加载异常：' + escapeHtml(error.message) + '</div>';
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--minus-btn-color);">加载异常：' + escapeHtml(error.message) + '</div>';
     }
 }
 
@@ -280,7 +280,7 @@ function renderCloudLists(lists) {
         console.log('renderCloudLists: 成功渲染', lists.length, '个云名单');
     } catch (error) {
         console.error('renderCloudLists 渲染失败:', error);
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">渲染失败：' + escapeHtml(error.message) + '</div>';
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--minus-btn-color);">渲染失败：' + escapeHtml(error.message) + '</div>';
     }
 }
 

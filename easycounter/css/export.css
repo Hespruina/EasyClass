@@ -21,12 +21,12 @@ animation: fadeOut 0.3s ease forwards;
 }
 .export-panel {
 background: var(--export-panel-bg);
-border: 1px solid var(--export-panel-border);
+border: 2px solid var(--export-panel-border);
 border-radius: 16px;
 padding: 30px;
 width: 90%;
 max-width: 500px;
-box-shadow: 0 0 50px var(--export-panel-shadow);
+box-shadow: 0 0 30px var(--export-panel-shadow);
 animation: slideIn 0.3s ease;
 }
 .export-modal.hiding .export-panel {
@@ -52,21 +52,20 @@ gap: 15px;
 padding: 15px 20px;
 background: var(--export-option-bg);
 border: 2px solid var(--export-option-border);
-border-radius: 12px;
+border-radius: 8px;
 cursor: pointer;
-transition: all 0.3s;
+transition: background 0.2s, border-color 0.2s, transform 0.2s;
 }
 .export-option:hover {
 background: var(--export-option-hover-bg);
 border-color: var(--export-option-hover-border);
-box-shadow: var(--export-btn-hover-shadow);
 transform: translateX(5px);
 }
 .export-icon {
 width: 48px;
 height: 48px;
 background: var(--export-icon-bg);
-border-radius: 12px;
+border-radius: 8px;
 display: flex;
 align-items: center;
 justify-content: center;

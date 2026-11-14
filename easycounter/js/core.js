@@ -136,7 +136,7 @@ card.innerHTML = `
 grid.appendChild(card);
 });
 }
-// 设置网格容器的操作方式不匹配检测
+// 设置网格容器的操作方式自动检测：检测到与当前模式不同的输入时静默自动切换
 function setupGridMismatchDetection() {
 // 移除旧的事件监听
 grid.removeEventListener('mousedown', handleGridMouseDown);
@@ -151,12 +151,12 @@ grid.addEventListener('touchstart', handleGridTouchStart, { capture: true });
 }
 function handleGridMouseDown(e) {
 if (e.target.closest('.vote-card') || e.target.closest('.minus-btn')) {
-showModeMismatchPrompt('mouse');
+setTouchMode('mouse');
 }
 }
 function handleGridTouchStart(e) {
 if (e.target.closest('.vote-card') || e.target.closest('.minus-btn')) {
-showModeMismatchPrompt('touch');
+setTouchMode('touch');
 }
 }
 function handleMouseDown(e) {
@@ -289,7 +289,10 @@ if (appState.votes[name] > 10) el.classList.add('high-score');
 else el.classList.remove('high-score');
 }
 function updateTotal() {
-totalEl.innerText = appState.totalVotes;
+const text = String(appState.totalVotes);
+// 值没变化就不重绘：云端响应/广播校准时不再闪一下透明度
+if (totalEl.innerText === text) return;
+totalEl.innerText = text;
 totalEl.style.opacity = '0.5';
 setTimeout(() => totalEl.style.opacity = '1', 100);
 }
@@ -324,7 +327,6 @@ window.addEventListener('touchend', stopDrag);
 }
 function openSettings() {
 settingsModal.classList.add('show');
-updateTouchModeUI();
 updateSearchModeUI();
 updateThemeUI();
 if (isLoggedIn) {
@@ -340,19 +342,8 @@ settingsModal.classList.remove('hiding');
 }
 function setTouchMode(mode) {
 appState.touchMode = mode;
-Storage.set('touchMode', mode);
-updateTouchModeUI();
 renderGrid();
 updateRankList(true);
-}
-function updateTouchModeUI() {
-if (appState.touchMode === 'mouse') {
-modeMouseBtn.classList.add('active');
-modeTouchBtn.classList.remove('active');
-} else {
-modeMouseBtn.classList.remove('active');
-modeTouchBtn.classList.add('active');
-}
 }
 function resetData() {
 showCustomConfirm('确定清空所有票数？', (confirmed) => {

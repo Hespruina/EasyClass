@@ -188,7 +188,7 @@
     padding: 20px;
     background: var(--account-header-bg);
     border: 1px solid var(--account-header-border);
-    border-radius: 12px;
+    border-radius: 8px;
     margin-bottom: 15px;
 }
 
@@ -320,10 +320,10 @@
 .cloud-list-item {
     background: var(--cloud-list-item-bg);
     border: 1px solid var(--cloud-list-item-border);
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 15px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s, border-color 0.2s;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -332,7 +332,6 @@
 .cloud-list-item:hover {
     background: var(--cloud-list-item-hover-bg);
     border-color: var(--cloud-list-item-hover-border);
-    transform: translateY(-2px);
 }
 
 .cloud-list-item.loading {
@@ -359,10 +358,10 @@
     border: 1px solid var(--cloud-btn-border);
     background: var(--cloud-btn-bg);
     color: var(--primary);
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 13px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s, border-color 0.2s;
     margin-top: auto;
 }
 

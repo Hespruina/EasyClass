@@ -96,7 +96,7 @@
   function openModal(){modal.classList.remove('hiding');modal.classList.add('show');}
   function closeModal(){
     modal.classList.remove('show'); modal.classList.add('hiding');
-    setTimeout(function(){modal.classList.remove('hiding');},210);
+    setTimeout(function(){modal.classList.remove('hiding');},320);
   }
   $('#modalOpen').addEventListener('click', openModal);
   ['#modalClose','#modalCancel','#modalOk'].forEach(function(s){$(s).addEventListener('click', closeModal);});

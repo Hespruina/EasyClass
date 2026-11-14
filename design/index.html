@@ -604,8 +604,8 @@
           <tr><td>slideInL</td><td>侧栏从左侧入</td><td><code>.4s</code></td></tr>
           <tr><td>popIn</td><td>空状态图标 / 汇总数字格</td><td><code>.35s</code></td></tr>
           <tr><td>barGrow</td><td>当前导航竖条长出来</td><td><code>.2s</code></td></tr>
-          <tr><td>slideIn / slideOut</td><td>模态开合（JS 触发）</td><td><code>.2s</code></td></tr>
-          <tr><td>panelIn / panelOut</td><td>面板开合</td><td><code>.2s</code></td></tr>
+          <tr><td>slideIn / slideOut</td><td><b>模态开合（全站统一标准）</b>：自上 50px 滑落淡入 / 向下滑出淡出（海报编辑面板同款）</td><td><code>.3s ease / ease-out</code></td></tr>
+          <tr><td>panelIn</td><td>浮层面板（选人面板实测保留）</td><td><code>.18s</code></td></tr>
           <tr><td>overlayIn / overlayOut</td><td>遮罩淡入淡出</td><td><code>.2s ease-out</code></td></tr>
           <tr><td>tabIn / fadeIn</td><td>选项卡切换 / 名字卡片加载态</td><td><code>.18–.5s</code></td></tr>
           <tr><td>spin</td><td>加载转圈（唯一功能性循环）</td><td><code>.7–1s linear infinite</code></td></tr>
@@ -625,7 +625,7 @@
       </div>
       <div class="d-row" style="margin-top:12px"><button class="btn btn-secondary btn-sm" type="button" id="fxReplay">重播入场</button><button class="action-btn-inline" type="button" id="fxStagger">重播序列</button></div>
       <div class="d-h4">三条必须记住的坑</div>
-      <div class="d-flag do"><b>坑 1 · 别删 slideIn/slideOut</b>控制层主界面的 JS 有 6 处 <code>panel.style.animation = 'slideIn/slideOut …'</code>，内联 animation 会覆盖 CSS 的 panelIn，删掉这两个 keyframes 模态会"啪"地硬出现。</div>
+      <div class="d-flag do"><b>坑 1 · 别删 slideIn/slideOut</b>控制层主界面的 JS 有 6 处 <code>panel.style.animation = 'slideIn/slideOut …'</code>，内联 animation 会覆盖 CSS 的滑入动画，删掉这两个 keyframes 模态会"啪"地硬出现。</div>
       <div class="d-flag do"><b>坑 2 · fill-mode 只能用 backwards</b>入场动画一律 <code>animation-fill-mode: backwards</code>。<code>both/forwards</code> 会长期占住 transform，把卡片 hover 上浮永久压死。</div>
       <div class="d-flag do"><b>坑 3 · 用 !important 压住内联 delay</b>长列表 stagger 必须用作者 <code>!important</code> 覆盖 JS 内联 <code>animation-delay</code>，否则第 30 张卡片要等 1.5s 才出现。</div>
       <div class="d-flag dont" style="margin-top:8px"><b>禁止</b>bounce / breathe / twinkle / pulse 无限循环装饰（点名框抽选态除外）、<b>禁止发光 / 光晕脉冲类动画</b>；禁止回弹缓动；禁止动画化布局属性；四页均须带 <code>@media (prefers-reduced-motion: reduce)</code> 兜底。</div>
@@ -638,8 +638,10 @@
 <span class="k">@keyframes popIn</span>{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 <span class="k">@keyframes slideInL</span>{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 <span class="k">@keyframes barGrow</span>{from{transform:translateY(-50%) scaleY(.15)}to{transform:translateY(-50%) scaleY(1)}}
-<span class="k">@keyframes slideIn</span>{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
-<span class="k">@keyframes slideOut</span>{from{opacity:1}to{opacity:0;transform:translateY(10px) scale(.99)}}
+<span class="k">@keyframes slideIn</span>{from{transform:translateY(-50px);opacity:0}to{transform:translateY(0);opacity:1}}
+<span class="k">@keyframes slideOut</span>{from{transform:translateY(0);opacity:1}to{transform:translateY(50px);opacity:0}}
+<span class="k">.modal-panel</span>{animation:slideIn <span class="t">.3s ease</span>} <span class="c">/* 模态统一 */</span>
+<span class="k">.modal-overlay.hiding .modal-panel</span>{animation:slideOut <span class="t">.3s ease-out forwards</span>}
 <span class="c">/* 入场只允许 backwards，绝不用 both / forwards */</span>
 <span class="k">.panel</span>{animation:riseIn .45s var(--ease) <span class="t">backwards</span>}
 <span class="c">/* 悬停上浮用中性黑阴影，按钮按下 scale(.97) */</span>
@@ -925,7 +927,7 @@
 
   <!-- 09.8 模态 -->
   <article class="d-spec" id="c-modal">
-    <div class="d-spec-head"><span class="d-spec-id">09.8</span><h3>对话框与遮罩</h3><p>点击「打开对话框」观察遮罩淡入 + 面板 slideIn；关闭走 slideOut，不做硬消失。面板与 09.5 提示模态同族：以舞台层设置模态框为准（<code>#1c1c1c</code> / <code>2px #666</code> / 16px）。</p><span class="d-spec-src">舞台层模态家族（编辑名单面板 · 设置模态框）/ 控制层主界面</span></div>
+    <div class="d-spec-head"><span class="d-spec-id">09.8</span><h3>对话框与遮罩</h3><p>点击「打开对话框」观察：遮罩淡入 + 面板<b>自上方 50px 滑落淡入</b>（slideIn .3s ease）；关闭<b>向下滑出淡出</b>（slideOut .3s ease-out forwards），不做硬消失。<b>全站模态开合动画统一以参考层海报编辑面板的滑入滑出为准</b>。面板与 09.5 提示模态同族：<code>#1c1c1c</code> / <code>2px #666</code> / 16px。</p><span class="d-spec-src">参考层海报编辑面板（slideIn/slideOut 实测）/ 舞台层模态家族 / 控制层主界面</span></div>
     <div class="d-spec-demo">
       <div class="d-legend"><span><b>①</b> 打开 / 关闭（可重复）</span><span><b>②</b> 确认 / 取消</span><span><b>③</b> 表单对话框</span></div>
       <div class="d-row" style="margin-bottom:14px"><button class="btn btn-primary btn-sm" type="button" id="modalOpen">打开对话框</button><span class="d-chip">遮罩 <code>rgba(6,9,12,.72)</code></span></div>
@@ -944,11 +946,18 @@
       <thead><tr><th>项</th><th>规范值</th></tr></thead><tbody>
         <tr><td>遮罩</td><td><code>position:fixed;inset:0;z-index:1000</code>；<code>overlayIn/out .2s ease-out</code></td></tr>
         <tr><td>面板</td><td>与舞台层模态家族基准一致（设置模态框 / 编辑名单面板 / 通用提示面板，三处同族）：<code>#1c1c1c</code> 底 / <code>2px #666</code> 边 / <code>radius 16</code> / 阴影 <code>0 0 30px rgba(0,0,0,.5)</code>（中性黑）</td></tr>
-        <tr><td>入场</td><td><code>panelIn .2s var(--ease)</code>；JS 触发的 <code>slideIn/slideOut</code> 必须保留</td></tr>
+        <tr><td>入场 / 出场</td><td><b>统一动画（2026-11-14 用户裁定）</b>：<code>slideIn .3s ease</code>（<code>translateY(-50px)→0</code> 淡入）+ <code>slideOut .3s ease-out forwards</code>（<code>0→translateY(50px)</code> 淡出），以参考层海报编辑面板实测为准；<b>替换原 panelIn .2s</b>；JS 触发的 <code>slideIn/slideOut</code> 必须保留</td></tr>
         <tr><td>结构</td><td>header → body（可滚动）→ footer，<b>无分隔线</b>，纯间距分区（2026-11-14 用户去除蓝色分隔线）；标题青色 ZCOOL、正文 <code>#ddd</code></td></tr>
         <tr><td>按钮</td><td>footer 右对齐，次按钮在左、主按钮在右，<code>gap 10px</code>；<code>padding:10px 20px / radius 8 / 无边框</code>（2026-11-14 用户修订：模态内按钮用正常圆角 8px，不用 4px 小圆角），<b>不随容器拉伸</b>：确认 = 青底深字 hover <code>#35eaff</code>，取消 = <code>#666</code> 底白字 hover <code>#555</code></td></tr>
         <tr><td>原生对话框</td><td>全部替换为 <code>showCustomAlert / Confirm / Prompt</code>，返回 Promise</td></tr>
-      </tbody></table></div></div><div>
+      </tbody></table></div>
+      <details class="d-code" style="margin-top:12px"><summary>复制模态开合动画（全站统一 · 海报编辑面板同款）</summary><button class="d-copy" type="button">复制</button><pre><span class="c">/* 入场 = 自上 50px 滑落淡入；出场 = 向下滑出淡出（forwards 停在画面外） */</span>
+<span class="k">@keyframes slideIn</span>{from{transform:translateY(-50px);opacity:0}to{transform:translateY(0);opacity:1}}
+<span class="k">@keyframes slideOut</span>{from{transform:translateY(0);opacity:1}to{transform:translateY(50px);opacity:0}}
+<span class="k">.modal-panel</span>{animation:slideIn <span class="t">.3s ease</span>}
+<span class="k">.modal-overlay.hiding .modal-panel</span>{animation:slideOut <span class="t">.3s ease-out forwards</span>}
+<span class="c">/* JS 配套：open 前先 remove('hiding')；close 先 remove('show') 再 add('hiding')，</span>
+<span class="c">   约 320ms 后移除 hiding，避免下次打开带出淡出态 */</span></pre></details></div><div>
       <div class="d-flag do"><b>应当</b>打开前先 <code>classList.remove('hiding')</code>，避免上次关闭动画未结束带出淡出态；长内容 <code>max-height:85vh</code> + body 滚动。</div>
       <div class="d-flag dont"><b>禁止</b>用原生 <code>confirm()</code>；禁止删除 <code>slideIn/slideOut</code> keyframes；禁止遮罩用 <code>rgba(0,0,0,.85)</code>  hardcoded（参考层已统一到 <code>var(--modal-bg)</code>）。</div>
     </div></div>
@@ -1343,7 +1352,7 @@ if(localStorage.getItem(KEY)===<span class="t">'light'</span>) applyTheme(<span 
       <tr><td>源码残留发光</td><td>舞台层的性别钮 / 小组项 / 气泡、参考层的选中态仍有彩色 glow 与发光 <code>text-shadow</code>，属历史债务</td><td>直接删除发光声明，只保留实色底与描边；改一处要全链路搜</td></tr>
       <tr><td>ZCOOL KuaiLe 进控制台</td><td>数据密集界面可读性下降</td><td>Noto Sans SC 400/500/600/700</td></tr>
       <tr><td>渐变按钮 + hover 上浮</td><td>通用模板感，且上浮会与入场动画 fill-mode 打架</td><td>实色/描边 + 仅变色 + <code>:active scale(.97)</code></td></tr>
-      <tr><td>bounce / breathe / twinkle / pulse</td><td>无限循环装饰 ≠ 表达因果</td><td>riseIn / popIn / tabIn / panelIn 等一次性状态动效</td></tr>
+      <tr><td>bounce / breathe / twinkle / pulse</td><td>无限循环装饰 ≠ 表达因果</td><td>riseIn / popIn / tabIn / slideIn 等一次性状态动效</td></tr>
       <tr><td><code>text-shadow</code> 发光标题</td><td>与"唯一焦点"冲突，且显得很 AI（新规硬性禁止）</td><td>字号 + 字重 + 字距分级</td></tr>
       <tr><td>大圆角卡片墙 + 左竖条强调</td><td>最常见的 AI 设计模板</td><td>4 / 8px 小圆角 + 发丝线 + 编号 + 数据手册式排版</td></tr>
       <tr><td>多处硬编码颜色</td><td>参考层浅色模式整片失效的真实事故</td><td>一律 <code>var(--token)</code>，双向校验「定义/引用」</td></tr>

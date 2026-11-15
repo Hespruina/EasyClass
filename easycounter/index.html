@@ -574,23 +574,88 @@ z-index: 1001;
 </div>
 
 <!-- JS Modules - 按依赖顺序加载 -->
-<script src="js/post-themes.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/theme-manager.js"></script>
-<script src="js/state.js"></script>
-<script src="js/dialogs.js"></script>
-<script src="js/search.js"></script>
-<script src="js/cloud.js"></script>
-<script src="js/tasks.js"></script>
-<script src="js/import.js"></script>
-<script src="js/init.js"></script>
-<script src="js/core.js"></script>
-<script src="js/edit-names.js"></script>
-<script src="js/poster.js"></script>
-<script src="js/export.js"></script>
-<script src="js/events.js"></script>
-<script src="js/browser-detect.js"></script>
-<script src="js/account.js"></script>
-<script src="js/batch-add.js"></script>
+<!-- 加载自愈：单个脚本回源失败（CDN 522/525 之类）时在解析期同步重试一次，
+     第二次仍失败才记录并提示，避免静默缺功能。依赖事件绑定侧已按块隔离，
+     单个脚本缺失只会让对应功能降级，不再拖垮整页。 -->
+<script>
+(function () {
+  var MAX_RETRY = 1;
+  var failedList = [];
+
+  function showBar(text) {
+    var render = function () {
+      var bar = document.getElementById('assetFallbackBar');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'assetFallbackBar';
+        bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;padding:10px 16px;' +
+          'background:#7f1d1d;color:#fff;font:14px/1.6 system-ui,-apple-system,sans-serif;text-align:center;';
+        document.body.appendChild(bar);
+      }
+      bar.innerHTML = '';
+      var span = document.createElement('span');
+      span.textContent = text;
+      bar.appendChild(span);
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '刷新';
+      btn.style.cssText = 'margin-left:12px;padding:2px 12px;border:1px solid #fff;background:transparent;' +
+        'color:#fff;border-radius:4px;cursor:pointer;font:inherit;';
+      btn.onclick = function () { location.reload(); };
+      bar.appendChild(btn);
+    };
+    if (document.body) { render(); } else { document.addEventListener('DOMContentLoaded', render); }
+  }
+
+  window.__ecAssetFail = function (src, depth) {
+    depth = depth || 0;
+    if (depth >= MAX_RETRY || document.readyState !== 'loading') {
+      if (failedList.indexOf(src) === -1) {
+        failedList.push(src);
+        console.error('[loader] 脚本加载失败：' + src);
+        showBar('部分页面资源加载失败（网络异常），当前功能可能不完整。');
+      }
+      return;
+    }
+    // 解析期用 document.write 插回原位：脚本执行顺序保持不变
+    var sep = src.indexOf('?') === -1 ? '?' : '&';
+    document.write('<script src="' + src + sep + 'r=' + (depth + 1) +
+      '" onerror="__ecAssetFail(\'' + src + '\',' + (depth + 1) + ')"><\/script>');
+  };
+
+  // 兜底自检：万一 onerror 未触发（写入被浏览器忽略之类），
+  // 仍在 load 时确认关键依赖到位，缺失就明确告知，而不是静默降级。
+  window.addEventListener('load', function () {
+    var required = ['closeCustomAlert', 'showCustomAlert', 'showCustomConfirm',
+      'handleCustomConfirmOk', 'handleCustomConfirmCancel'];
+    var missing = [];
+    for (var i = 0; i < required.length; i++) {
+      if (typeof window[required[i]] !== 'function') missing.push(required[i]);
+    }
+    if (missing.length) {
+      console.error('[loader] 关键依赖缺失：' + missing.join(', '));
+      showBar('页面脚本未能完整加载，部分功能不可用。');
+    }
+  });
+})();
+</script>
+<script src="js/post-themes.js" onerror="__ecAssetFail('js/post-themes.js')"></script>
+<script src="js/storage.js" onerror="__ecAssetFail('js/storage.js')"></script>
+<script src="js/theme-manager.js" onerror="__ecAssetFail('js/theme-manager.js')"></script>
+<script src="js/state.js" onerror="__ecAssetFail('js/state.js')"></script>
+<script src="js/dialogs.js" onerror="__ecAssetFail('js/dialogs.js')"></script>
+<script src="js/search.js" onerror="__ecAssetFail('js/search.js')"></script>
+<script src="js/cloud.js" onerror="__ecAssetFail('js/cloud.js')"></script>
+<script src="js/tasks.js" onerror="__ecAssetFail('js/tasks.js')"></script>
+<script src="js/import.js" onerror="__ecAssetFail('js/import.js')"></script>
+<script src="js/init.js" onerror="__ecAssetFail('js/init.js')"></script>
+<script src="js/core.js" onerror="__ecAssetFail('js/core.js')"></script>
+<script src="js/edit-names.js" onerror="__ecAssetFail('js/edit-names.js')"></script>
+<script src="js/poster.js" onerror="__ecAssetFail('js/poster.js')"></script>
+<script src="js/export.js" onerror="__ecAssetFail('js/export.js')"></script>
+<script src="js/events.js" onerror="__ecAssetFail('js/events.js')"></script>
+<script src="js/browser-detect.js" onerror="__ecAssetFail('js/browser-detect.js')"></script>
+<script src="js/account.js" onerror="__ecAssetFail('js/account.js')"></script>
+<script src="js/batch-add.js" onerror="__ecAssetFail('js/batch-add.js')"></script>
 </body>
 </html>

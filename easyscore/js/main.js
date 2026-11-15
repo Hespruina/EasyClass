@@ -5,7 +5,7 @@ import { initCards, renderCards, setBatchMode, getSelectedItemIds } from './card
 import { initModal, openModal } from './modal.js';
 import { initOverview, renderOverview } from './overview.js';
 import { initLedger, renderLedger } from './ledger.js';
-import { connectWS } from './sync.js';
+import { connectWS, disconnectWS } from './sync.js';
 import { toast, showLoading, hideLoading } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
@@ -13,8 +13,44 @@ const $ = (id) => document.getElementById(id);
 function applyTable(table) {
   state.table = table;
   state.balances = table.balances || [];
+  state.directOffset = table.offset_mode === 'direct';
+  paintTableHint();
+  // 抵消模式决定总览的版式（两榜 / 总分榜）。首屏有可能在表配置回来之前就切到总览，
+  // 拿不到 offset_mode 就会画错版式，所以配置到位后若正停在总览页就重画一次。
+  // 顺带：另一台设备加分时，停在这两个页面上的设备也要跟着更新。
+  const ov = $('overview-panel');
+  if (ov && ov.classList.contains('active')) renderOverview();
+  const lg = $('ledger-panel');
+  if (lg && lg.classList.contains('active')) renderLedger();
+}
+
+function paintTableHint() {
   const hint = $('tableHint');
-  hint.textContent = (table.name || '') + ' · ' + state.balances.length + ' 人';
+  if (!hint) return;
+  const t = state.table;
+  hint.textContent = t ? (t.name || '') + ' · ' + state.balances.length + ' 人' : '';
+  hint.classList.remove('bad');
+}
+
+/* 实时同步断开 / 恢复：借用顶栏 hint 显示状态，恢复后由 paintTableHint 复原 */
+function paintSyncState(online) {
+  if (online) { paintTableHint(); return; }
+  const hint = $('tableHint');
+  if (!hint) return;
+  hint.textContent = '实时同步已断开 · 重连中…';
+  hint.classList.add('bad');
+}
+
+/* 其它设备改了积分表列表 / 删掉了当前这张表 */
+function onTablesChanged(msg) {
+  if (msg && msg.type === 'table_deleted' && Number(msg.table_id) === state.tableId) {
+    // 当前表已被别的设备删除，继续留着只会满屏 404，直接退回控制台
+    disconnectWS();
+    toast('该积分表已被其他设备删除', true);
+    setTimeout(() => { window.location.href = CONSOLE_URL; }, 1200);
+    return;
+  }
+  loadTableList();
 }
 
 async function refresh() {
@@ -66,9 +102,14 @@ function switchTab(tab) {
   });
   document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
   $(tab + '-panel').classList.add('active');
+  let hasGroup = false;
   document.querySelectorAll('#ribbon [data-tab-group]').forEach(g => {
-    g.style.display = g.dataset.tabGroup === tab ? '' : 'none';
+    const on = g.dataset.tabGroup === tab;
+    g.style.display = on ? '' : 'none';
+    if (on) hasGroup = true;
   });
+  // 该选项卡没有功能组时收起功能区，避免一条空白带把内容往下压
+  $('ribbon').classList.toggle('rb-no-groups', !hasGroup);
   if (tab === 'overview') renderOverview();
   else if (tab === 'ledger') renderLedger();
 }
@@ -148,10 +189,11 @@ function boot() {
   });
 
   loadTable().then(() => {
-    connectWS(
-      (table) => { applyTable(table); renderCards(); },
-      () => { loadTableList(); },
-    );
+    connectWS({
+      onState: (table) => { applyTable(table); renderCards(); },
+      onTables: onTablesChanged,
+      onStatus: paintSyncState,
+    });
   });
 }
 

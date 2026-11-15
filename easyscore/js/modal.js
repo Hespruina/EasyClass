@@ -140,7 +140,7 @@ async function save() {
 
 async function loadReasons() {
   try {
-    const data = await apiGet('/api/score/reasons');
+    const data = await apiGet('/easycore/api/score/reasons');
     reasonsLoaded = true;
     reasonHistory.innerHTML = '';
     const list = data.reasons || [];

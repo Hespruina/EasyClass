@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>易积分 · 班级积分管理</title>
 <meta name="description" content="易积分是免费的在线班级积分管理工具，绑定云名单即可加减分、自动抵消、按期归档，支持总览统计与历史记录。">
-<link rel="icon" href="../favicon.ico" type="image/x-icon">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/ribbon.css">
 <link rel="stylesheet" href="css/score.css">
@@ -51,17 +51,24 @@
 
   <!-- 数据总览 -->
   <div class="view-panel" id="overview-panel">
-    <div class="ov-filter" id="ovFilter">
-      <button class="qbtn" data-days="360" type="button">360天</button>
-      <button class="qbtn" data-days="90" type="button">90天</button>
-      <button class="qbtn" data-days="30" type="button">30天</button>
-      <button class="qbtn" data-days="7" type="button">7天</button>
-      <input type="date" id="ovFrom" title="开始日期">
-      <span style="color:var(--muted)">至</span>
-      <input type="date" id="ovTo" title="结束日期">
+    <div class="ov-inner">
+      <div class="ov-filter" id="ovFilter">
+        <div class="ov-quick">
+          <button class="qbtn" data-days="360" type="button">360天</button>
+          <button class="qbtn" data-days="90" type="button">90天</button>
+          <button class="qbtn" data-days="30" type="button">30天</button>
+          <button class="qbtn" data-days="7" type="button">7天</button>
+        </div>
+        <div class="ov-dates">
+          <input type="date" id="ovFrom" title="开始日期" aria-label="开始日期">
+          <span class="ov-sep">至</span>
+          <input type="date" id="ovTo" title="结束日期" aria-label="结束日期">
+        </div>
+        <span class="ov-range-hint" id="ovRangeHint"></span>
+      </div>
+      <div class="ov-stats" id="ovCards"></div>
+      <div class="ov-boards" id="ovTableWrap"></div>
     </div>
-    <div class="ov-cards" id="ovCards"></div>
-    <div class="ov-table-wrap" id="ovTableWrap"></div>
   </div>
 
   <!-- 积分操作 -->

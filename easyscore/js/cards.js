@@ -36,7 +36,7 @@ function createCard(b) {
 
   const score = document.createElement('div');
   score.className = 's-score';
-  score.innerHTML = '<span class="pos">+' + b.add_score + '</span><span class="neg">−' + b.deduct_score + '</span>';
+  score.innerHTML = scoreMarkup(b);
 
   card.appendChild(avatar);
   card.appendChild(name);
@@ -45,6 +45,21 @@ function createCard(b) {
   if (state.selectedItems.has(b.item_id)) card.classList.add('batch-selected');
   card.addEventListener('click', () => onCardClick(b, card));
   return card;
+}
+
+/* 卡片右侧分数：
+ * - 默认两池分列（+加分 / −扣分）；
+ * - 「直接抵消」模式下两池不会同时有值，只显示有值的那个，两边都空则显示 0。 */
+function scoreMarkup(b) {
+  const add = b.add_score || 0;
+  const deduct = b.deduct_score || 0;
+  if (!state.directOffset) {
+    return '<span class="pos">+' + add + '</span><span class="neg">−' + deduct + '</span>';
+  }
+  const net = add - deduct;
+  if (net > 0) return '<span class="pos">+' + net + '</span>';
+  if (net < 0) return '<span class="neg">−' + (-net) + '</span>';
+  return '<span class="zero">0</span>';
 }
 
 function onCardClick(b, card) {

@@ -75,6 +75,7 @@
 }
 .student-card .s-score .pos { color: var(--male); }
 .student-card .s-score .neg { color: var(--danger); }
+.student-card .s-score .zero { color: var(--muted); }
 
 /* 姓氏头像：小圆角方块，底色按性别 */
 .s-avatar {
@@ -257,65 +258,159 @@ body.batch-mode .student-card:hover { border-color: #ffe066; }
 .batch-toast .bt-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ============ 总览页 ============ */
-#overview-panel { overflow-y: auto; padding: 16px 18px; }
-
-.ov-filter {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+/* 整页可滚；内容限宽居中，避免宽屏上文字被拉成一条长线 */
+#overview-panel {
+  overflow-y: auto;
+  padding: 16px 20px 30px;
+  scrollbar-gutter: stable;
 }
+.ov-inner {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+/* 「直接抵消」模式只有一条总分榜，整列一起收窄：单榜铺满 980px 会重演
+   「名字和分数隔一屏」，只收卡片又会让统计条比榜单宽出一截 */
+.ov-inner.narrow { max-width: 720px; }
+
+/* ---- 时间段筛选 ---- */
+.ov-filter {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.ov-quick { display: flex; gap: 6px; }
+.ov-dates { display: flex; align-items: center; gap: 6px; }
+.ov-sep { color: var(--gray); font-size: 12.5px; }
 .ov-filter .qbtn {
-  padding: 6px 14px; border-radius: var(--radius-ctl);
+  height: 30px; padding: 0 13px;
+  border-radius: var(--radius-ctl);
   border: 1px solid var(--line); background: transparent; outline: none;
   color: #c9ced6; font: inherit; font-size: 12.5px; cursor: pointer;
+  transition: color .16s, border-color .16s, background .16s;
 }
-.ov-filter .qbtn.on { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+.ov-filter .qbtn:hover { color: var(--accent); border-color: var(--accent); }
+.ov-filter .qbtn.on {
+  background: var(--accent); border-color: var(--accent);
+  color: var(--panel); font-weight: 600;
+}
 .ov-filter input[type="date"] {
+  height: 30px; min-width: 0;
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius-ctl); color: #e6e7eb; font: inherit;
-  font-size: 12.5px; padding: 5px 8px; outline: none;
+  font-size: 12.5px; padding: 0 8px; outline: none;
   color-scheme: dark;
+  transition: border-color .16s;
+}
+.ov-filter input[type="date"]:focus { border-color: var(--accent); }
+.ov-range-hint {
+  margin-left: auto; color: var(--muted); font-size: 12.5px;
+  white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 
-.ov-cards { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
-.ov-stat {
-  flex: 1 1 180px; min-width: 160px;
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius-box); padding: 16px;
+/* ---- 四格统计条（连成一条，不做四张独立卡片） ---- */
+.ov-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-box);
+  overflow: hidden;
 }
-.ov-stat .ov-num { font-size: 30px; font-weight: 700; line-height: 1.1; }
+.ov-stat {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 12px 16px; min-width: 0;
+}
+.ov-stat + .ov-stat { border-left: 1px solid var(--line); }
+.ov-stat .ov-num {
+  font-size: 22px; font-weight: 700; line-height: 1.2;
+  color: #e6e7eb; font-variant-numeric: tabular-nums;
+}
 .ov-stat .ov-num.pos { color: var(--male); }
 .ov-stat .ov-num.neg { color: var(--danger); }
-.ov-stat .ov-label { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.ov-stat .ov-label { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
 
-.ov-rank {
-  flex: 1 1 280px; min-width: 260px;
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius-box); padding: 14px 16px;
+/* ---- 正分榜 / 负分榜：两竖列；「直接抵消」模式合成一条总分榜 ---- */
+.ov-boards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
 }
-.ov-rank h3 { font-size: 14px; color: var(--accent); margin-bottom: 10px; font-weight: 600; }
-.ov-rank .rk-list { max-height: 220px; overflow-y: auto; }
-.rk-row {
-  display: flex; align-items: center; gap: 10px; padding: 6px 2px;
-  border-bottom: 1px solid var(--line); font-size: 13.5px;
+/* 单榜不限宽会重演「名字和分数隔一屏」，收到一列阅读宽度 */
+.ov-boards.single { grid-template-columns: minmax(0, 1fr); }
+.ov-boards.single .ov-board { max-width: 560px; }
+.ov-board {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-box);
 }
-.rk-row:last-child { border-bottom: none; }
-.rk-row .rk-no { width: 22px; color: var(--muted); text-align: center; flex: 0 0 auto; }
-.rk-row .rk-name { color: #e6e7eb; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rk-row .rk-val { color: var(--accent); font-weight: 600; }
-.rk-row .rk-val.neg { color: var(--danger); }
-
-.ov-table-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-box); overflow: hidden; }
-.ov-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-.ov-table th, .ov-table td { padding: 10px 14px; text-align: left; }
-.ov-table thead th {
-  position: sticky; top: 0; background: var(--panel-2);
-  color: var(--muted); font-weight: 600; font-size: 12.5px;
+.ob-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding: 10px 14px 9px;
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-box) var(--radius-box) 0 0;
 }
-.ov-table tbody tr { border-bottom: 1px solid var(--line); }
-.ov-table tbody tr:last-child { border-bottom: none; }
-.ov-table td.name { color: #e6e7eb; }
-.ov-table td.pos { color: var(--male); font-weight: 600; }
-.ov-table td.neg { color: var(--danger); font-weight: 600; }
+.ob-title {
+  font-family: "ZCOOL KuaiLe", sans-serif;
+  font-size: 14px; letter-spacing: .04em; color: var(--accent);
+}
+.ob-meta { font-size: 11.5px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ob-list { list-style: none; padding: 4px 0 6px; }
+
+.ob-row {
+  position: relative;
+  display: flex; align-items: center; gap: 9px;
+  height: 32px; padding: 0 14px;
+  font-size: 13.5px;
+}
+/* 数据条：宽度 = 该生分值 / 榜首分值，一眼看出量级差；
+   颜色跟着「这一行」的正负走（总分榜同一条里既有正也有负） */
+.ob-row::before {
+  content: ''; position: absolute; left: 0; top: 2px; bottom: 2px;
+  width: calc(var(--p, 0) * 1%);
+  border-radius: 0 3px 3px 0;
+  pointer-events: none;
+}
+.ob-row.pos::before {
+  background: linear-gradient(90deg, rgba(77, 166, 255, .20), rgba(77, 166, 255, .04));
+}
+.ob-row.neg::before {
+  background: linear-gradient(90deg, rgba(255, 107, 107, .20), rgba(255, 107, 107, .04));
+}
+.ob-row > * { position: relative; }
+.ob-rank {
+  flex: 0 0 20px; width: 20px; text-align: center;
+  font-size: 12px; color: #6f7078; font-variant-numeric: tabular-nums;
+}
+.ob-rank.top { color: var(--accent); font-weight: 700; font-size: 12.5px; }
+/* 负分前三是「扣得最多」，用暖色而不是主色，别和表扬混淆 */
+.ob-row.neg .ob-rank.top { color: var(--danger); }
+.ob-name {
+  flex: 1 1 auto; min-width: 0;
+  color: #e6e7eb;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ob-val {
+  flex: 0 0 auto; font-weight: 600;
+  font-variant-numeric: tabular-nums; color: #e6e7eb;
+}
+.ob-row.pos .ob-val { color: var(--male); }
+.ob-row.neg .ob-val { color: var(--danger); }
+.ob-empty { padding: 26px 14px; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* 窄屏：两列改一列，统计条两行 */
+@media (max-width: 720px) {
+  #overview-panel { padding: 12px 12px 26px; }
+  .ov-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ov-stat:nth-child(3) { border-left: none; }
+  .ov-stat:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  .ov-boards { grid-template-columns: minmax(0, 1fr); }
+  .ov-range-hint { margin-left: 0; width: 100%; }
+}
 
 /* ============ 历史记录页 ============ */
 #ledger-panel { overflow-y: auto; padding: 16px 18px; }

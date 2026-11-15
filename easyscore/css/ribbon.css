@@ -97,10 +97,14 @@
   padding: 4px 10px;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: thin;
 }
-.rb-body::-webkit-scrollbar { height: 5px; }
-.rb-body::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+.rb-body::-webkit-scrollbar { height: 6px; }
+.rb-body::-webkit-scrollbar-thumb { background: #3d3e47; border: none; border-radius: 3px; }
+.rb-body::-webkit-scrollbar-thumb:hover { background: rgba(69, 243, 255, .45); }
+
+/* 当前选项卡没有任何功能组时（数据总览 / 历史记录）整条收起，
+   否则会留一条 78px 的空白带把内容往下压 */
+#ribbon.rb-no-groups .rb-body { display: none; }
 
 .rb-group {
   flex: 0 0 auto;
@@ -200,4 +204,18 @@
 /* 模式开关：只显示当前选项卡的功能组 / 按钮 */
 #ribbon[data-mode="seat"] [data-mode="layout"],
 #ribbon[data-mode="layout"] [data-mode="seat"] { display: none !important; }
+
+/* ---- 窄屏：选项卡栏不许撑破视口 ---- */
+/* 品牌字 + 三个选项卡 + 右侧两组按钮在 430px 下放不下，
+   会顶出 130px 的横向溢出（body overflow:hidden，页面被整体缩排）。
+   手机上先舍品牌字与按钮文字，保三个选项卡和班级名。 */
+@media (max-width: 560px) {
+  .rb-tabs { gap: 4px; padding: 0 8px; }
+  .rb-brand { display: none; }
+  .rb-tab { padding: 5px 10px; font-size: 13px; }
+  .rb-tabs-right { gap: 4px; }
+  .tb-hint { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .rb-icon-btn { padding: 4px 7px; }
+  .rb-icon-btn span { display: none; }
+}
 

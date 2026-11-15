@@ -424,6 +424,23 @@ Copyright © 2026 zhrhello.top. All rights reserved.
         let isConnected = false;
         let currentCode = '';
         let isNameListSent = false;  // 标记是否已发送名单
+        let reconnectTimer = null;   // 断线自动重连（手机锁屏 / 切后台会掐掉连接）
+        let dropFails = 0;           // 连续失败次数，连上即清零
+        let closedByUs = false;      // 主动断开（PC 已下线 / 用户离开）时不重连
+        let offlineNotified = false; // 一次掉线只提示一次，别每次重试都闪红
+        // 重连节奏（与其它端一致）：第 1 次立刻重连，之后 1s 起翻倍封顶 2s，
+        // 连续失败超 10 次则固定每 1s 试一次
+        const RETRY_BURST = 10;
+        const RETRY_STEP = 1000;
+        const RETRY_CAP = 2000;
+        const RETRY_STEADY = 1000;
+
+        function nextRetryDelay() {
+            dropFails += 1;
+            if (dropFails === 1) return 0;
+            if (dropFails > RETRY_BURST) return RETRY_STEADY;
+            return Math.min(RETRY_STEP * Math.pow(2, dropFails - 2), RETRY_CAP);
+        }
 
         /* ===== 性别标签解析（与 PC 端保持一致） ===== */
         const GENDER_LABEL_MAP = {
@@ -490,6 +507,17 @@ Copyright © 2026 zhrhello.top. All rights reserved.
             return false;
         }
 
+        /* 断线重连：首跳立即，之后按 nextRetryDelay 的节奏。
+           PC 一旦不在线，服务端会下发「PC 端未在线」并由 disconnectSocket()
+           标成主动断开，所以这里不会空转。 */
+        function scheduleReconnect() {
+            if (closedByUs || reconnectTimer || !currentCode) return;
+            reconnectTimer = setTimeout(function () {
+                reconnectTimer = null;
+                connectWebSocket(currentCode);
+            }, nextRetryDelay());
+        }
+
         // 建立 WebSocket 连接的函数
         function connectWebSocket(code) {
             const connectButton = document.getElementById('connectButton');
@@ -499,6 +527,15 @@ Copyright © 2026 zhrhello.top. All rights reserved.
                 showError('请输入code');
                 return;
             }
+
+            // 已经在连着 / 正在连：别开第二条（重连定时器与用户点按钮可能撞车）
+            if (socket && (socket.readyState === WebSocket.OPEN ||
+                           socket.readyState === WebSocket.CONNECTING)) {
+                return;
+            }
+            if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+            closedByUs = false;
+            currentCode = code;
 
             console.log('开始建立 WebSocket 连接，code:', code);
             
@@ -512,6 +549,8 @@ Copyright © 2026 zhrhello.top. All rights reserved.
             socket.onopen = function() {
                 console.log('WebSocket连接已打开');
                 isConnected = true;
+                dropFails = 0;
+                offlineNotified = false;
                 connectButton.value = 'Click';
                 document.getElementById('editNameListButton').disabled = false;
                 semicircle.style.backgroundColor = '#45f3ff';
@@ -587,7 +626,15 @@ Copyright © 2026 zhrhello.top. All rights reserved.
                 isNameListSent = false;
                 connectButton.value = 'connect';
                 document.getElementById('editNameListButton').disabled = true;
-                showError('连接已断开');
+                if (closedByUs) {
+                    showError('连接已断开');
+                    return;
+                }
+                if (!offlineNotified) {
+                    offlineNotified = true;
+                    showError('连接已断开，正在自动重连…');
+                }
+                scheduleReconnect();
             };
         }
 
@@ -684,6 +731,8 @@ Copyright © 2026 zhrhello.top. All rights reserved.
         }
 
         function disconnectSocket() {
+            closedByUs = true;   // 主动断开（PC 已下线 / 用户操作），不要再自动重连
+            if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
             if (socket) {
                 socket.onopen = null;
                 socket.onmessage = null;
@@ -695,6 +744,17 @@ Copyright © 2026 zhrhello.top. All rights reserved.
             isConnected = false;
             isNameListSent = false;
         }
+
+        /* 锁屏 / 切后台回来：连接已被系统掐掉就当场重连，不等退避定时器 */
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState !== 'visible' || closedByUs) return;
+            if (socket && (socket.readyState === WebSocket.OPEN ||
+                           socket.readyState === WebSocket.CONNECTING)) return;
+            if (!currentCode) return;
+            if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+            dropFails = 0;
+            connectWebSocket(currentCode);
+        });
 
         document.addEventListener('DOMContentLoaded', function () {
             const codeInput = document.getElementById('code');

@@ -20,6 +20,7 @@
     <p style="font-size:0.8em; color:#888; margin-bottom:10px;">每行一个姓名<br>可用「张三 男」「李四，女」附带性别</p>
     <textarea id="nameInput" placeholder="张三 男&#10;李四 女&#10;王五"></textarea>
     <button id="sendBtn">上传</button>
+    <p id="connTip" class="hidden" style="color:#ffd700; font-size:0.82em; margin:10px 0 0;">连接已断开，正在重连…</p>
 </div>
 <div class="box hidden" id="successBox">
     <div class="success">上传成功</div>
@@ -46,28 +47,66 @@
     const basePath = getApiBasePath();
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = protocol + '//' + window.location.host + basePath + 'api/randamer/ws?my_code=' + encodeURIComponent(code);
-    console.log('Phone WebSocket URL:', wsUrl);
-    const phoneSocket = new WebSocket(wsUrl);
-    phoneSocket.onopen = () => {
-        console.log('Phone connected with code:', code);
-    };
-    phoneSocket.onmessage = (event) => {
-        console.log('Phone received message:', event.data);
-        // 服务端 5s 一次的心跳，立即回 pong
-        try {
-            const data = JSON.parse(event.data);
-            if (data && data.type === 'ping') {
-                wsSend({ type: 'pong', ts: data.ts });
-            }
-        } catch (e) { /* 非 JSON 消息忽略 */ }
-    };
-    phoneSocket.onerror = (err) => {
-        console.error('Phone connection error:', err);
-        alert('连接错误');
-    };
-    phoneSocket.onclose = (event) => {
-        console.log('Phone disconnected, code:', event.code);
-    };
+
+    let phoneSocket = null;
+    let reconnectTimer = null;
+    let dropFails = 0;        // 连续失败次数，连上即清零
+    let closedByUs = false;
+
+    // 重连节奏（与其它端一致）：第 1 次立刻重连，之后 1s 起翻倍封顶 2s，
+    // 连续失败超 10 次则固定每 1s 试一次
+    const RETRY_BURST = 10;
+    const RETRY_STEP = 1000;
+    const RETRY_CAP = 2000;
+    const RETRY_STEADY = 1000;
+
+    function nextRetryDelay() {
+        dropFails += 1;
+        if (dropFails === 1) return 0;
+        if (dropFails > RETRY_BURST) return RETRY_STEADY;
+        return Math.min(RETRY_STEP * Math.pow(2, dropFails - 2), RETRY_CAP);
+    }
+
+    function setConnTip(offline) {
+        const tip = document.getElementById('connTip');
+        if (tip) tip.classList.toggle('hidden', !offline);
+    }
+
+    function scheduleReconnect() {
+        if (closedByUs || reconnectTimer || !code) return;
+        reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            connect();
+        }, nextRetryDelay());
+    }
+
+    /* 手机锁屏 / 切后台会把连接掐掉，回来后必须自己接上：
+       否则用户点「上传」看到的是一次静默失败（原先就是这样，界面照样显示上传成功） */
+    function connect() {
+        if (closedByUs || !code) return;
+        let ws;
+        try { ws = new WebSocket(wsUrl); } catch (e) { scheduleReconnect(); return; }
+        phoneSocket = ws;
+
+        ws.onopen = () => {
+            dropFails = 0;
+            setConnTip(false);
+            console.log('Phone connected with code:', code);
+        };
+        ws.onmessage = (event) => {
+            // 服务端 5s 一次的心跳，立即回 pong
+            let data;
+            try { data = JSON.parse(event.data); } catch (e) { return; }
+            if (data && data.type === 'ping') wsSend({ type: 'pong', ts: data.ts });
+        };
+        ws.onerror = () => { /* onclose 会负责重连 */ };
+        ws.onclose = (event) => {
+            console.log('Phone disconnected, code:', event.code);
+            if (closedByUs) return;
+            setConnTip(true);
+            scheduleReconnect();
+        };
+    }
 
     function wsSend(data) {
         if (phoneSocket && phoneSocket.readyState === WebSocket.OPEN) {
@@ -76,6 +115,18 @@
         }
         return false;
     }
+
+    connect();
+
+    // 回到前台时连接可能已经死了：当场重连，不等退避定时器
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible' || closedByUs) return;
+        if (phoneSocket && phoneSocket.readyState === WebSocket.OPEN) return;
+        if (phoneSocket && phoneSocket.readyState === WebSocket.CONNECTING) return;
+        if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+        dropFails = 0;
+        connect();
+    });
 
     /* ===== 性别标签解析（与 PC 端保持一致） ===== */
     const GENDER_LABEL_MAP = {
@@ -121,12 +172,17 @@
             );
         }
 
-        wsSend({
+        const sent = wsSend({
             type: 'this_is_list',
             code: code,
             names: entries.map(e => e.name),
             genders: entries.map(e => (applyGender ? e.gender : null))
         });
+        // 发不出去就必须说清楚：原先不管有没有发成功都直接显示「上传成功」
+        if (!sent) {
+            alert('连接已断开，名单没有发出去。等页面重连成功（上方黄色提示消失）后再点上传。');
+            return;
+        }
         document.getElementById('inputBox').classList.add('hidden');
         document.getElementById('successBox').classList.remove('hidden');
     });

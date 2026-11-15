@@ -142,6 +142,22 @@ const MAX_RECONNECT_FAILS = 3; // 最大重连失败次数，超过则判定code
 const CODE_TIMEOUT = 3300; // 3.3秒超时时间
 let isCodeRefreshing = false; // 防止重复点击刷新
 
+// 断线重连节奏（与易积分 / 易排座 / 易计票 / 易任务一致）：
+// 第 1 次立刻重连，之后 1s 起翻倍封顶 2s，连续失败超 10 次则固定每 1s 试一次
+const RETRY_BURST = 10;
+const RETRY_STEP = 1000;
+const RETRY_CAP = 2000;
+const RETRY_STEADY = 1000;
+let dropFails = 0; // 连续失败次数，连上即清零
+
+/* 第 n 次重试前该等多久：首次 0ms（掉线立刻重连） */
+function nextRetryDelay() {
+    dropFails += 1;
+    if (dropFails === 1) return 0;
+    if (dropFails > RETRY_BURST) return RETRY_STEADY;
+    return Math.min(RETRY_STEP * Math.pow(2, dropFails - 2), RETRY_CAP);
+}
+
 // 构造原生 WebSocket URL（支持查询参数）
 function getWsUrl(params = {}) {
     const basePath = getApiBasePath();
@@ -1079,6 +1095,7 @@ function initRemoteCodeClickHandler() {
         
         socket.onopen = function() {
             refreshConnected = true;
+            dropFails = 0;
             console.log('重置后的WebSocket 连接已打开');
             isConnecting = false;
             // 立即请求新code
@@ -1285,7 +1302,7 @@ function resetSocketMessageHandlers() {
             } else {
                 initWebSocket();
             }
-        }, 2000);
+        }, nextRetryDelay());
     };
     
     socket.onerror = function(error) {
@@ -1424,6 +1441,7 @@ function initWebSocket(reconnectCode = null) {
 
     socket.onopen = function() {
         hasConnected = true;
+        dropFails = 0;
         console.log('WebSocket 连接已打开');
         updateConnectionStatus(true);
         isConnecting = false;
@@ -1575,7 +1593,7 @@ function initWebSocket(reconnectCode = null) {
         clearCodeTimeout();
 
         if (!hasConnected) {
-            // 连接未成功建立（connect_error 场景），延迟重连
+            // 连接未成功建立（connect_error 场景），按退避节奏重连
             reconnectTimer = setTimeout(() => {
                 if (savedCode) {
                     console.log('连接错误后尝试重连，code:', savedCode);
@@ -1583,9 +1601,9 @@ function initWebSocket(reconnectCode = null) {
                 } else {
                     initWebSocket();
                 }
-            }, 3000);
+            }, nextRetryDelay());
         } else {
-            // 连接正常断开，延迟重连
+            // 连接正常断开，按退避节奏重连
             reconnectTimer = setTimeout(() => {
                 if (savedCode) {
                     console.log('尝试使用保存的code重连:', savedCode);
@@ -1593,7 +1611,7 @@ function initWebSocket(reconnectCode = null) {
                 } else {
                     initWebSocket();
                 }
-            }, 2000);
+            }, nextRetryDelay());
         }
     };
 }

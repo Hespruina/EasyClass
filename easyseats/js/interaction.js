@@ -15,6 +15,7 @@ import {
 } from './group.js';
 import { closeMenu, showMenu } from './menu.js';
 import { beginSeatDrag, canDragSeat, endSeatDrag, onSeatTap, updateSeatDrag } from './drag.js';
+import { openRoleMenu } from './role.js';
 
   /* ================================================================
    *  座位拖拽（鼠标）—— 仅编辑模式
@@ -22,6 +23,16 @@ import { beginSeatDrag, canDragSeat, endSeatDrag, onSeatTap, updateSeatDrag } fr
 
   export function onSeatMouseDown(e, seat) {
     if (!editMode) {
+      // 排座模式右键 = 设置职位（组长之类）。格局编辑模式的右键仍是删除座位，
+      // 两者不冲突：编辑模式下座位没有姓名，职位无从谈起。
+      if (e.button === 2) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeMenu();
+        openRoleMenu(seat, e.clientX, e.clientY);
+        return;
+      }
+
       // 排座模式：座位本身固定不动（布局只能在编辑模式里改）。
       // · 单击（没有拖动）座位 = 打开该座位的操作菜单
       // · 按住「有人的座位」拖动 = 把这位同学拖到别的座位（互换 / 移进空座）

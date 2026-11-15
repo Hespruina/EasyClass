@@ -34,6 +34,38 @@
 #canvas.view-mode .seat:not(.has-name):hover { background: #26272e; }
 .seat.hl { background: rgba(69,243,255,.3) !important; border-color: var(--warn) !important; }
 
+/* 职位气泡（组长 / 副组长…）：排在姓名上方，同处座位方块内
+ * 用一个 46px 方块装两行文字（气泡 9px + 姓名 11px），不向外溢出，
+ * 相邻座位 10px 的间隙因此永远不会被盖住。 */
+#canvas.view-mode .seat.has-role {
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 2px;
+  line-height: 1.05;
+}
+.seat-role {
+  display: block;
+  max-width: 100%;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 9px;
+  line-height: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.seat-name {
+  display: block;
+  max-width: 100%;
+  font-size: 11px;
+  word-break: break-all;
+  overflow: hidden;
+}
+
 .ghost {
   position: fixed;
   width: 46px; height: 46px;

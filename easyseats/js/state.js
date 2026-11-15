@@ -95,6 +95,9 @@
   export let seatSeq = 0;
   export let groupSeq = 0;
   export let nameBySeatId = new Map();   // 排座结果：座位 id -> 姓名
+  // 职位（姓名 -> 职位，如「组长」）：与**人**绑定，换座后仍跟着这位同学。
+  // 随排座结果一起存在 arrangement.roles 里（见 layout.js / 后端 normalize_arrangement）。
+  export let roleByName = new Map();
 
   export let gridAlign = true;
   export let manualGrouping = false;
@@ -209,6 +212,7 @@ export function setGroups(v) { groups = v; }
 export function setSeatSeq(v) { seatSeq = v; }
 export function setGroupSeq(v) { groupSeq = v; }
 export function setNameBySeatId(v) { nameBySeatId = v; }
+export function setRoleByName(v) { roleByName = v; }
 export function writeGridAlign(v) { gridAlign = v; }
 export function setManualGrouping(v) { manualGrouping = v; }
 export function setManualSelected(v) { manualSelected = v; }

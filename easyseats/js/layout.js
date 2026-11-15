@@ -6,8 +6,8 @@
 import {
   CELL, FILL_COLS, MAX_SCALE, MIN_SCALE, PAD, allowEmptyBtn, allowEmptySeats, canvas, chart, clamp,
   editMode, gridAlign, gridSwitchWrap, groupSeq, groups, listItems, nameBySeatId, offsetX, offsetY,
-  scale, seats, setGroupSeq, setGroups, setHighlightedGroupId, setNameBySeatId, setOffsetX,
-  setOffsetY, setScale, setSeats, writeGridAlign
+  roleByName, scale, seats, setGroupSeq, setGroups, setHighlightedGroupId, setNameBySeatId,
+  setOffsetX, setOffsetY, setRoleByName, setScale, setSeats, writeGridAlign
 } from './state.js';
 import { applyTransform, fitToContent } from './viewport.js';
 import {
@@ -101,6 +101,7 @@ import { markLayoutSaved } from './mode.js';
     setSeats([]);
     setGroups([]);
     setNameBySeatId(new Map());
+    setRoleByName(new Map());
     setHighlightedGroupId(null);
     updateEmpty();
     updateSeatCountHint();
@@ -179,12 +180,22 @@ import { markLayoutSaved } from './mode.js';
 
   export function applyArrangement(arrangement) {
     setNameBySeatId(new Map());
+    setRoleByName(new Map());
     const raw = (arrangement && arrangement.seats) || {};
     Object.keys(raw).forEach(k => {
       const sid = parseInt(k, 10);
       const name = raw[k];
       if (sid) nameBySeatId.set(sid, name || '');
     });
+    // 职位：姓名 -> 职位（与座位无关，换座后仍跟着人走）
+    const roles = new Map();
+    const rawRoles = (arrangement && arrangement.roles) || {};
+    Object.keys(rawRoles).forEach(k => {
+      const name = String(k || '').trim();
+      const role = String(rawRoles[k] || '').trim();
+      if (name && role) roles.set(name, role);
+    });
+    setRoleByName(roles);
     seats.forEach(paintSeat);
     updateSeatCountHint();
   }
@@ -195,5 +206,11 @@ import { markLayoutSaved } from './mode.js';
       const name = nameBySeatId.get(s.id);
       if (name) out[String(s.id)] = name;
     });
-    return { seats: out };
+    const result = { seats: out };
+    const roles = {};
+    roleByName.forEach((role, name) => {
+      if (name && role) roles[name] = role;
+    });
+    if (Object.keys(roles).length) result.roles = roles;
+    return result;
   }

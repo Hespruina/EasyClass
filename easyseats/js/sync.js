@@ -30,8 +30,12 @@ import { reapplyKeepNames, syncTabState, layoutDirty } from './mode.js';
 import { toast } from './ui.js';
 
   const HEARTBEAT_INTERVAL = 5000;   // 与后端 seats_hub 一致
-  const RECONNECT_MIN = 1500;
-  const RECONNECT_MAX = 10000;
+  // 断线重连节奏（与易积分 / 易计票 / 易任务 / 易点名一致）：
+  // 第 1 次立刻重连，之后 1s 起翻倍封顶 2s，连续失败超 10 次则固定每 1s 试一次
+  const RETRY_BURST = 10;
+  const RETRY_STEP = 1000;
+  const RETRY_CAP = 2000;
+  const RETRY_STEADY = 1000;
   const VIEW_SAVE_DEBOUNCE = 1200;   // 视角稳定 1.2s 后才保存，拖动画布不刷接口
 
   /* ================================================================
@@ -52,8 +56,16 @@ import { toast } from './ui.js';
   let activeChartId = null;          // 当前订阅的座位表
   let pingTimer = null;
   let reconnectTimer = null;
-  let reconnectDelay = RECONNECT_MIN;
+  let dropFails = 0;                 // 连续失败次数，连上即清零
   let closedByUs = false;
+
+  /* 第 n 次重试前该等多久：首次 0ms（掉线立刻重连） */
+  function nextRetryDelay() {
+    dropFails += 1;
+    if (dropFails === 1) return 0;
+    if (dropFails > RETRY_BURST) return RETRY_STEADY;
+    return Math.min(RETRY_STEP * Math.pow(2, dropFails - 2), RETRY_CAP);
+  }
 
   function wsUrl(chartId) {
     const base = new URL('/easycore/', window.location.origin);
@@ -88,9 +100,8 @@ import { toast } from './ui.js';
     setSyncStatus('连接已断开，正在重连…', 'warn');
     reconnectTimer = setTimeout(() => {
       reconnectTimer = null;
-      reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX);
       openSocket();
-    }, reconnectDelay);
+    }, nextRetryDelay());
   }
 
   function openSocket() {
@@ -107,7 +118,7 @@ import { toast } from './ui.js';
     socket = ws;
 
     ws.onopen = () => {
-      reconnectDelay = RECONNECT_MIN;
+      dropFails = 0;
       setSyncStatus('实时同步已连接', 'ok');
       send({ type: 'state_request' });   // 立刻对账一次（重连场景尤其重要）
       startPing();

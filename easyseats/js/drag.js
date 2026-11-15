@@ -9,6 +9,7 @@ import {
 } from './state.js';
 import { closeMenu, showMenu } from './menu.js';
 import { toast } from './ui.js';
+import { openRoleMenu } from './role.js';
 import {
   assignNameToSeat, cancelSwap, closeNamePicker, finishSwap, openNamePicker, seatNameOf,
   setPickedSeat, startSwap
@@ -107,6 +108,8 @@ import {
     const items = [{ label: '手动选择名字', onClick: () => openNamePicker(seat) }];
     if (name) {
       items.push({ label: '与其他同学换座', onClick: () => startSwap(seat) });
+      // 触屏没有右键：长按/轻点菜单里也给一个入口（右键走 interaction.js 那条路）
+      items.push({ label: '设置职位', onClick: () => openRoleMenu(seat, r.left, r.bottom + 6) });
       items.push({ label: '移出座位', danger: true, onClick: () => assignNameToSeat(seat, '') });
     }
     items.push({ label: '当前：' + (name || '空座'), note: true });

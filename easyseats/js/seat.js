@@ -5,8 +5,8 @@
 
 import {
   CELL, PAD, WORLD_MARGIN, canvas, clamp, editMode, gridAlign, listItems, manualSelected,
-  nameBySeatId, nextSeatSeq, notice, saveBtn, seatCountHint, seatSeq, seats, seatsFit, setSeatSeq,
-  setSeats, world
+  nameBySeatId, nextSeatSeq, notice, roleByName, saveBtn, seatCountHint, seatSeq, seats, seatsFit,
+  setSeatSeq, setSeats, world
 } from './state.js';
 import { clampWorld } from './viewport.js';
 import { onSeatMouseDown, onSeatTouchStart } from './interaction.js';
@@ -63,10 +63,28 @@ import { syncTabState } from './mode.js';
   }
 
   export function paintSeat(seat) {
-    seat.el.textContent = seatLabelText(seat);
+    const name = nameBySeatId.get(seat.id);
+    // 职位只在排座模式（= 有姓名可显示）下出现；格局编辑模式的座位不显示姓名
+    const role = (!editMode && name) ? (roleByName.get(name) || '') : '';
+    if (role) {
+      // 「姓名上方气泡」：气泡 + 姓名两行都塞进座位方块内（不用绝对定位外挂，
+      // 否则放大缩小、相邻座位 10px 的间隙都会让气泡压到别人的座位上）
+      seat.el.textContent = '';
+      const badge = document.createElement('span');
+      badge.className = 'seat-role';
+      badge.textContent = role;
+      const label = document.createElement('span');
+      label.className = 'seat-name';
+      label.textContent = name;
+      seat.el.appendChild(badge);
+      seat.el.appendChild(label);
+    } else {
+      seat.el.textContent = seatLabelText(seat);
+    }
     // has-name 与模式无关，永远按当前姓名刷：只在排座态维护的话，
     // 在格局编辑态新增 / 改动的座位会带着过期的类回到排座态（光标、空座样式都不对）
-    seat.el.classList.toggle('has-name', !!nameBySeatId.get(seat.id));
+    seat.el.classList.toggle('has-name', !!name);
+    seat.el.classList.toggle('has-role', !!role);
   }
 
   // 按最终世界坐标落一个座位（col / row 为网格号，非吸附时为 null）

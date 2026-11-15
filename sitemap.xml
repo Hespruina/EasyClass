@@ -4,15 +4,23 @@
   <!-- 易系列工具导航页 -->
   <url>
     <loc>https://easyclass.zhrhello.top/</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-11-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
+  </url>
+
+  <!-- 易核 (EasyCore) 账户与数据 -->
+  <url>
+    <loc>https://easyclass.zhrhello.top/easycore/</loc>
+    <lastmod>2026-11-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
 
   <!-- 易点名 (Randamer) -->
   <url>
     <loc>https://easyclass.zhrhello.top/randamer/</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-11-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -20,7 +28,7 @@
   <!-- 易点名手机端 -->
   <url>
     <loc>https://easyclass.zhrhello.top/randamer/phone/</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-11-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
@@ -28,7 +36,7 @@
   <!-- 易计票 (EasyCounter) -->
   <url>
     <loc>https://easyclass.zhrhello.top/easycounter/</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-11-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -36,7 +44,23 @@
   <!-- 易排座 (EasySeats) -->
   <url>
     <loc>https://easyclass.zhrhello.top/easyseats/</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-11-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 易任务 (EasyTasks) -->
+  <url>
+    <loc>https://easyclass.zhrhello.top/easytasks/</loc>
+    <lastmod>2026-11-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 易积分 (EasyScore) -->
+  <url>
+    <loc>https://easyclass.zhrhello.top/easyscore/</loc>
+    <lastmod>2026-11-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>

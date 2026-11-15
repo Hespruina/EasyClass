@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# 私有工具页：forteachers 导入入口（站内不放入口，仅供手动访问）
+Disallow: /easycore/import
+
+Sitemap: https://easyclass.zhrhello.top/sitemap.xml

@@ -1,0 +1,203 @@
+/* Office 风格功能区（选项卡 + Ribbon）
+ * 由 index.html 内联样式拆出，保持原始声明顺序。
+ */
+/* ============ Office 风格功能区（Ribbon） ============ */
+#ribbon {
+  position: relative;
+  flex: 0 0 auto;
+  background: var(--panel);
+  border-bottom: 2px solid var(--accent);
+  z-index: 10;
+}
+
+/* ---- 选项卡栏 ---- */
+.rb-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 12px;
+  background: #16171b;
+  border-bottom: 1px solid var(--line);
+}
+.rb-brand {
+  font-family: "ZCOOL KuaiLe", sans-serif;
+  font-size: 15px;
+  color: var(--accent);
+  letter-spacing: .5px;
+  margin-right: 12px;
+  white-space: nowrap;
+}
+/* 选项卡 = 按钮：边框常驻显示，未选中的那个也要看得出来能点
+   （只靠 hover 才出现底色的话，未选中项看着像一行纯文字） */
+.rb-tab {
+  background: rgba(69,243,255,.08);
+  border: 1px solid rgba(69,243,255,.55);
+  outline: none;
+  font: inherit;
+  font-family: "ZCOOL KuaiLe", sans-serif;
+  font-size: 14px;
+  color: #c9ced6;
+  padding: 6px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .18s, background .18s, border-color .18s;
+}
+.rb-tab:hover {
+  color: var(--accent);
+  background: rgba(69,243,255,.16);
+  border-color: var(--accent);
+}
+.rb-tab.active {
+  color: var(--panel);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.rb-tab.active:hover { background: var(--accent-hi); border-color: var(--accent-hi); color: var(--panel); }
+.rb-tab:disabled { opacity: .38; cursor: not-allowed; }
+.rb-tab:disabled:hover {
+  background: rgba(69,243,255,.08);
+  border-color: rgba(69,243,255,.55);
+  color: #c9ced6;
+}
+
+/* 选项卡右侧：座位表选择 / 统计 / 图标按钮 */
+.rb-tabs-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rb-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--gray);
+  border-radius: 5px;
+  color: #d7d8dd;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.rb-icon-btn svg { width: 15px; height: 15px; display: block; }
+.rb-icon-btn:hover { color: var(--accent); border-color: var(--accent); background: rgba(69,243,255,.10); }
+
+/* ---- 功能区（Ribbon 主体） ---- */
+.rb-body {
+  display: flex;
+  align-items: stretch;
+  height: 78px;
+  padding: 4px 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+.rb-body::-webkit-scrollbar { height: 5px; }
+.rb-body::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+
+.rb-group {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2px 9px 0;
+}
+.rb-row { display: flex; align-items: flex-start; gap: 4px; }
+.rb-label {
+  font-size: 11px;
+  color: #6f7078;
+  text-align: center;
+  padding: 1px 0 2px;
+  white-space: nowrap;
+}
+.rb-spacer { flex: 1 1 auto; min-width: 10px; }
+
+/* 图标 + 文字的功能按钮（小号：横排；.big：图标在上、文字在下） */
+.rb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #d7d8dd;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 5px 9px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.rb-btn:hover { background: rgba(69,243,255,.10); border-color: rgba(69,243,255,.34); color: var(--accent); }
+.rb-btn:active { background: rgba(69,243,255,.22); }
+.rb-btn.on { background: rgba(69,243,255,.16); border-color: var(--accent); color: var(--accent); }
+.rb-btn:disabled { opacity: .4; cursor: not-allowed; }
+.rb-btn:disabled:hover { background: transparent; border-color: transparent; color: #d7d8dd; }
+
+.rb-btn.big {
+  flex-direction: column;
+  gap: 3px;
+  min-width: 60px;
+  padding: 3px 10px 2px;
+  font-size: 11.5px;
+}
+.rb-btn.big .rb-ico svg { width: 24px; height: 24px; }
+.rb-ico { display: flex; align-items: center; justify-content: center; }
+.rb-ico svg { width: 16px; height: 16px; display: block; }
+
+.rb-btn.primary {
+  background: var(--accent);
+  color: var(--panel);
+  border-color: var(--accent);
+  font-family: "ZCOOL KuaiLe", sans-serif;
+  font-size: 13px;
+}
+.rb-btn.primary:hover { background: var(--accent-hi); border-color: var(--accent-hi); color: var(--panel); }
+.rb-btn.primary:disabled { background: rgba(69,243,255,.30); border-color: transparent; color: rgba(28,28,28,.75); }
+
+#zoomHint { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+.tb-hint { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+.tb-hint.ok { color: var(--accent); }
+.tb-hint.bad { color: var(--warn); }
+.tb-hint b { color: inherit; font-weight: 600; }
+
+/* 拖拽新建座位的「新座位」块 */
+#seatSource { cursor: grab; }
+#seatSource:active { cursor: grabbing; transform: scale(.95); }
+
+/* 座位表下拉（选项卡右侧）。
+   min-width:0 是关键：select 作为 flex 项默认 min-width:auto，会按最长选项撑开，
+   窄屏上直接顶到旁边的按钮上（实测 430px 下与「随机排座」重叠）。 */
+#chartSelect {
+  appearance: none; -webkit-appearance: none;
+  min-width: 0;
+  background: var(--panel-2);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  padding: 4px 26px 4px 10px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  max-width: 38vw;
+  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+                    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position: calc(100% - 15px) center, calc(100% - 10px) center;
+  background-size: 6px 6px, 6px 6px; background-repeat: no-repeat;
+}
+#chartSelect option { background: var(--panel); color: var(--accent); }
+
+/* 手动建组过程中出现的「完成 / 取消」 */
+#manualActions { display: none; gap: 4px; }
+
+/* 模式开关：只显示当前选项卡的功能组 / 按钮 */
+#ribbon[data-mode="seat"] [data-mode="layout"],
+#ribbon[data-mode="layout"] [data-mode="seat"] { display: none !important; }
+

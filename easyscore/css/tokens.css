@@ -1,0 +1,38 @@
+/* 设计变量 / 全局重置 / 字体
+ * 由 index.html 内联样式拆出，保持原始声明顺序。
+ */
+/* randamer 同款字体 */
+@import url('https://google-fonts.mirrors.sjtug.sjtu.edu.cn/css2?family=Noto+Sans+SC:wght@100..900&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&display=swap');
+
+/* ============ 设计变量（对齐 randamer，不含发光） ============ */
+:root {
+  --bg:        #23242a;   /* 页面底色 */
+  --panel:     #1c1c1c;   /* 面板 / 容器 */
+  --panel-2:   #28292d;   /* 次级面板 */
+  --line:      #33343b;   /* 分隔线 */
+  --accent:    #45f3ff;   /* 主色 */
+  --accent-hi: #35eaff;   /* 主色 hover */
+  --accent-lo: #25daff;   /* 主色 active */
+  --muted:     #8f8f8f;   /* 次要文字 */
+  --gray:      #666;      /* 中性按钮 / 未选中轨道 */
+  --danger:    #ff6b6b;
+  --warn:      #ffd700;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0;
+    font-family: "Noto Sans SC", sans-serif; font-optical-sizing: auto; }
+html, body { height: 100%; overscroll-behavior: none; }
+body {
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+  background: var(--bg);
+  color: var(--accent);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+

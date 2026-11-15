@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>易积分 · 班级积分管理</title>
+<meta name="description" content="易积分是免费的在线班级积分管理工具，绑定云名单即可加减分、自动抵消、按期归档，支持总览统计与历史记录。">
+<link rel="icon" href="../favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ribbon.css">
+<link rel="stylesheet" href="css/score.css">
+</head>
+<body>
+
+<div id="ribbon" data-tab="operate">
+  <div class="rb-tabs">
+    <span class="rb-brand">易积分</span>
+    <button class="rb-tab" id="tabOverview" type="button">数据总览</button>
+    <button class="rb-tab active" id="tabOperate" type="button">积分操作</button>
+    <button class="rb-tab" id="tabLedger" type="button">历史记录</button>
+
+    <div class="rb-tabs-right">
+      <span id="tableHint" class="tb-hint"></span>
+      <select id="scoreSelect" style="display:none"></select>
+      <button id="reloadBtn" class="rb-icon-btn" type="button" style="display:none" title="重新加载">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11a8.5 8.5 0 1 0-2.4 6.1"/><path d="M20.5 4v7h-7"/></svg>
+        <span>刷新</span>
+      </button>
+      <button id="backBtn" class="rb-icon-btn" type="button" title="返回 EasyCore 控制台">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H12"/></svg>
+        <span>返回控制台</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="rb-body">
+    <div class="rb-group" data-tab-group="operate">
+      <div class="rb-row">
+        <button id="batchBtn" class="rb-btn big" type="button" title="勾选多名学生，批量加分或扣分">
+          <span class="rb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/><path d="m9 3 3 3-3 3"/></svg></span>
+          <span class="rb-txt">批量操作</span>
+        </button>
+      </div>
+      <div class="rb-label">积分</div>
+    </div>
+    <span class="rb-spacer"></span>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- 数据总览 -->
+  <div class="view-panel" id="overview-panel">
+    <div class="ov-filter" id="ovFilter">
+      <button class="qbtn" data-days="360" type="button">360天</button>
+      <button class="qbtn" data-days="90" type="button">90天</button>
+      <button class="qbtn" data-days="30" type="button">30天</button>
+      <button class="qbtn" data-days="7" type="button">7天</button>
+      <input type="date" id="ovFrom" title="开始日期">
+      <span style="color:var(--muted)">至</span>
+      <input type="date" id="ovTo" title="结束日期">
+    </div>
+    <div class="ov-cards" id="ovCards"></div>
+    <div class="ov-table-wrap" id="ovTableWrap"></div>
+  </div>
+
+  <!-- 积分操作 -->
+  <div class="view-panel active" id="operate-panel">
+    <div class="edit-names-body" id="operateBody">
+      <div style="display:flex;align-items:center;gap:10px;padding:4px 0 12px;">
+        <div class="score-search" style="width:240px;max-width:60vw;">
+          <input type="text" id="searchInput" placeholder="搜索名字…" autocomplete="off" spellcheck="false">
+        </div>
+        <span class="tb-hint" id="studentHint"></span>
+      </div>
+      <div class="edit-names-layout">
+        <div class="edit-names-cards" id="cardsContainer"></div>
+        <div class="alpha-index" id="alphaIndex" aria-label="拼音首字母筛选"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 历史记录 -->
+  <div class="view-panel" id="ledger-panel">
+    <div id="ledgerList"></div>
+  </div>
+
+</div>
+
+<!-- 操作模态框 -->
+<div class="modal-overlay" id="scoreModal">
+  <div class="score-modal">
+    <div class="m-head">
+      <div class="m-title" id="modalTitle">学生</div>
+      <button class="m-close" id="modalClose" type="button" title="关闭">×</button>
+    </div>
+    <div>
+      <div class="m-field-label">加分还是扣分</div>
+      <div class="m-kind">
+        <button class="round-btn add on" id="kindAdd" type="button" title="加分">+</button>
+        <button class="round-btn deduct" id="kindDeduct" type="button" title="扣分">−</button>
+      </div>
+    </div>
+    <div>
+      <div class="m-field-label">操作分值</div>
+      <div class="m-value-row">
+        <button class="step-btn" id="valMinus" type="button" title="减 1">−</button>
+        <input class="m-value-input" id="valInput" type="number" value="1" min="1" step="1">
+        <button class="step-btn" id="valPlus" type="button" title="加 1">+</button>
+      </div>
+      <div class="m-quick" id="quickBtns"></div>
+    </div>
+    <div>
+      <div class="m-field-label">理由（可选）</div>
+      <textarea class="m-reason-input" id="reasonInput" placeholder="如「认真听讲」，可留空"></textarea>
+      <div class="reason-history" id="reasonHistory"></div>
+    </div>
+    <div class="m-foot">
+      <button class="m-btn" id="modalCancel" type="button">取消</button>
+      <button class="m-btn primary" id="modalSave" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 批量操作 toast -->
+<div class="batch-toast" id="batchToast">
+  <span class="bt-count" id="btCount">已选 0 人</span>
+  <button class="bt-btn" id="btCancel" type="button">取消多选</button>
+  <button class="bt-btn confirm" id="btConfirm" type="button">确定</button>
+</div>
+
+<div id="toast"></div>
+<div id="loading"><div class="spinner"></div><span id="loadingText">加载中…</span></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

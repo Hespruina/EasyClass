@@ -100,7 +100,42 @@ function renderGrid() {
 grid.innerHTML = '';
 // 设置网格容器的事件监听（用于检测操作方式不匹配）
 setupGridMismatchDetection();
+// 名字卡片布局：混排（默认）按名单顺序铺满网格；按拼音分行按首字母分组分行
+const letterLayout = appState.cardLayout === 'pinyin';
+grid.classList.toggle('card-layout-letter', letterLayout);
+if (letterLayout) {
+buildLetterGroups().forEach((group) => {
+const row = document.createElement('div');
+row.className = 'letter-row';
+const head = document.createElement('div');
+head.className = 'letter-row-head';
+const key = document.createElement('span');
+key.className = 'letter-row-key';
+key.textContent = group.letter;
+const count = document.createElement('span');
+count.className = 'letter-row-count';
+count.textContent = group.entries.length + ' 人';
+const line = document.createElement('span');
+line.className = 'letter-row-line';
+head.appendChild(key);
+head.appendChild(count);
+head.appendChild(line);
+const cards = document.createElement('div');
+cards.className = 'letter-row-cards';
+group.entries.forEach((entry) => cards.appendChild(createVoteCard(entry.item, entry.index)));
+row.appendChild(head);
+row.appendChild(cards);
+grid.appendChild(row);
+});
+return;
+}
 appState.namesData.forEach((item, index) => {
+grid.appendChild(createVoteCard(item, index));
+});
+}
+// 单个投票卡片。index 必须是 namesData 里的下标：票数节点 id 为 score-<index>，
+// updateDisplay 靠它直接定位，所以「按拼音分行」也只是分组，不能重排下标。
+function createVoteCard(item, index) {
 const card = document.createElement('div');
 card.className = 'vote-card';
 card.dataset.index = index;
@@ -133,8 +168,34 @@ card.innerHTML = `
 <div class="minus-btn" data-index="${index}" data-name="${item.name}">−</div>
 </div>
 `;
-grid.appendChild(card);
+return card;
+}
+// 按拼音首字母分组：A→Z 升序，识别不出首字母的（#）排在最后
+function buildLetterGroups() {
+const buckets = new Map();
+appState.namesData.forEach((item, index) => {
+const letter = letterOfName(item);
+if (!buckets.has(letter)) buckets.set(letter, []);
+buckets.get(letter).push({item: item, index: index});
 });
+return Array.from(buckets.keys())
+.sort((a, b) => {
+if (a === '#') return 1;
+if (b === '#') return -1;
+return a.localeCompare(b);
+})
+.map((letter) => ({letter: letter, entries: buckets.get(letter)}));
+}
+// 取名字首字母：优先用云端快照里的 firstLetter；老快照缺该字段时回退到
+// groupedByLetter 反查，最后兜底「首字符是字母就用它，否则归 #」
+function letterOfName(item) {
+if (item && item.firstLetter) return item.firstLetter;
+const grouped = appState.groupedByLetter || {};
+for (const letter in grouped) {
+if (grouped[letter].some((entry) => entry.name === item.name)) return letter;
+}
+const first = String((item && item.name) || '').charAt(0).toUpperCase();
+return /^[A-Z]$/.test(first) ? first : '#';
 }
 // 设置网格容器的操作方式自动检测：检测到与当前模式不同的输入时静默自动切换
 function setupGridMismatchDetection() {
@@ -329,6 +390,7 @@ function openSettings() {
 settingsModal.classList.add('show');
 updateSearchModeUI();
 updateThemeUI();
+updateCardLayoutUI();
 if (isLoggedIn) {
     fetchAndRenderCloudLists();
 }
@@ -344,6 +406,18 @@ function setTouchMode(mode) {
 appState.touchMode = mode;
 renderGrid();
 updateRankList(true);
+}
+// 名字卡片布局：混排 / 按拼音分行（本机偏好，与搜索模式、主题一样存 localStorage）
+function updateCardLayoutUI() {
+const isLetter = appState.cardLayout === 'pinyin';
+if (layoutMixedBtn) layoutMixedBtn.classList.toggle('active', !isLetter);
+if (layoutPinyinBtn) layoutPinyinBtn.classList.toggle('active', isLetter);
+}
+function setCardLayout(mode) {
+appState.cardLayout = mode === 'pinyin' ? 'pinyin' : 'mixed';
+Storage.set('cardLayout', appState.cardLayout);
+updateCardLayoutUI();
+renderGrid();
 }
 function resetData() {
 showCustomConfirm('确定清空所有票数？', (confirmed) => {

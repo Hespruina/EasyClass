@@ -9,6 +9,7 @@ initLetterGrid();
 initQuickSearchGrid();
 updateSearchModeUI();
 updateQuickSearchGrid();
+updateCardLayoutUI();
 populateThemeSelect();
 }
 // 初始化主应用

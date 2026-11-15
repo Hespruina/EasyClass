@@ -192,6 +192,9 @@ searchModalBtn.addEventListener('click', () => setSearchMode('modal'));
 themeSystemBtn.addEventListener('click', () => setThemeOption('system'));
 themeLightBtn.addEventListener('click', () => setThemeOption('light'));
 themeDarkBtn.addEventListener('click', () => setThemeOption('dark'));
+// 名字卡片布局：混排 / 按拼音分行
+if (layoutMixedBtn) layoutMixedBtn.addEventListener('click', () => setCardLayout('mixed'));
+if (layoutPinyinBtn) layoutPinyinBtn.addEventListener('click', () => setCardLayout('pinyin'));
 // 编辑名单事件
 editNamesBtn.addEventListener('click', openEditNamesModal);
 saveNamesBtn.addEventListener('click', saveEditedNames);
@@ -294,5 +297,7 @@ handleLetterClick(key);
 // 页面加载：先拉云端任务列表，再处理从易点名 / 云名单带回来的名单 token
 window.addEventListener('load', async () => {
     await bootstrapTasks();
+    // 控制台「计票进程」点「打开」会带 ?task_id=，直接进入那次计票
+    if (await enterTaskFromUrl()) return;
     await checkImportTokenAndOpenCreate();
 });

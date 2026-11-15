@@ -238,6 +238,27 @@ async function createTaskFromNames(names) {
 
 let taskLoading = false;       // 进入计票期间的防重复点击锁
 
+// URL 与当前计票任务同步：带 ?task_id=<id> 时刷新页面能直接回到这次计票，
+// 控制台「计票进程」页的「打开」也是靠这个参数直达。
+function syncTaskUrl(id) {
+    try {
+        const url = new URL(location.href);
+        if (id) url.searchParams.set('task_id', id);
+        else url.searchParams.delete('task_id');
+        history.replaceState(null, '', url.toString());
+    } catch (e) { /* 老浏览器不支持 URL 对象时忽略，不影响主流程 */ }
+}
+
+// 从控制台「计票进程」点「打开」进来时 URL 带着 ?task_id=，直接进入对应任务
+async function enterTaskFromUrl() {
+    const id = parseInt(new URLSearchParams(location.search).get('task_id'), 10);
+    if (!id) return false;
+    await enterTask(id);
+    // 任务已被删除 / 无权访问：enterTask 会提示并停在列表页，这里顺手清掉失效参数
+    if (!currentTaskId) syncTaskUrl(null);
+    return true;
+}
+
 function showTaskLoading(show, taskName) {
     const overlay = document.getElementById('taskLoadingOverlay');
     if (!overlay) return;
@@ -273,6 +294,7 @@ async function enterTask(id) {
         mainApp.classList.add('visible');
         CloudSync.connect(currentTaskId);
         initMainApp();                 // 操作方式自动检测（无弹窗），直接初始化主界面
+        syncTaskUrl(currentTaskId);
     } finally {
         showTaskLoading(false);
         taskLoading = false;
@@ -284,6 +306,7 @@ function backToTaskList() {
     currentTaskId = null;
     mainApp.classList.remove('visible');
     document.getElementById('taskListScreen').classList.remove('hidden');
+    syncTaskUrl(null);
     refreshTaskList();
     CloudSync.connect(null);
 }

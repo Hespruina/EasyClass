@@ -55,6 +55,9 @@ searchModalBtn.addEventListener('click', function () { setSearchMode('modal'); }
 themeSystemBtn.addEventListener('click', function () { setThemeOption('system'); });
 themeLightBtn.addEventListener('click', function () { setThemeOption('light'); });
 themeDarkBtn.addEventListener('click', function () { setThemeOption('dark'); });
+// 名字卡片布局：混排 / 按拼音分行
+if (layoutMixedBtn) layoutMixedBtn.addEventListener('click', function () { setCardLayout('mixed'); });
+if (layoutPinyinBtn) layoutPinyinBtn.addEventListener('click', function () { setCardLayout('pinyin'); });
 
 // ==================== 编辑名单 ====================
 editNamesBtn.addEventListener('click', openEditNamesModal);
@@ -145,5 +148,7 @@ document.addEventListener('keydown', function (e) {
 window.addEventListener('load', async function () {
     ensureStarButtons();
     await bootstrapTasks();
+    // 控制台「教学任务」点「打开」会带 ?task_id=，直接进入那个任务
+    if (await enterTaskFromUrl()) return;
     await checkImportTokenAndOpenCreate();
 });

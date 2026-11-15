@@ -5,6 +5,7 @@ let appState = {
     totalVotes: 0,
     touchMode: (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ? 'touch' : 'mouse',
     searchMode: Storage.get('searchMode', 'permanent'), // 'permanent' 或 'modal'
+    cardLayout: Storage.get('cardLayout', 'mixed'), // 'mixed' 混排 或 'pinyin' 按拼音分行
     namesData: [], // 从云端快照获取的排序后数据
     groupedByLetter: {},
     availableLetters: []
@@ -31,6 +32,8 @@ const searchModalBtn = document.getElementById('searchModal');
 const themeSystemBtn = document.getElementById('themeSystem');
 const themeLightBtn = document.getElementById('themeLight');
 const themeDarkBtn = document.getElementById('themeDark');
+const layoutMixedBtn = document.getElementById('layoutMixed');
+const layoutPinyinBtn = document.getElementById('layoutPinyin');
 const searchBtn = document.getElementById('searchBtn');
 const letterSearchModal = document.getElementById('letterSearchModal');
 const letterGrid = document.getElementById('letterGrid');

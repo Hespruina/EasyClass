@@ -94,9 +94,72 @@ function createStudentCard(item, index) {
 
 function renderGrid() {
     grid.innerHTML = '';
+    // 名字卡片布局：混排（默认）按名单顺序铺满网格；按拼音分行按首字母分组分行
+    const letterLayout = appState.cardLayout === 'pinyin';
+    grid.classList.toggle('card-layout-letter', letterLayout);
+    if (letterLayout) {
+        buildLetterGroups().forEach(function (group) {
+            const row = document.createElement('div');
+            row.className = 'letter-row';
+
+            const head = document.createElement('div');
+            head.className = 'letter-row-head';
+            const key = document.createElement('span');
+            key.className = 'letter-row-key';
+            key.textContent = group.letter;
+            const count = document.createElement('span');
+            count.className = 'letter-row-count';
+            count.textContent = group.entries.length + ' 人';
+            const line = document.createElement('span');
+            line.className = 'letter-row-line';
+            head.appendChild(key);
+            head.appendChild(count);
+            head.appendChild(line);
+
+            const cards = document.createElement('div');
+            cards.className = 'letter-row-cards';
+            group.entries.forEach(function (entry) {
+                cards.appendChild(createStudentCard(entry.item, entry.index));
+            });
+
+            row.appendChild(head);
+            row.appendChild(cards);
+            grid.appendChild(row);
+        });
+        return;
+    }
     appState.namesData.forEach(function (item, index) {
         grid.appendChild(createStudentCard(item, index));
     });
+}
+
+// 按拼音首字母分组：A→Z 升序，识别不出首字母的（#）排在最后
+function buildLetterGroups() {
+    const buckets = new Map();
+    appState.namesData.forEach(function (item, index) {
+        const letter = letterOfName(item);
+        if (!buckets.has(letter)) buckets.set(letter, []);
+        buckets.get(letter).push({ item: item, index: index });
+    });
+    return Array.from(buckets.keys())
+        .sort(function (a, b) {
+            if (a === '#') return 1;
+            if (b === '#') return -1;
+            return a.localeCompare(b);
+        })
+        .map(function (letter) { return { letter: letter, entries: buckets.get(letter) }; });
+}
+
+// 取名字首字母：优先用云端快照里的 firstLetter；老快照缺该字段时回退到
+// groupedByLetter 反查，最后兜底「首字符是字母就用它，否则归 #」
+function letterOfName(item) {
+    if (item && item.firstLetter) return item.firstLetter;
+    const grouped = appState.groupedByLetter || {};
+    for (const letter in grouped) {
+        if (grouped[letter].some(function (entry) { return entry.name === item.name; })) return letter;
+    }
+    const first = String((item && item.name) || '').charAt(0).toUpperCase();
+    return /^[A-Z]$/.test(first) ? first : '#';
 }
 
 function updateStudentCard(name) {
@@ -361,10 +424,25 @@ function toggleStudentStar(value) {
 
 // ==================== 设置 / 清空 ====================
 
+// 名字卡片布局：混排 / 按拼音分行（本机偏好，与搜索模式、主题一样存 localStorage）
+function updateCardLayoutUI() {
+    const isLetter = appState.cardLayout === 'pinyin';
+    if (layoutMixedBtn) layoutMixedBtn.classList.toggle('active', !isLetter);
+    if (layoutPinyinBtn) layoutPinyinBtn.classList.toggle('active', isLetter);
+}
+
+function setCardLayout(mode) {
+    appState.cardLayout = mode === 'pinyin' ? 'pinyin' : 'mixed';
+    Storage.set('cardLayout', appState.cardLayout);
+    updateCardLayoutUI();
+    renderGrid();
+}
+
 function openSettings() {
     settingsModal.classList.add('show');
     updateSearchModeUI();
     updateThemeUI();
+    updateCardLayoutUI();
     if (isLoggedIn) {
         fetchAndRenderCloudLists();
     }

@@ -6,6 +6,7 @@ function initMainAppUI() {
     initQuickSearchGrid();
     updateSearchModeUI();
     updateQuickSearchGrid();
+    updateCardLayoutUI();
 }
 
 // 初始化主应用

@@ -138,6 +138,26 @@ touch-action: pan-y;
 .vote-grid::-webkit-scrollbar-track { background: var(--scrollbar-bg); border-radius: 3px; }
 .vote-grid::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
 
+/* 名字卡片布局：按拼音分行（默认混排，即上面的 auto-fill 网格） */
+.vote-grid.card-layout-letter { display: block; }
+.card-layout-letter .letter-row { margin-bottom: 16px; }
+.card-layout-letter .letter-row:last-child { margin-bottom: 4px; }
+.card-layout-letter .letter-row-head {
+display: flex; align-items: center; gap: 8px;
+position: sticky; top: 0; z-index: 2;
+padding: 6px 2px; margin-bottom: 8px;
+background: var(--bg-color);
+}
+.letter-row-key { color: var(--primary); font-size: 15px; font-weight: 800; letter-spacing: 0.5px; }
+.letter-row-count { color: var(--text-dim); font-size: 12px; }
+.letter-row-line { flex: 1; height: 1px; background: var(--primary-border); }
+.card-layout-letter .letter-row-cards {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+gap: 12px;
+align-content: start;
+}
+
 /* 中等屏幕：两栏收窄，卡片区仍占一半 */
 @media (max-width: 1024px) {
 .overview-side { flex: 0 0 26%; width: 26%; min-width: 180px; }

@@ -149,11 +149,11 @@ const CloudSync = (function () {
     // ---------- REST ----------
 
     function listTasks() { return api('api/tasks'); }
-    function createTask(name, names, mode, steps) {
-        return api('api/tasks', {
-            method: 'POST',
-            body: { name: name, names: names, mode: mode, steps: steps }
-        });
+    function createTask(name, names, mode, steps, listId) {
+        const body = { name: name, names: names, mode: mode, steps: steps };
+        // 来自云名单时一并提交 list_id：服务端会把这次任务与该名单绑定（跟随名单）
+        if (listId) body.list_id = listId;
+        return api('api/tasks', { method: 'POST', body: body });
     }
     function getTask(id) { return api('api/tasks/' + id); }
     function updateTask(id, payload) {

@@ -85,8 +85,11 @@ async function readCreateTaskNames() {
         const items = Array.isArray(data.items) ? data.items : [];
         const names = items.map(i => i.name).filter(Boolean);
         if (names.length === 0) { showCustomAlert('该名单还没有名字'); return null; }
+        // 记下名单 id：建任务时一起提交，让这个任务跟随这份名单（名单改这里自动同步）
+        createTaskListId = parseInt(listId, 10) || null;
         return names;
     }
+    createTaskListId = null;
     const textarea = document.getElementById('createTaskNames');
     const text = textarea ? textarea.value.trim() : '';
     const names = text.split('\n').map(n => n.trim()).filter(Boolean);

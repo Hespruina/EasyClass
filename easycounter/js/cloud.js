@@ -205,8 +205,11 @@ const CloudSync = (function () {
     // ---------- REST ----------
 
     function listTasks() { return api('api/counter/tasks'); }
-    function createTask(name, names) {
-        return api('api/counter/tasks', { method: 'POST', body: { name: name, names: names } });
+    function createTask(name, names, listId) {
+        const body = { name: name, names: names };
+        // 来自云名单时一并提交 list_id：服务端会把这次计票与该名单绑定（跟随名单）
+        if (listId) body.list_id = listId;
+        return api('api/counter/tasks', { method: 'POST', body: body });
     }
     function getTask(id) { return api('api/counter/tasks/' + id); }
     function renameTask(id, name) {

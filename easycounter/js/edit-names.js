@@ -612,7 +612,7 @@ return;
 const changesHTML = generateChangeTagsHTML(changes.removed, changes.added);
 
 // 显示确认弹窗，包含更改内容
-const confirmMessage = `修改名单将重置所有票数，是否继续？<br/>
+const confirmMessage = `修改名单会保留仍在名单中的同学的票数，是否继续？<br/>
 <div style="font-size: 13px; color: #8f8f8f; margin: 10px 0;">共 ${changes.removed.length + changes.added.length} 处更改：</div>
 ${changesHTML}`;
 
@@ -623,7 +623,7 @@ return;
 const saveBtn = document.getElementById('saveNamesBtn');
 setButtonBusy(saveBtn, true, '保存中…');
 try {
-// 云端：后端重新按拼音排序 + 重置票数 + 立即落库 + 广播给其它设备
+// 云端：后端重新按拼音排序 + 保留仍在名单里的票数 + 立即落库 + 广播给其它设备
 await CloudSync.setNames(newNames);
 updateLetterGrid();
 updateQuickSearchGrid();

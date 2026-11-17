@@ -6,6 +6,9 @@
  */
 let taskListCache = [];
 let createTaskSource = 'manual';   // 'manual' | 'cloud'
+// 新建时若名单来自云名单，记下它的 id：建任务时一起提交，让这次计票**跟随**那份名单
+// （名单增删人后台同步，票数按姓名保留）。手动输入时为 null。
+let createTaskListId = null;
 
 function pad2(n) { return String(n).padStart(2, '0'); }
 
@@ -130,6 +133,7 @@ function openCreateTaskModal(prefillNames) {
     const nameEl = document.getElementById('createTaskName');
     nameEl.value = '';
     nameEl.placeholder = defaultTaskName();
+    createTaskListId = null;
     document.getElementById('createTaskNames').value =
         Array.isArray(prefillNames) ? prefillNames.join('\n') : '';
     switchCreateSource('manual');
@@ -219,7 +223,8 @@ async function createTaskFromNames(names) {
     }
     setButtonBusy(btn, true, '创建中…');
     try {
-        const data = await CloudSync.createTask(name, names);
+        const data = await CloudSync.createTask(name, names, createTaskListId);
+        createTaskListId = null;
         closeCreateTaskModal();
         await refreshTaskList();
         const id = data.task && data.task.id;
